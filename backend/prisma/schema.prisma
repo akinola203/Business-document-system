@@ -1,0 +1,792 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -----------------------------------------------------------------------------
+// ENUMS
+// -----------------------------------------------------------------------------
+
+enum DocumentType {
+  INVOICE
+  WAYBILL
+  LETTER
+}
+
+enum DocumentStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ISSUED
+  COMPLETED
+  CANCELLED
+  REJECTED
+  ARCHIVED
+}
+
+enum InvoicePaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  OVERPAID
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CHEQUE
+  CASH
+  CARD
+  OTHER
+}
+
+enum WaybillDeliveryStatus {
+  PREPARING
+  READY
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ClientType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+  OFFICE
+}
+
+enum CompanyUserStatus {
+  ACTIVE
+  SUSPENDED
+  INVITED
+}
+
+enum FileCategory {
+  LOGO
+  SIGNATURE
+  STAMP
+  ATTACHMENT
+  GENERATED_PDF
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// -----------------------------------------------------------------------------
+// TENANCY & ORGANIZATION ENTITIES
+// -----------------------------------------------------------------------------
+
+model Company {
+  id              String   @id @default(uuid())
+  name            String
+  legalName       String
+  rcNumber        String?  // Seed: "9905345..."
+  tin             String?  // Seed: "2622739227683"
+  address         String   // Seed: "1 Alade Ibukun Close, Ayo Irewolede CDA, Ewupe, Ota, Ogun State, Nigeria"
+  email           String?
+  phone           String?
+  website         String?
+  defaultCurrency String   @default("NGN")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  settings                CompanySetting?
+  departments             Department[]
+  branches                Branch[]
+  companyUsers            CompanyUser[]
+  roles                   Role[]
+  clients                 Client[]
+  documents               Document[]
+  documentNumberSequences DocumentNumberSequence[]
+  templates               Template[]
+  files                   File[]
+  auditLogs               AuditLog[]
+  payments                Payment[]
+  notifications           Notification[]
+  idempotencyKeys         IdempotencyKey[]
+  outboxEvents            OutboxEvent[]
+
+  @@map("companies")
+}
+
+model CompanySetting {
+  id                      String   @id @default(uuid())
+  companyId               String   @unique
+  company                 Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  // Financial & Banking Settings
+  bankName                String?  // Seed: "Globus Bank"
+  bankAccountNumber       String?  // Seed: "1000652112"
+  bankAccountName         String?
+  bankSortCode            String?
+  showBankDetailsOnInvoice Boolean @default(true)
+  showBankDetailsOnWaybill Boolean @default(false)
+  showBankDetailsOnLetter  Boolean @default(false)
+  
+  // Tax & Terms Policies
+  defaultVatRate          Decimal  @default(7.50) @db.Decimal(5, 2)
+  defaultPaymentTermsDays Int      @default(30)
+  allowSelfApproval       Boolean  @default(false) // Security: self-approval disallowed by default
+  
+  // Branding Assets (File IDs or URIs)
+  logoFileId              String?
+  stampFileId             String?
+  signatureFileId         String?
+
+  metadata                Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("company_settings")
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companyUsers CompanyUser[]
+  documents    Document[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
+  @@map("departments")
+}
+
+model Branch {
+  id          String   @id @default(uuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  code        String
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companyUsers CompanyUser[]
+  documents    Document[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
+  @@map("branches")
+}
+
+// -----------------------------------------------------------------------------
+// IDENTITY, AUTHENTICATION & ACCESS CONTROL (RBAC)
+// -----------------------------------------------------------------------------
+
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
+  phone               String?
+  isActive            Boolean   @default(true)
+  failedLoginAttempts Int       @default(0)
+  lockoutUntil        DateTime?
+  lastLoginAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  companyUsers        CompanyUser[]
+  refreshTokens       RefreshToken[]
+  createdDocuments    Document[]         @relation("DocumentCreator")
+  authoredVersions    DocumentVersion[]  @relation("VersionAuthor")
+  documentApprovals   DocumentApproval[] @relation("DocumentApprover")
+  recordedPayments    Payment[]          @relation("PaymentRecorder")
+  notifications       Notification[]
+  auditLogs           AuditLog[]         @relation("AuditActor")
+
+  @@index([email, isActive])
+  @@map("users")
+}
+
+model CompanyUser {
+  id           String            @id @default(uuid())
+  companyId    String
+  company      Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId       String
+  role         Role              @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  departmentId String?
+  department   Department?       @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  branchId     String?
+  branch       Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  isOwner      Boolean           @default(false)
+  status       CompanyUserStatus @default(ACTIVE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([companyId, userId])
+  @@index([companyId, status])
+  @@map("company_users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  companyId   String?  // Null for global system standard roles, or set for custom roles
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companyUsers    CompanyUser[]
+  rolePermissions RolePermission[]
+
+  @@unique([companyId, name])
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  slug        String   @unique // e.g. "invoice:approve"
+  name        String
+  category    String   // e.g. "INVOICE", "PAYMENT", "WAYBILL"
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@index([category])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  familyId   String   // Group UUID for token rotation reuse-detection
+  isRevoked  Boolean  @default(false)
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, isRevoked])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+// -----------------------------------------------------------------------------
+// CLIENTS & ADDRESSES
+// -----------------------------------------------------------------------------
+
+model Client {
+  id           String       @id @default(uuid())
+  companyId    String
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clientNumber String       // e.g. "CLI-00001"
+  type         ClientType   @default(COMPANY)
+  name         String       // Primary contact name or trading name
+  companyName  String?      // Registered corporate entity name
+  email        String?
+  phone        String?
+  tin          String?
+  notes        String?
+  status       ClientStatus @default(ACTIVE)
+  creditLimit  Decimal?     @db.Decimal(14, 2)
+  balance      Decimal      @default(0.00) @db.Decimal(14, 2)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  addresses ClientAddress[]
+  documents Document[]
+
+  @@unique([companyId, clientNumber])
+  @@index([companyId, status])
+  @@index([companyId, name])
+  @@map("clients")
+}
+
+model ClientAddress {
+  id           String      @id @default(uuid())
+  clientId     String
+  client       Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type         AddressType @default(BILLING)
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  country      String      @default("Nigeria")
+  postalCode   String?
+  isDefault    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([clientId, type])
+  @@map("client_addresses")
+}
+
+// -----------------------------------------------------------------------------
+// BASE DOCUMENT & LIFECYCLE MANAGEMENT
+// -----------------------------------------------------------------------------
+
+model Document {
+  id                 String         @id @default(uuid())
+  companyId          String
+  company            Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branchId           String?
+  branch             Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  departmentId       String?
+  department         Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  clientId           String?
+  client             Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  
+  documentType       DocumentType
+  documentNumber     String         // e.g. "INV-2026-000001" or temporary draft reference
+  title              String
+  status             DocumentStatus @default(DRAFT)
+  issueDate          DateTime       @default(now())
+  dueDate            DateTime?
+  currency           String         @default("NGN")
+
+  // Authoritative Financial Summary (Authoritative Backend Decimal Math)
+  subtotal           Decimal        @default(0.00) @db.Decimal(14, 2)
+  taxAmount          Decimal        @default(0.00) @db.Decimal(14, 2)
+  discountAmount     Decimal        @default(0.00) @db.Decimal(14, 2)
+  totalAmount        Decimal        @default(0.00) @db.Decimal(14, 2)
+  balanceDue         Decimal        @default(0.00) @db.Decimal(14, 2)
+
+  // Concurrency & Versioning
+  versionCounter     Int            @default(1)
+  createdById        String
+  createdBy          User           @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  currentVersionId   String?
+  templateId         String?
+  template           Template?      @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  templateVersionId  String?
+  templateVersion    TemplateVersion? @relation(fields: [templateVersionId], references: [id], onDelete: SetNull)
+
+  isArchived         Boolean        @default(false)
+  cancellationReason String?
+  metadata           Json?          // Flexible non-relational tags, duplicate source link, etc.
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  // Specialized Entity Extensions (1:1 Polymorphic Specialization)
+  invoice            Invoice?
+  waybill            Waybill?
+  letter             Letter?
+
+  // Lifecycle & Historical Relations
+  versions           DocumentVersion[]
+  approvals          DocumentApproval[]
+  attachments        File[]         @relation("DocumentAttachments")
+
+  @@unique([companyId, documentNumber])
+  @@index([companyId, documentType, status])
+  @@index([companyId, issueDate])
+  @@index([companyId, clientId])
+  @@index([createdById])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id              String   @id @default(uuid())
+  documentId      String
+  document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versionNumber   Int
+  snapshotData    Json     // Authoritative frozen snapshot of document, items, and company branding
+  pdfFileId       String?  // Reference to generated PDF in File storage
+  pdfFile         File?    @relation("VersionPdfFile", fields: [pdfFileId], references: [id], onDelete: SetNull)
+  createdById     String
+  createdBy       User     @relation("VersionAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+  changeReason    String?
+  createdAt       DateTime @default(now())
+
+  documentsWithCurrent TemplateVersion[]
+
+  @@unique([documentId, versionNumber])
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+model DocumentApproval {
+  id          String         @id @default(uuid())
+  documentId  String
+  document    Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  stepNumber  Int            @default(1)
+  approverId  String
+  approver    User           @relation("DocumentApprover", fields: [approverId], references: [id], onDelete: Restrict)
+  status      ApprovalStatus @default(PENDING)
+  comment     String?
+  actionDate  DateTime?
+  createdAt   DateTime       @default(now())
+
+  @@index([documentId, status])
+  @@index([approverId])
+  @@map("document_approvals")
+}
+
+model DocumentNumberSequence {
+  id            String       @id @default(uuid())
+  companyId     String
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  documentType  DocumentType
+  prefix        String       // e.g. "INV", "WB", "AOA/LET"
+  currentNumber Int          @default(0)
+  padding       Int          @default(6) // Result: 000001
+  resetYear     Int          // e.g. 2026 (0 if non-annual reset)
+  lastResetAt   DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([companyId, documentType, resetYear])
+  @@map("document_number_sequences")
+}
+
+// -----------------------------------------------------------------------------
+// SPECIALIZED: INVOICES & ITEMS
+// -----------------------------------------------------------------------------
+
+model Invoice {
+  id                 String               @id @default(uuid())
+  documentId         String               @unique
+  document           Document             @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  paymentTerms       String?              // e.g. "Net 30 Days"
+  poNumber           String?              // Client Purchase Order Reference
+  bankDetailsVisible Boolean              @default(true)
+  paymentStatus      InvoicePaymentStatus @default(UNPAID)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  items              InvoiceItem[]
+  payments           Payment[]
+  waybills           Waybill[]            @relation("InvoiceWaybills")
+
+  @@index([paymentStatus])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id              String   @id @default(uuid())
+  invoiceId       String
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  lineNumber      Int
+  description     String
+  quantity        Decimal  @db.Decimal(10, 4)
+  unit            String   // e.g. "Pcs", "Hours", "Drums", "Kg"
+  unitPrice       Decimal  @db.Decimal(14, 2)
+  discountPercent Decimal  @default(0.00) @db.Decimal(5, 2)
+  taxRate         Decimal  @default(7.50) @db.Decimal(5, 2)
+  taxAmount       Decimal  @default(0.00) @db.Decimal(14, 2)
+  lineTotal       Decimal  @db.Decimal(14, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([invoiceId, lineNumber])
+  @@map("invoice_items")
+}
+
+// -----------------------------------------------------------------------------
+// FINANCIAL LEDGER: PAYMENTS
+// -----------------------------------------------------------------------------
+
+model Payment {
+  id              String        @id @default(uuid())
+  companyId       String
+  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoiceId       String
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  paymentNumber   String        // e.g. "PAY-2026-000001"
+  amount          Decimal       @db.Decimal(14, 2)
+  currency        String        @default("NGN")
+  paymentDate     DateTime      @default(now())
+  method          PaymentMethod @default(BANK_TRANSFER)
+  referenceNumber String        // Bank transaction / cheque / teller reference
+  notes           String?
+  recordedById    String
+  recordedBy      User          @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: Restrict)
+  
+  // Auditable Reversal Ledger Pattern (No physical deletion)
+  isReversed      Boolean       @default(false)
+  reversedAt      DateTime?
+  reversedById    String?
+  reversalReason  String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([companyId, paymentNumber])
+  @@index([invoiceId, isReversed])
+  @@index([companyId, paymentDate])
+  @@map("payments")
+}
+
+// -----------------------------------------------------------------------------
+// SPECIALIZED: WAYBILLS / DELIVERY NOTES & ITEMS
+// -----------------------------------------------------------------------------
+
+model Waybill {
+  id                     String                @id @default(uuid())
+  documentId             String                @unique
+  document               Document              @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  invoiceId              String?
+  invoice                Invoice?              @relation("InvoiceWaybills", fields: [invoiceId], references: [id], onDelete: SetNull)
+  shipmentDate           DateTime              @default(now())
+  consignorSnapshot      Json                  // Sender company/branch address snapshot
+  consigneeSnapshot      Json                  // Recipient client address snapshot
+  originAddress          String
+  destinationAddress     String
+  vehicleNumber          String?               // Carrier vehicle registration number
+  driverName             String?               // Driver name
+  driverPhone            String?               // Driver telephone contact
+  trackingNumber         String?               // Waybill dispatch tracker
+  deliveryStatus         WaybillDeliveryStatus @default(PREPARING)
+  
+  // Delivery Confirmation
+  receivedByName         String?
+  receivedDate           DateTime?
+  receiverSignatureFileId String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+
+  items                  WaybillItem[]
+
+  @@index([deliveryStatus])
+  @@index([invoiceId])
+  @@map("waybills")
+}
+
+model WaybillItem {
+  id           String   @id @default(uuid())
+  waybillId    String
+  waybill      Waybill  @relation(fields: [waybillId], references: [id], onDelete: Cascade)
+  lineNumber   Int
+  description  String
+  quantity     Decimal  @db.Decimal(10, 4)
+  unit         String   // e.g. "Bags", "Cartons", "Pallets"
+  weightKg     Decimal? @db.Decimal(10, 2)
+  packageCount Int?
+  packageType  String?  // e.g. "Wooden Crate", "Shrink-wrapped"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([waybillId, lineNumber])
+  @@map("waybill_items")
+}
+
+// -----------------------------------------------------------------------------
+// SPECIALIZED: LETTERS & LETTERHEADS
+// -----------------------------------------------------------------------------
+
+model Letter {
+  id                    String   @id @default(uuid())
+  documentId            String   @unique
+  document              Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  letterDate            DateTime @default(now())
+  recipientName         String
+  recipientTitle        String?
+  recipientOrganization String?
+  recipientAddress      String?
+  subject               String
+  bodyHtml              String   @db.Text
+  bodyText              String   @db.Text
+  signatoryName         String
+  signatoryTitle        String?
+  signatoryDepartment   String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("letters")
+}
+
+// -----------------------------------------------------------------------------
+// TEMPLATES & VERSIONED STYLING
+// -----------------------------------------------------------------------------
+
+model Template {
+  id           String       @id @default(uuid())
+  companyId    String
+  company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  documentType DocumentType
+  name         String       // e.g. "Corporate Classic", "Industrial Minimal"
+  code         String       // e.g. "INV-CORP-CLASSIC"
+  isDefault    Boolean      @default(false)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  versions     TemplateVersion[]
+  documents    Document[]
+
+  @@unique([companyId, code])
+  @@index([companyId, documentType, isDefault])
+  @@map("templates")
+}
+
+model TemplateVersion {
+  id            String          @id @default(uuid())
+  templateId    String
+  template      Template        @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  layoutEngine  String          @default("PUPPETEER_HTML")
+  htmlStructure String          @db.Text
+  cssStyles     String          @db.Text
+  schemaConfig  Json?           // Color tokens, font choices, margin configs
+  createdById   String
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+
+  documents     Document[]
+  documentVersions DocumentVersion[]
+
+  @@unique([templateId, versionNumber])
+  @@map("template_versions")
+}
+
+// -----------------------------------------------------------------------------
+// SECURE FILE STORAGE & ATTACHMENTS
+// -----------------------------------------------------------------------------
+
+model File {
+  id             String       @id @default(uuid())
+  companyId      String
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  documentId     String?
+  document       Document?    @relation("DocumentAttachments", fields: [documentId], references: [id], onDelete: SetNull)
+  originalFilename String
+  storageKey     String       @unique // Randomized secure key in storage volume/bucket
+  mimeType       String
+  sizeBytes      BigInt
+  fileCategory   FileCategory @default(ATTACHMENT)
+  checksumSha256 String       // Integrity verification
+  isPublic       Boolean      @default(false)
+  createdById    String
+  createdAt      DateTime     @default(now())
+
+  versionPdfs    DocumentVersion[] @relation("VersionPdfFile")
+
+  @@index([companyId, fileCategory])
+  @@index([documentId])
+  @@map("files")
+}
+
+// -----------------------------------------------------------------------------
+// AUDIT LOGGING, IDEMPOTENCY & NOTIFICATIONS
+// -----------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String   // e.g. "INVOICE_ISSUED", "PAYMENT_REVERSED"
+  entityType String   // e.g. "Document", "Payment", "Client"
+  entityId   String
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([companyId, entityType, entityId])
+  @@index([companyId, action])
+  @@index([companyId, createdAt])
+  @@map("audit_logs")
+}
+
+model IdempotencyKey {
+  id             String    @id @default(uuid())
+  key            String
+  companyId      String
+  company        Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId         String
+  endpoint       String
+  requestHash    String
+  responseStatus Int?
+  responseBody   Json?
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime
+
+  @@unique([companyId, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // e.g. "APPROVAL_REQUEST", "INVOICE_PAID"
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([companyId, createdAt])
+  @@map("notifications")
+}
+
+model OutboxEvent {
+  id           String            @id @default(uuid())
+  companyId    String
+  company      Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  eventType    String            // e.g. "DOCUMENT_ISSUED_GENERATE_PDF", "SEND_EMAIL_NOTIFICATION"
+  payload      Json
+  status       OutboxEventStatus @default(PENDING)
+  retryCount   Int               @default(0)
+  lastError    String?
+  scheduledFor DateTime          @default(now())
+  processedAt  DateTime?
+  createdAt    DateTime          @default(now())
+
+  @@index([status, scheduledFor])
+  @@index([companyId, eventType])
+  @@map("outbox_events")
+}
