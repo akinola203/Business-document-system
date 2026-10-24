@@ -6,6 +6,9 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { CompaniesModule } from './modules/companies/companies.module';
+import { OrganizationModule } from './modules/organization/organization.module';
+import { ClientsModule } from './modules/clients/clients.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -29,6 +32,9 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     PrismaModule,
     AuthModule,
     HealthModule,
+    CompaniesModule,
+    OrganizationModule,
+    ClientsModule,
   ],
   providers: [
     {

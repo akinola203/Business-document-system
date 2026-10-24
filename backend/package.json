@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/src/main.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
-    "test": "ts-node test/unit/guards.test.ts && ts-node test/unit/auth.test.ts",
+    "test": "ts-node test/unit/guards.test.ts && ts-node test/unit/auth.test.ts && ts-node test/unit/companies.test.ts && ts-node test/unit/organization.test.ts && ts-node test/unit/clients.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
