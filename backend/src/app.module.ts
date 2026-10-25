@@ -9,6 +9,11 @@ import { HealthModule } from './modules/health/health.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { ClientsModule } from './modules/clients/clients.module';
+import { NumberingModule } from './modules/numbering/numbering.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { InvoicesModule } from './modules/invoices/invoices.module';
+import { WaybillsModule } from './modules/waybills/waybills.module';
+import { LettersModule } from './modules/letters/letters.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -35,6 +40,11 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     CompaniesModule,
     OrganizationModule,
     ClientsModule,
+    NumberingModule,
+    DocumentsModule,
+    InvoicesModule,
+    WaybillsModule,
+    LettersModule,
   ],
   providers: [
     {
