@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -102,6 +103,13 @@ export class LettersService {
     if (document.status !== DocumentStatus.DRAFT) {
       throw new BadRequestException(
         `Only DRAFT letters can be edited. Current status is ${document.status}.`,
+      );
+    }
+
+    // Optimistic Concurrency Control Check
+    if (dto.expectedVersion !== undefined && document.versionCounter !== dto.expectedVersion) {
+      throw new ConflictException(
+        `Document has been modified by another user or session. Current version is ${document.versionCounter}. Please refresh and review latest changes before reapplying edits.`,
       );
     }
 

@@ -56,4 +56,9 @@ export class UpdateWaybillDto {
   @ValidateNested({ each: true })
   @Type(() => WaybillItemDto)
   items?: WaybillItemDto[];
+
+  @ApiPropertyOptional({ example: 1, description: 'Expected current version counter for optimistic concurrency control (OCC)' })
+  @IsOptional()
+  @Type(() => Number)
+  expectedVersion?: number;
 }

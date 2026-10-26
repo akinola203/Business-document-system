@@ -14,6 +14,9 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
 import { WaybillsModule } from './modules/waybills/waybills.module';
 import { LettersModule } from './modules/letters/letters.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { IdempotencyModule } from './modules/idempotency/idempotency.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -21,6 +24,7 @@ import { CompanyScopeGuard } from './common/guards/company-scope.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
 
 @Module({
   imports: [
@@ -35,6 +39,9 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
       },
     ]),
     PrismaModule,
+    AuditModule,
+    IdempotencyModule,
+    NotificationsModule,
     AuthModule,
     HealthModule,
     CompaniesModule,
@@ -70,6 +77,10 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: IdempotencyInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

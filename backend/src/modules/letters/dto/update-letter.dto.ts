@@ -71,4 +71,8 @@ export class UpdateLetterDto {
   @IsOptional()
   @IsString()
   templateVersionId?: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'Expected current version counter for optimistic concurrency control (OCC)' })
+  @IsOptional()
+  expectedVersion?: number;
 }

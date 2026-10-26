@@ -48,7 +48,22 @@ test('DocumentsService Unit Tests', async (t) => {
     getNextDocumentNumber: async () => 'INV-2026-000099',
   };
 
-  const service = new DocumentsService(mockPrisma, mockNumberingService);
+  const mockAuditService: any = {
+    logAction: async (opt: any) => {
+      auditLogs.push(opt);
+    },
+  };
+
+  const mockNotificationsService: any = {
+    createNotification: async () => {},
+  };
+
+  const service = new DocumentsService(
+    mockPrisma,
+    mockNumberingService,
+    mockAuditService,
+    mockNotificationsService,
+  );
 
   await t.test('findAll filters documents and returns pagination metadata', async () => {
     documentsDb = [

@@ -79,4 +79,9 @@ export class UpdateInvoiceDto {
   @ValidateNested({ each: true })
   @Type(() => InvoiceItemDto)
   items?: InvoiceItemDto[];
+
+  @ApiPropertyOptional({ example: 1, description: 'Expected current version counter for optimistic concurrency control (OCC)' })
+  @IsOptional()
+  @Type(() => Number)
+  expectedVersion?: number;
 }
