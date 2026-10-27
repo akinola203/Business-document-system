@@ -46,6 +46,15 @@ export class NumberingService {
         defaultPadding = 4;
       }
 
+      const priorSequence = await tx.documentNumberSequence.findFirst({
+        where: { companyId, documentType },
+        orderBy: { resetYear: 'desc' },
+        select: { prefix: true, padding: true },
+      });
+
+      const prefix = priorSequence?.prefix ?? defaultPrefix;
+      const padding = priorSequence?.padding ?? defaultPadding;
+
       sequence = await tx.documentNumberSequence.upsert({
         where: {
           companyId_documentType_resetYear: {
@@ -58,9 +67,9 @@ export class NumberingService {
         create: {
           companyId,
           documentType,
-          prefix: defaultPrefix,
+          prefix,
           currentNumber: 0,
-          padding: defaultPadding,
+          padding,
           resetYear: currentYear,
         },
       });

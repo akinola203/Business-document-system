@@ -187,11 +187,18 @@ export class LettersService {
         issuedAt: new Date().toISOString(),
       };
 
+      const latestVersion = await tx.documentVersion.findFirst({
+        where: { documentId: document.id },
+        orderBy: { versionNumber: 'desc' },
+        select: { versionNumber: true },
+      });
+      const versionNumber = (latestVersion?.versionNumber ?? 0) + 1;
+
       const version = await tx.documentVersion.create({
         data: {
           documentId: document.id,
-          versionNumber: 1,
-          snapshotData: snapshot as unknown as Prisma.InputJsonValue,
+          versionNumber,
+          snapshotData: JSON.parse(JSON.stringify(snapshot)) as Prisma.InputJsonValue,
           createdById: actorId,
           changeReason: 'Letter Official Issuance',
         },
@@ -212,7 +219,7 @@ export class LettersService {
           action: 'LETTER_ISSUED',
           entityType: 'Document',
           entityId: document.id,
-          newValues: { versionNumber: 1, versionId: version.id },
+          newValues: { versionNumber, versionId: version.id },
         },
       });
 

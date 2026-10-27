@@ -19,12 +19,21 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ResponseEnvel
     return next.handle().pipe(
       map((res) => {
         // Handle responses that already include meta or are standard objects
-        if (res && typeof res === 'object' && 'data' in res && 'meta' in res) {
-          return {
-            success: true,
-            data: res.data,
-            meta: res.meta,
-          };
+        if (res && typeof res === 'object') {
+          if ('data' in res && 'meta' in res) {
+            return {
+              success: true,
+              data: res.data,
+              meta: res.meta,
+            };
+          }
+          if ('items' in res && 'meta' in res) {
+            return {
+              success: true,
+              data: res.items,
+              meta: res.meta,
+            };
+          }
         }
         return {
           success: true,

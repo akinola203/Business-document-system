@@ -273,11 +273,18 @@ export class WaybillsService {
         dispatchedAt: new Date().toISOString(),
       };
 
+      const latestVersion = await tx.documentVersion.findFirst({
+        where: { documentId: document.id },
+        orderBy: { versionNumber: 'desc' },
+        select: { versionNumber: true },
+      });
+      const versionNumber = (latestVersion?.versionNumber ?? 0) + 1;
+
       const version = await tx.documentVersion.create({
         data: {
           documentId: document.id,
-          versionNumber: 1,
-          snapshotData: snapshot as unknown as Prisma.InputJsonValue,
+          versionNumber,
+          snapshotData: JSON.parse(JSON.stringify(snapshot)) as Prisma.InputJsonValue,
           createdById: actorId,
           changeReason: 'Waybill Consignment Dispatched',
         },

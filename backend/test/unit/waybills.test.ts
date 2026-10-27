@@ -79,6 +79,12 @@ test('WaybillsService Unit Tests', async (t) => {
       },
     },
     documentVersion: {
+      findFirst: async ({ where }: any) => {
+        const list = versionsDb
+          .filter((v) => v.documentId === where.documentId)
+          .sort((a, b) => b.versionNumber - a.versionNumber);
+        return list[0] ?? null;
+      },
       create: async ({ data }: any) => {
         const item = { id: `ver-${versionsDb.length + 1}`, ...data };
         versionsDb.push(item);
