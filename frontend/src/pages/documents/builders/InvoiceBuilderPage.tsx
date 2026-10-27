@@ -10,6 +10,7 @@ import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4InvoiceSheet } from '../../../components/builder/LiveA4InvoiceSheet';
 import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
+import { ErrorBoundary } from '../../../components/common/ErrorBoundary';
 import { DEMO_CLIENTS, DEMO_SUPPLIES } from '../../../lib/mock-data';
 import {
   Plus,
@@ -65,11 +66,27 @@ export const InvoiceBuilderPage: React.FC = () => {
   const [activeCatalogIndex, setActiveCatalogIndex] = React.useState<number | null>(null);
 
   const handleSelectCatalogItem = (item: SupplyItem) => {
+    const safeName = item?.name || (item as any)?.description || 'Supply Item';
+    const safeUnit = item?.unit || 'Units';
+    const safePrice = Number(item?.sellingPrice ?? (item as any)?.unitCost ?? 0) || 0;
+    const safeTax = Number(item?.taxRate ?? 7.5) || 7.5;
+
     if (activeCatalogIndex !== null) {
-      setValue(`items.${activeCatalogIndex}.description`, item.name, { shouldValidate: true, shouldDirty: true });
-      setValue(`items.${activeCatalogIndex}.unit`, item.unit, { shouldValidate: true, shouldDirty: true });
-      setValue(`items.${activeCatalogIndex}.unitPrice`, Number(item.sellingPrice), { shouldValidate: true, shouldDirty: true });
-      setValue(`items.${activeCatalogIndex}.taxRate`, Number(item.taxRate ?? 7.5), { shouldValidate: true, shouldDirty: true });
+      if (activeCatalogIndex >= fields.length) {
+        append({
+          description: safeName,
+          quantity: 1,
+          unit: safeUnit,
+          unitPrice: safePrice,
+          discountPercent: 0,
+          taxRate: safeTax,
+        });
+      } else {
+        setValue(`items.${activeCatalogIndex}.description`, safeName, { shouldValidate: true, shouldDirty: true });
+        setValue(`items.${activeCatalogIndex}.unit`, safeUnit, { shouldValidate: true, shouldDirty: true });
+        setValue(`items.${activeCatalogIndex}.unitPrice`, safePrice, { shouldValidate: true, shouldDirty: true });
+        setValue(`items.${activeCatalogIndex}.taxRate`, safeTax, { shouldValidate: true, shouldDirty: true });
+      }
       setActiveCatalogIndex(null);
     }
   };
@@ -85,15 +102,18 @@ export const InvoiceBuilderPage: React.FC = () => {
   const company: Company | null = (companyData as any)?.data || (companyData as any) || null;
 
   // 2. Fetch Clients Catalog
-  const { data: clientsData } = useQuery<{ items: Client[] }>({
+  const { data: clientsData } = useQuery<any>({
     queryKey: ['clients-catalog'],
     queryFn: async () => {
       const res = await apiClient.get('/clients', { params: { limit: 100 } });
       return res.data;
     },
   });
-  const clients: Client[] =
-    clientsData?.items && clientsData.items.length > 0 ? clientsData.items : DEMO_CLIENTS;
+  const clients: Client[] = useMemo(() => {
+    const raw = (clientsData as any)?.data || (clientsData as any)?.items || clientsData;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return DEMO_CLIENTS;
+  }, [clientsData]);
 
   // 3. Fetch Templates for Invoices
   const { data: templatesData } = useQuery<any[]>({
@@ -117,7 +137,7 @@ export const InvoiceBuilderPage: React.FC = () => {
   });
 
   // 5. Fetch Supplies Catalog for Quick-Add
-  const { data: suppliesData } = useQuery<{ items?: SupplyItem[]; data?: SupplyItem[] }>({
+  const { data: suppliesData } = useQuery<any>({
     queryKey: ['supplies-items'],
     queryFn: async () => {
       try {
@@ -128,12 +148,11 @@ export const InvoiceBuilderPage: React.FC = () => {
       }
     },
   });
-  const catalogSupplies: SupplyItem[] =
-    suppliesData?.items && suppliesData.items.length > 0
-      ? suppliesData.items
-      : suppliesData?.data && suppliesData.data.length > 0
-      ? suppliesData.data
-      : DEMO_SUPPLIES;
+  const catalogSupplies: SupplyItem[] = useMemo(() => {
+    const raw = (suppliesData as any)?.data || (suppliesData as any)?.items || suppliesData;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return DEMO_SUPPLIES;
+  }, [suppliesData]);
 
   // Calculate default dates
   const todayStr = new Date().toISOString().split('T')[0];
@@ -225,38 +244,39 @@ export const InvoiceBuilderPage: React.FC = () => {
 
   // Find currently selected client and address
   const selectedClient = useMemo(() => {
-    return clients.find((c) => c.id === formValues.clientId) || existingDoc?.client || null;
-  }, [clients, formValues.clientId, existingDoc]);
+    return clients.find((c) => c?.id === formValues?.clientId) || existingDoc?.client || null;
+  }, [clients, formValues?.clientId, existingDoc]);
 
   // Handle client selection change: automatically update address
   const handleClientChange = (clientId: string) => {
     setValue('clientId', clientId, { shouldValidate: true });
-    const cl = clients.find((c) => c.id === clientId);
-    if (cl && cl.addresses && cl.addresses.length > 0) {
+    const cl = clients.find((c) => c?.id === clientId);
+    if (cl && Array.isArray(cl.addresses) && cl.addresses.length > 0) {
       const def = cl.addresses.find((a) => a.isDefault) || cl.addresses[0];
-      setValue('selectedAddressId', def.id);
+      setValue('selectedAddressId', def?.id || '');
     } else {
       setValue('selectedAddressId', '');
     }
   };
 
   const selectedAddress = useMemo(() => {
-    if (!selectedClient?.addresses) return null;
+    if (!selectedClient?.addresses || !Array.isArray(selectedClient.addresses)) return null;
     return (
-      selectedClient.addresses.find((a) => a.id === formValues.selectedAddressId) ||
+      selectedClient.addresses.find((a) => a?.id === formValues?.selectedAddressId) ||
       selectedClient.addresses[0] ||
       null
     );
-  }, [selectedClient, formValues.selectedAddressId]);
+  }, [selectedClient, formValues?.selectedAddressId]);
 
   // Live Math calculations
   const summaryCalculations = useMemo(() => {
-    const items = formValues.items || [];
+    const items = formValues?.items || [];
     let subtotal = 0;
     let discount = 0;
     let tax = 0;
 
     for (const item of items) {
+      if (!item) continue;
       const q = Math.max(0, Number(item.quantity) || 0);
       const p = Math.max(0, Number(item.unitPrice) || 0);
       const dPercent = Math.max(0, Math.min(100, Number(item.discountPercent) || 0));
@@ -372,7 +392,7 @@ export const InvoiceBuilderPage: React.FC = () => {
       {/* 1. Finnova Studio Header Bar */}
       <StudioHeaderBar
         documentType="INVOICE"
-        documentTitle={formValues.title}
+        documentTitle={formValues?.title || 'New Invoice'}
         documentNumber={existingDoc?.documentNumber}
         isEdit={isEdit}
         version={existingDoc?.version || 1}
@@ -388,8 +408,9 @@ export const InvoiceBuilderPage: React.FC = () => {
       />
 
       {/* 2. Split-Screen Studio Layout: Left 45% Form / Right 55% A4 Stage */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Interactive Form Studio (45% -> 5.5 cols / 6 cols) */}
+      <ErrorBoundary fallbackTitle="Invoice Studio Workspace Error">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Interactive Form Studio (45% -> 5.5 cols / 6 cols) */}
         <div className="lg:col-span-6 space-y-6">
           {/* Card 1: Client & Recipient Information */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
@@ -421,24 +442,24 @@ export const InvoiceBuilderPage: React.FC = () => {
                       type="button"
                       onClick={() => handleClientChange(c.id)}
                       className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${
-                        formValues.clientId === c.id
+                        formValues?.clientId === c.id
                           ? 'bg-[#5847F6] text-white border-[#5847F6] shadow-sm shadow-indigo-500/20'
                           : 'bg-white hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border-slate-200'
                       }`}
                     >
-                      ⚡ {c.companyName?.split(' ')[0] || c.name.split(' ')[0]}
+                      ⚡ {(c.companyName || c.name || 'Client').split(' ')[0]}
                     </button>
                   ))}
                 </div>
                 <select
-                  value={formValues.clientId}
+                  value={formValues?.clientId || ''}
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6] cursor-pointer"
                 >
                   <option value="">Select a client from directory...</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} {c.companyName ? `(${c.companyName})` : ''} — {c.clientNumber}
+                      {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''} — {c.clientNumber || 'ID'}
                     </option>
                   ))}
                 </select>
@@ -448,7 +469,7 @@ export const InvoiceBuilderPage: React.FC = () => {
               </div>
 
               {/* 1:N Address Selector if Client has multiple registered addresses */}
-              {selectedClient?.addresses && selectedClient.addresses.length > 0 && (
+              {selectedClient?.addresses && Array.isArray(selectedClient.addresses) && selectedClient.addresses.length > 0 && (
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Select Billing Address ({selectedClient.addresses.length} on file)
@@ -459,7 +480,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                   >
                     {selectedClient.addresses.map((addr) => (
                       <option key={addr.id} value={addr.id}>
-                        [{addr.type}] {addr.line1}, {addr.city}, {addr.state} {addr.isDefault ? '(Default)' : ''}
+                        [{addr.type || 'ADDR'}] {addr.line1 || ''}, {addr.city || ''}, {addr.state || ''} {addr.isDefault ? '(Default)' : ''}
                       </option>
                     ))}
                   </select>
@@ -660,20 +681,20 @@ export const InvoiceBuilderPage: React.FC = () => {
                     type="button"
                     onClick={() => {
                       append({
-                        description: item.name,
+                        description: item.name || item.sku || 'Catalog Item',
                         quantity: 1,
-                        unit: item.unit,
-                        unitPrice: Number(item.sellingPrice),
+                        unit: item.unit || 'Units',
+                        unitPrice: Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0) || 0,
                         discountPercent: 0,
-                        taxRate: Number(item.taxRate || 7.5),
+                        taxRate: Number(item.taxRate ?? 7.5) || 7.5,
                       });
                     }}
                     className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <span className="font-mono text-[10px] text-indigo-600 font-bold">{item.sku}</span>
-                    <span>{item.name.split(' ')[0]}</span>
+                    <span>{(item.name || item.sku || 'Item').split(' ')[0]}</span>
                     <span className="text-[10px] text-emerald-600 font-mono font-bold">
-                      {formatCurrency(Number(item.sellingPrice), 'NGN')}
+                      {formatCurrency(Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0), 'NGN')}
                     </span>
                   </button>
                 ))}
@@ -683,7 +704,7 @@ export const InvoiceBuilderPage: React.FC = () => {
             {/* Line Items List */}
             <div className="space-y-4">
               {fields.map((field, index) => {
-                const itemValues = formValues.items?.[index] as Partial<InvoiceItemValues> | undefined;
+                const itemValues = formValues?.items?.[index] as Partial<InvoiceItemValues> | undefined;
                 const q = Number(itemValues?.quantity) || 0;
                 const p = Number(itemValues?.unitPrice) || 0;
                 const d = Number(itemValues?.discountPercent) || 0;
@@ -715,16 +736,22 @@ export const InvoiceBuilderPage: React.FC = () => {
 
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-slate-900 tabular-nums">
-                          {formatCurrency(rowTotal, formValues.currency)}
+                          {formatCurrency(rowTotal, formValues?.currency || 'NGN')}
                         </span>
                         <button
                           type="button"
                           onClick={() => {
-                            const current = formValues.items[index];
-                            append({
-                              ...current,
-                              description: current.description ? `${current.description} (Copy)` : '',
-                            });
+                            const current = formValues?.items?.[index];
+                            if (current) {
+                              append({
+                                description: current.description ? `${current.description} (Copy)` : 'Copy of Item',
+                                quantity: Number(current.quantity) || 1,
+                                unit: current.unit || 'Units',
+                                unitPrice: Number(current.unitPrice) || 0,
+                                discountPercent: Number(current.discountPercent) || 0,
+                                taxRate: Number(current.taxRate ?? 7.5) || 7.5,
+                              });
+                            }
                           }}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                           title="Duplicate line item"
@@ -808,19 +835,19 @@ export const InvoiceBuilderPage: React.FC = () => {
               <div className="flex justify-between text-slate-500">
                 <span>Calculated Subtotal:</span>
                 <span className="font-bold tabular-nums text-slate-800">
-                  {formatCurrency(summaryCalculations.subtotal, formValues.currency)}
+                  {formatCurrency(summaryCalculations.subtotal, formValues?.currency || 'NGN')}
                 </span>
               </div>
               <div className="flex justify-between text-slate-500">
                 <span>Value Added Tax (VAT 7.5%):</span>
                 <span className="font-bold tabular-nums text-slate-800">
-                  {formatCurrency(summaryCalculations.tax, formValues.currency)}
+                  {formatCurrency(summaryCalculations.tax, formValues?.currency || 'NGN')}
                 </span>
               </div>
               <div className="flex justify-between text-sm font-black pt-2 border-t border-slate-100 text-[#5847F6]">
                 <span>Grand Total:</span>
                 <span className="tabular-nums">
-                  {formatCurrency(summaryCalculations.total, formValues.currency)}
+                  {formatCurrency(summaryCalculations.total, formValues?.currency || 'NGN')}
                 </span>
               </div>
             </div>
@@ -840,21 +867,24 @@ export const InvoiceBuilderPage: React.FC = () => {
 
         {/* Right Sticky Dark Obsidian A4 Stage (55% -> 6 cols) */}
         <div className="lg:col-span-6">
-          <A4StageContainer
-            previewMode={previewMode}
-            documentId={existingDoc?.id}
-            onSaveDraft={onSaveDraft}
-          >
-            <LiveA4InvoiceSheet
-              formValues={formValues}
-              company={company}
-              selectedClient={selectedClient}
-              selectedAddress={selectedAddress}
-              documentNumber={existingDoc?.documentNumber}
-            />
-          </A4StageContainer>
+          <ErrorBoundary fallbackTitle="Live A4 Invoice Preview Error">
+            <A4StageContainer
+              previewMode={previewMode}
+              documentId={existingDoc?.id}
+              onSaveDraft={onSaveDraft}
+            >
+              <LiveA4InvoiceSheet
+                formValues={formValues}
+                company={company}
+                selectedClient={selectedClient}
+                selectedAddress={selectedAddress}
+                documentNumber={existingDoc?.documentNumber}
+              />
+            </A4StageContainer>
+          </ErrorBoundary>
         </div>
       </div>
+      </ErrorBoundary>
 
       {/* 1-Click Supplies Catalog Picker Modal */}
       <CatalogPickerModal

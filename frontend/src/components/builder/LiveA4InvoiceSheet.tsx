@@ -39,10 +39,26 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   selectedAddress,
   documentNumber,
 }) => {
-  const currency = formValues.currency || 'NGN';
+  const currency = formValues?.currency || 'NGN';
 
   // Calculate precision line items and totals
-  const calculatedItems = (formValues.items || []).map((item, index) => {
+  const calculatedItems = (formValues?.items || []).map((item, index) => {
+    if (!item) {
+      return {
+        lineNumber: index + 1,
+        description: 'Item description',
+        quantity: 1,
+        unit: 'Units',
+        unitPrice: 0,
+        discountPercent: 0,
+        taxRate: 7.5,
+        lineTotal: 0,
+        baseAmount: 0,
+        discountAmount: 0,
+        taxAmount: 0,
+      };
+    }
+
     const qty = Math.max(0, Number(item.quantity) || 0);
     const price = Math.max(0, Number(item.unitPrice) || 0);
     const discPercent = Math.max(0, Math.min(100, Number(item.discountPercent) || 0));
@@ -58,7 +74,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
       lineNumber: index + 1,
       description: item.description || 'Item description',
       quantity: qty,
-      unit: item.unit || 'units',
+      unit: item.unit || 'Units',
       unitPrice: price,
       discountPercent: discPercent,
       taxRate,
@@ -69,19 +85,19 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
     };
   });
 
-  const subtotal = calculatedItems.reduce((acc, it) => acc + it.baseAmount, 0);
-  const discountTotal = calculatedItems.reduce((acc, it) => acc + it.discountAmount, 0);
-  const taxTotal = calculatedItems.reduce((acc, it) => acc + it.taxAmount, 0);
+  const subtotal = calculatedItems.reduce((acc, it) => acc + (it.baseAmount || 0), 0);
+  const discountTotal = calculatedItems.reduce((acc, it) => acc + (it.discountAmount || 0), 0);
+  const taxTotal = calculatedItems.reduce((acc, it) => acc + (it.taxAmount || 0), 0);
   const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
 
   // Address resolution
   const formattedAddress =
-    formValues.customBillingAddress ||
+    formValues?.customBillingAddress ||
     (selectedAddress
-      ? `${selectedAddress.line1}${selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''}, ${selectedAddress.city}, ${selectedAddress.state}, ${selectedAddress.country}`
+      ? `${selectedAddress.line1 || ''}${selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''}, ${selectedAddress.city || ''}, ${selectedAddress.state || ''}, ${selectedAddress.country || ''}`
       : selectedClient?.address || selectedClient?.addresses?.[0]?.line1 || 'No billing address specified');
 
-  const showBank = formValues.bankDetailsVisible ?? company?.settings?.showBankDetailsOnInvoice ?? true;
+  const showBank = formValues?.bankDetailsVisible ?? company?.settings?.showBankDetailsOnInvoice ?? true;
 
   return (
     <div className="aspect-[1/1.414] w-full max-w-[680px] bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-200">
@@ -117,15 +133,15 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
             <div className="mt-2 space-y-0.5 text-[11px] text-slate-600">
               <div>
                 <span className="text-slate-400">Date: </span>
-                <span className="font-semibold">{formatDate(formValues.issueDate || new Date().toISOString())}</span>
+                <span className="font-semibold">{formatDate(formValues?.issueDate || new Date().toISOString())}</span>
               </div>
-              {formValues.dueDate && (
+              {formValues?.dueDate && (
                 <div>
                   <span className="text-slate-400">Due Date: </span>
                   <span className="font-semibold text-rose-600">{formatDate(formValues.dueDate)}</span>
                 </div>
               )}
-              {formValues.poNumber && (
+              {formValues?.poNumber && (
                 <div>
                   <span className="text-slate-400">PO Ref: </span>
                   <span className="font-semibold font-mono">{formValues.poNumber}</span>
@@ -208,7 +224,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
                       {item.description}
                     </td>
                     <td className="py-2 px-3 text-right tabular-nums font-semibold text-slate-700 whitespace-nowrap">
-                      {item.quantity.toLocaleString()} {item.unit}
+                      {Number(item.quantity || 0).toLocaleString()} {item.unit || 'Units'}
                     </td>
                     <td className="py-2 px-3 text-right tabular-nums text-slate-700 whitespace-nowrap">
                       {formatCurrency(item.unitPrice, currency)}
