@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/main.js",
-    "test": "ts-node test/unit/guards.test.ts && ts-node test/unit/auth.test.ts && ts-node test/unit/companies.test.ts && ts-node test/unit/organization.test.ts && ts-node test/unit/clients.test.ts && ts-node test/unit/numbering.test.ts && ts-node test/unit/financial-math.test.ts && ts-node test/unit/invoices.test.ts && ts-node test/unit/waybills.test.ts && ts-node test/unit/letters.test.ts && ts-node test/unit/documents.test.ts && ts-node test/unit/audit.test.ts && ts-node test/unit/idempotency.test.ts && ts-node test/unit/notifications.test.ts && ts-node test/unit/approvals.test.ts && ts-node test/unit/versions.test.ts && ts-node test/unit/concurrency.test.ts && ts-node test/unit/payments.test.ts && ts-node test/unit/iam.test.ts",
+    "test": "ts-node test/unit/guards.test.ts && ts-node test/unit/auth.test.ts && ts-node test/unit/companies.test.ts && ts-node test/unit/organization.test.ts && ts-node test/unit/clients.test.ts && ts-node test/unit/numbering.test.ts && ts-node test/unit/financial-math.test.ts && ts-node test/unit/invoices.test.ts && ts-node test/unit/waybills.test.ts && ts-node test/unit/letters.test.ts && ts-node test/unit/documents.test.ts && ts-node test/unit/audit.test.ts && ts-node test/unit/idempotency.test.ts && ts-node test/unit/notifications.test.ts && ts-node test/unit/approvals.test.ts && ts-node test/unit/versions.test.ts && ts-node test/unit/concurrency.test.ts && ts-node test/unit/payments.test.ts && ts-node test/unit/iam.test.ts && ts-node test/unit/files.test.ts && ts-node test/unit/templates.test.ts && ts-node test/unit/pdf.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
@@ -36,8 +36,10 @@
     "decimal.js": "^10.4.3",
     "dotenv": "^16.4.7",
     "helmet": "^8.0.0",
+    "multer": "^2.5.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "puppeteer": "^25.16.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "zod": "^4.6.7"
@@ -45,6 +47,7 @@
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",
+    "@types/multer": "^2.3.0",
     "@types/node": "^22.10.1",
     "@types/passport-jwt": "^4.0.1",
     "prisma": "^5.22.0",
