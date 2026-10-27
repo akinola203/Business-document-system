@@ -10,6 +10,8 @@ import { WaybillsPage } from './pages/documents/WaybillsPage';
 import { LettersPage } from './pages/documents/LettersPage';
 import { PaymentsPage } from './pages/payments/PaymentsPage';
 import { ClientsPage } from './pages/clients/ClientsPage';
+import { VendorsPage } from './pages/vendors/VendorsPage';
+import { SuppliesPage } from './pages/supplies/SuppliesPage';
 import { ReportsPage } from './pages/reports/ReportsPage';
 import { AuditLogsPage } from './pages/settings/AuditLogsPage';
 import { TemplatesPage } from './pages/settings/TemplatesPage';
@@ -59,6 +61,8 @@ export const App: React.FC = () => {
             <Route path="/documents/letters/:id/edit" element={<LetterBuilderPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/clients" element={<ClientsPage />} />
+            <Route path="/vendors" element={<VendorsPage />} />
+            <Route path="/supplies" element={<SuppliesPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/audit-logs" element={<AuditLogsPage />} />
             <Route path="/settings/templates" element={<TemplatesPage />} />

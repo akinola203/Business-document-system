@@ -5,10 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
-import { Client, Company, DocumentRecord } from '../../../types';
+import { Client, Company, DocumentRecord, SupplyItem } from '../../../types';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4WaybillSheet } from '../../../components/builder/LiveA4WaybillSheet';
+import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
 import { DEMO_CLIENTS } from '../../../lib/mock-data';
 import {
   Truck,
@@ -55,8 +56,16 @@ export const WaybillBuilderPage: React.FC = () => {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
   const [previewMode, setPreviewMode] = React.useState<'LIVE' | 'SERVER'>('LIVE');
+  const [activeCatalogIndex, setActiveCatalogIndex] = React.useState<number | null>(null);
+
+  const handleSelectCatalogItem = (item: SupplyItem) => {
+    if (activeCatalogIndex !== null) {
+      setValue(`items.${activeCatalogIndex}.description`, item.name, { shouldValidate: true, shouldDirty: true });
+      setValue(`items.${activeCatalogIndex}.unit`, item.unit, { shouldValidate: true, shouldDirty: true });
+      setActiveCatalogIndex(null);
+    }
+  };
 
   // 1. Fetch Company Profile (for default origin address)
   const { data: companyData } = useQuery<{ data?: Company } | Company>({
@@ -514,9 +523,18 @@ export const WaybillBuilderPage: React.FC = () => {
                   className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="w-6 h-6 rounded-full bg-slate-100 font-mono text-[11px] font-bold text-slate-600 flex items-center justify-center">
-                      #{index + 1}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-slate-100 font-mono text-[11px] font-bold text-slate-600 flex items-center justify-center">
+                        #{index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveCatalogIndex(index)}
+                        className="px-2.5 py-0.5 rounded-full bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold border border-sky-200 flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <span>📦 Pick from Supplies Catalog</span>
+                      </button>
+                    </div>
 
                     <div className="flex items-center gap-1.5">
                       <button
@@ -633,6 +651,13 @@ export const WaybillBuilderPage: React.FC = () => {
           </A4StageContainer>
         </div>
       </div>
+
+      {/* 1-Click Supplies Catalog Picker Modal */}
+      <CatalogPickerModal
+        isOpen={activeCatalogIndex !== null}
+        onClose={() => setActiveCatalogIndex(null)}
+        onSelectItem={handleSelectCatalogItem}
+      />
     </div>
   );
 };

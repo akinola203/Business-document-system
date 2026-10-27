@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Building2,
   Sparkles,
+  Package,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -37,6 +38,8 @@ const NAV_TABS: NavTab[] = [
   { name: 'Letters', path: '/documents/letters', icon: Mail, permission: 'letter:view' },
   { name: 'Payments', path: '/payments', icon: CreditCard, permission: 'payment:view' },
   { name: 'Clients', path: '/clients', icon: Users, permission: 'clients:view' },
+  { name: 'Vendors', path: '/vendors', icon: Building2, permission: 'vendors:view' },
+  { name: 'Supplies', path: '/supplies', icon: Package, permission: 'supplies:view' },
   { name: 'Reports', path: '/reports', icon: BarChart3, permission: 'reports:view' },
 ];
 

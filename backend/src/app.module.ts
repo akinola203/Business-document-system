@@ -23,6 +23,8 @@ import { FilesModule } from './modules/files/files.module';
 import { TemplatesModule } from './modules/templates/templates.module';
 import { PdfModule } from './modules/pdf/pdf.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { VendorsModule } from './modules/vendors/vendors.module';
+import { SuppliesModule } from './modules/supplies/supplies.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -64,6 +66,8 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
     TemplatesModule,
     PdfModule,
     ReportsModule,
+    VendorsModule,
+    SuppliesModule,
   ],
   providers: [
     {

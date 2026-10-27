@@ -5,10 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
-import { Client, Company, DocumentRecord } from '../../../types';
+import { Client, Company, DocumentRecord, SupplyItem } from '../../../types';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4InvoiceSheet } from '../../../components/builder/LiveA4InvoiceSheet';
+import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
 import { DEMO_CLIENTS } from '../../../lib/mock-data';
 import {
   Plus,
@@ -61,6 +62,17 @@ export const InvoiceBuilderPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [previewMode, setPreviewMode] = React.useState<'LIVE' | 'SERVER'>('LIVE');
+  const [activeCatalogIndex, setActiveCatalogIndex] = React.useState<number | null>(null);
+
+  const handleSelectCatalogItem = (item: SupplyItem) => {
+    if (activeCatalogIndex !== null) {
+      setValue(`items.${activeCatalogIndex}.description`, item.name, { shouldValidate: true, shouldDirty: true });
+      setValue(`items.${activeCatalogIndex}.unit`, item.unit, { shouldValidate: true, shouldDirty: true });
+      setValue(`items.${activeCatalogIndex}.unitPrice`, Number(item.sellingPrice), { shouldValidate: true, shouldDirty: true });
+      setValue(`items.${activeCatalogIndex}.taxRate`, Number(item.taxRate ?? 7.5), { shouldValidate: true, shouldDirty: true });
+      setActiveCatalogIndex(null);
+    }
+  };
 
   // 1. Fetch Company Profile (for VAT rate, default currency, bank settings)
   const { data: companyData } = useQuery<{ data?: Company } | Company>({
@@ -628,6 +640,13 @@ export const InvoiceBuilderPage: React.FC = () => {
                           #{index + 1}
                         </span>
                         <span className="text-xs font-bold text-slate-800">Item Position</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveCatalogIndex(index)}
+                          className="ml-2 px-2.5 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[10px] font-bold border border-indigo-200 flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <span>📦 Pick from Supplies Catalog</span>
+                        </button>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -772,6 +791,13 @@ export const InvoiceBuilderPage: React.FC = () => {
           </A4StageContainer>
         </div>
       </div>
+
+      {/* 1-Click Supplies Catalog Picker Modal */}
+      <CatalogPickerModal
+        isOpen={activeCatalogIndex !== null}
+        onClose={() => setActiveCatalogIndex(null)}
+        onSelectItem={handleSelectCatalogItem}
+      />
     </div>
   );
 };

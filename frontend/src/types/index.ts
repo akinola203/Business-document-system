@@ -518,3 +518,124 @@ export interface ReportsSummary {
   };
 }
 
+// =============================================================================
+// VENDORS & SUPPLIERS
+// =============================================================================
+
+export type VendorCategory = 
+  | 'RAW_MATERIALS' 
+  | 'LOGISTICS_HAULAGE' 
+  | 'EQUIPMENT' 
+  | 'SERVICES' 
+  | 'GENERAL';
+
+export type VendorStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+
+export interface Vendor {
+  id: string;
+  companyId: string;
+  vendorCode: string;
+  name: string;
+  category: VendorCategory;
+  contactPerson?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  taxId?: string | null;
+  registrationNumber?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country: string;
+  bankName?: string | null;
+  bankAccountName?: string | null;
+  bankAccountNumber?: string | null;
+  paymentTerms?: string | null;
+  currency: string;
+  status: VendorStatus;
+  notes?: string | null;
+  totalSuppliedAmount: number;
+  outstandingPayable: number;
+  createdAt?: string;
+  updatedAt?: string;
+  items?: SupplyItem[];
+  orders?: SupplyOrder[];
+  _count?: {
+    items?: number;
+    orders?: number;
+  };
+}
+
+// =============================================================================
+// SUPPLIES & ITEMS CATALOG
+// =============================================================================
+
+export interface SupplyItem {
+  id: string;
+  companyId: string;
+  preferredVendorId?: string | null;
+  sku: string;
+  name: string;
+  category?: string | null;
+  description?: string | null;
+  unit: string;
+  unitCost: number;
+  sellingPrice: number;
+  taxRate: number;
+  currentStock: number;
+  reorderLevel: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  preferredVendor?: {
+    id: string;
+    name: string;
+    vendorCode: string;
+  } | null;
+}
+
+// =============================================================================
+// SUPPLY ORDERS & PURCHASE RECEIPTS
+// =============================================================================
+
+export type SupplyOrderStatus = 
+  | 'ORDERED' 
+  | 'RECEIVED' 
+  | 'PARTIALLY_PAID' 
+  | 'PAID' 
+  | 'CANCELLED';
+
+export interface SupplyOrderItem {
+  id: string;
+  supplyOrderId: string;
+  supplyItemId: string;
+  quantity: number;
+  unitCost: number;
+  lineTotal: number;
+  supplyItem?: SupplyItem;
+}
+
+export interface SupplyOrder {
+  id: string;
+  companyId: string;
+  supplyNumber: string;
+  vendorId: string;
+  supplyDate: string;
+  deliveryRef?: string | null;
+  status: SupplyOrderStatus;
+  currency: string;
+  subtotal: number;
+  taxTotal: number;
+  grandTotal: number;
+  amountPaid: number;
+  notes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  vendor?: {
+    id: string;
+    name: string;
+    vendorCode: string;
+    category?: string;
+  };
+  items?: SupplyOrderItem[];
+}
+

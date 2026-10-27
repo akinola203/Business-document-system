@@ -1,4 +1,13 @@
-import { PrismaClient, DocumentType, ClientType, AddressType, CompanyUserStatus } from '@prisma/client';
+import {
+  PrismaClient,
+  DocumentType,
+  ClientType,
+  AddressType,
+  CompanyUserStatus,
+  VendorCategory,
+  VendorStatus,
+  SupplyOrderStatus,
+} from '@prisma/client';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -173,6 +182,12 @@ async function main() {
     // Reports & Exports
     { slug: 'reports:view', name: 'View Financial & Operational Reports', category: 'REPORTS' },
     { slug: 'documents:export', name: 'Export Document Reports & CSVs', category: 'REPORTS' },
+
+    // Vendors & Supplies
+    { slug: 'vendors:view', name: 'View Vendor Profiles & Suppliers', category: 'VENDORS' },
+    { slug: 'vendors:manage', name: 'Manage Vendors & Payout Accounts', category: 'VENDORS' },
+    { slug: 'supplies:view', name: 'View Supplies & Items Catalog', category: 'SUPPLIES' },
+    { slug: 'supplies:manage', name: 'Manage Supplies Catalog & Orders', category: 'SUPPLIES' },
   ];
 
   const dbPermissions: { [key: string]: string } = {};
@@ -250,6 +265,7 @@ async function main() {
     'waybill:view', 'waybill:create', 'waybill:update', 'waybill:approve', 'waybill:dispatch', 'waybill:complete', 'waybill:cancel',
     'letter:view', 'letter:create', 'letter:update', 'letter:approve', 'letter:issue',
     'reports:view', 'documents:export',
+    'vendors:view', 'vendors:manage', 'supplies:view', 'supplies:manage',
   ];
   for (const slug of managerSlugs) {
     await prisma.rolePermission.upsert({
@@ -266,6 +282,7 @@ async function main() {
     'payment:view',
     'waybill:view', 'waybill:create', 'waybill:update',
     'letter:view', 'letter:create', 'letter:update',
+    'vendors:view', 'supplies:view', 'supplies:manage',
   ];
   for (const slug of staffSlugs) {
     await prisma.rolePermission.upsert({
@@ -276,7 +293,10 @@ async function main() {
   }
 
   // Viewer permissions
-  const viewerSlugs = ['company:view', 'clients:view', 'invoice:view', 'waybill:view', 'letter:view', 'reports:view'];
+  const viewerSlugs = [
+    'company:view', 'clients:view', 'invoice:view', 'waybill:view', 'letter:view', 'reports:view',
+    'vendors:view', 'supplies:view',
+  ];
   for (const slug of viewerSlugs) {
     await prisma.rolePermission.upsert({
       where: { roleId_permissionId: { roleId: roleViewer.id, permissionId: dbPermissions[slug] } },
@@ -560,6 +580,232 @@ async function main() {
       state: 'Ogun State',
       country: 'Nigeria',
       isDefault: true,
+    },
+  });
+
+  // 12. Seed Corporate Vendors
+  console.log('Seeding Corporate Vendors...');
+  const vendor1 = await prisma.vendor.upsert({
+    where: { companyId_vendorCode: { companyId: company.id, vendorCode: 'VND-0001' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      vendorCode: 'VND-0001',
+      name: 'NNPC Retail Logistics & Fuels',
+      category: VendorCategory.LOGISTICS_HAULAGE,
+      contactPerson: 'Engr. Farouk Ahmed',
+      email: 'logistics@nnpcretail.com',
+      phone: '+234 803 111 2233',
+      taxId: '24891044-0001',
+      registrationNumber: 'RC-184920',
+      address: 'Plot 7 NNPC Towers, Herbert Macaulay Way, CBD',
+      city: 'Abuja',
+      state: 'FCT',
+      country: 'Nigeria',
+      bankName: 'Globus Bank Plc',
+      bankAccountName: 'NNPC Retail Logistics Ltd',
+      bankAccountNumber: '1000652199',
+      paymentTerms: 'Net 30 Days',
+      totalSuppliedAmount: 24500000.0,
+      outstandingPayable: 4200000.0,
+      status: VendorStatus.ACTIVE,
+    },
+  });
+
+  const vendor2 = await prisma.vendor.upsert({
+    where: { companyId_vendorCode: { companyId: company.id, vendorCode: 'VND-0002' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      vendorCode: 'VND-0002',
+      name: 'Julius Berger Plant & Fleet Services',
+      category: VendorCategory.SERVICES,
+      contactPerson: 'Klaus Reinhardt',
+      email: 'fleet@julius-berger.com',
+      phone: '+234 802 222 3344',
+      taxId: '10023456-0002',
+      registrationNumber: 'RC-112349',
+      address: '10 Shettima A. Munguno Crescent, Utako',
+      city: 'Abuja',
+      state: 'FCT',
+      country: 'Nigeria',
+      bankName: 'Zenith Bank Plc',
+      bankAccountName: 'Julius Berger Plant Services',
+      bankAccountNumber: '2004567890',
+      paymentTerms: 'Net 15 Days',
+      totalSuppliedAmount: 18400000.0,
+      outstandingPayable: 0.0,
+      status: VendorStatus.ACTIVE,
+    },
+  });
+
+  const vendor3 = await prisma.vendor.upsert({
+    where: { companyId_vendorCode: { companyId: company.id, vendorCode: 'VND-0003' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      vendorCode: 'VND-0003',
+      name: 'WAPC Packaging & Building Materials',
+      category: VendorCategory.RAW_MATERIALS,
+      contactPerson: 'Chief Tunde Balogun',
+      email: 'orders@wapc-packaging.ng',
+      phone: '+234 805 333 4455',
+      taxId: '19482011-0003',
+      registrationNumber: 'RC-294810',
+      address: 'Km 38 Abeokuta Express Road, Ewekoro',
+      city: 'Ewekoro',
+      state: 'Ogun State',
+      country: 'Nigeria',
+      bankName: 'First Bank of Nigeria',
+      bankAccountName: 'WAPC Packaging Solutions',
+      bankAccountNumber: '3001234567',
+      paymentTerms: 'Immediate',
+      totalSuppliedAmount: 34500000.0,
+      outstandingPayable: 2500000.0,
+      status: VendorStatus.ACTIVE,
+    },
+  });
+
+  const vendor4 = await prisma.vendor.upsert({
+    where: { companyId_vendorCode: { companyId: company.id, vendorCode: 'VND-0004' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      vendorCode: 'VND-0004',
+      name: 'TotalEnergies Industrial Solutions',
+      category: VendorCategory.EQUIPMENT,
+      contactPerson: 'Mme. Claire Dubois',
+      email: 'industrial@totalenergies.ng',
+      phone: '+234 809 444 5566',
+      taxId: '30192844-0004',
+      registrationNumber: 'RC-394812',
+      address: 'Plot 24 Karimu Kotun Street, Victoria Island',
+      city: 'Lagos',
+      state: 'Lagos State',
+      country: 'Nigeria',
+      bankName: 'Access Bank Plc',
+      bankAccountName: 'TotalEnergies Industrial Ltd',
+      bankAccountNumber: '0019283746',
+      paymentTerms: 'Net 45 Days',
+      totalSuppliedAmount: 12000000.0,
+      outstandingPayable: 0.0,
+      status: VendorStatus.ACTIVE,
+    },
+  });
+
+  // 13. Seed Supply Catalog Items
+  console.log('Seeding Supply Items Catalog...');
+  const item1 = await prisma.supplyItem.upsert({
+    where: { companyId_sku: { companyId: company.id, sku: 'SUP-CEM-001' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      preferredVendorId: vendor3.id,
+      sku: 'SUP-CEM-001',
+      name: 'Portland Limestone Cement 50kg',
+      category: 'RAW_MATERIALS',
+      description: 'High-performance grade 42.5N building cement for heavy engineering construction.',
+      unit: 'Bags',
+      unitCost: 6800.0,
+      sellingPrice: 8500.0,
+      taxRate: 7.5,
+      currentStock: 1250.0,
+      reorderLevel: 200.0,
+      isActive: true,
+    },
+  });
+
+  await prisma.supplyItem.upsert({
+    where: { companyId_sku: { companyId: company.id, sku: 'SUP-AGO-002' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      preferredVendorId: vendor1.id,
+      sku: 'SUP-AGO-002',
+      name: 'AGO Automotive Gas Oil (Diesel)',
+      category: 'FUEL',
+      description: 'Refined low-sulfur diesel fuel for heavy generator sets and transport fleet.',
+      unit: 'Litres',
+      unitCost: 1150.0,
+      sellingPrice: 1420.0,
+      taxRate: 7.5,
+      currentStock: 18000.0,
+      reorderLevel: 5000.0,
+      isActive: true,
+    },
+  });
+
+  await prisma.supplyItem.upsert({
+    where: { companyId_sku: { companyId: company.id, sku: 'SUP-FLAT-003' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      preferredVendorId: vendor2.id,
+      sku: 'SUP-FLAT-003',
+      name: 'Heavy Duty Flatbed Haulage (30-Ton)',
+      category: 'LOGISTICS_HAULAGE',
+      description: 'Interstate haulage service with dedicated GPS tracking and logistics escort.',
+      unit: 'Trips',
+      unitCost: 320000.0,
+      sellingPrice: 450000.0,
+      taxRate: 7.5,
+      currentStock: 25.0,
+      reorderLevel: 5.0,
+      isActive: true,
+    },
+  });
+
+  await prisma.supplyItem.upsert({
+    where: { companyId_sku: { companyId: company.id, sku: 'SUP-GRN-004' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      preferredVendorId: vendor4.id,
+      sku: 'SUP-GRN-004',
+      name: 'Industrial Aggregate Granite (3/4 Inch)',
+      category: 'RAW_MATERIALS',
+      description: 'Clean crushed quarry granite stone for reinforced concrete casting.',
+      unit: 'Tons',
+      unitCost: 12500.0,
+      sellingPrice: 16000.0,
+      taxRate: 7.5,
+      currentStock: 480.0,
+      reorderLevel: 100.0,
+      isActive: true,
+    },
+  });
+
+  // 14. Seed Sample Supply Order
+  console.log('Seeding Supply Orders...');
+  await prisma.supplyOrder.upsert({
+    where: { companyId_supplyNumber: { companyId: company.id, supplyNumber: 'SUP-2026-0001' } },
+    update: {},
+    create: {
+      companyId: company.id,
+      vendorId: vendor3.id,
+      supplyNumber: 'SUP-2026-0001',
+      supplyDate: new Date('2026-06-01T10:00:00Z'),
+      deliveryRef: 'WAPC/DEL/2026/8941',
+      status: SupplyOrderStatus.RECEIVED,
+      currency: 'NGN',
+      subtotal: 3400000.0,
+      taxTotal: 255000.0,
+      grandTotal: 3655000.0,
+      amountPaid: 3655000.0,
+      notes: 'Initial warehouse replenishment batch - 500 bags delivered to Ota Terminal.',
+      receivedAt: new Date('2026-06-02T14:30:00Z'),
+      items: {
+        create: [
+          {
+            supplyItemId: item1.id,
+            description: 'Portland Limestone Cement 50kg (Batch EWE-01)',
+            unit: 'Bags',
+            quantity: 500,
+            unitCost: 6800.0,
+            lineTotal: 3400000.0,
+          },
+        ],
+      },
     },
   });
 
