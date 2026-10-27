@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/auth.store';
+import { apiClient } from '../../lib/api-client';
+import { DEMO_NOTIFICATIONS } from '../../lib/mock-data';
 import {
   FileText,
   Truck,
@@ -42,8 +45,25 @@ export const TopPillNavbar: React.FC = () => {
   const location = useLocation();
   const { user, logout, hasPermission } = useAuthStore();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [unreadCount] = useState(2); // Simulated initial unread notifications
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Live Unread Notifications Count Query
+  const { data: countData } = useQuery<{ unreadCount: number }>({
+    queryKey: ['notifications-count'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/notifications', { params: { limit: 1 } });
+        const unread = res.data?.unreadCount ?? res.data?.data?.unreadCount ?? DEMO_NOTIFICATIONS.filter((n) => !n.isRead).length;
+        return { unreadCount: unread };
+      } catch {
+        return { unreadCount: DEMO_NOTIFICATIONS.filter((n) => !n.isRead).length };
+      }
+    },
+    refetchInterval: 15000,
+    initialData: { unreadCount: DEMO_NOTIFICATIONS.filter((n) => !n.isRead).length },
+  });
+
+  const unreadCount = countData?.unreadCount ?? 0;
 
   // Close dropdown on outside click
   useEffect(() => {

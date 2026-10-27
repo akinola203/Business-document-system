@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
+import { DEMO_INVOICES } from '../../lib/mock-data';
 import { formatCurrency } from '../../lib/utils';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { PillFilterBar, FilterState } from '../../components/common/PillFilterBar';
@@ -66,7 +67,12 @@ export const InvoicesPage: React.FC = () => {
     },
   });
 
-  const allInvoices: DocumentRecord[] = invoicesData?.items || invoicesData?.data || [];
+  const allInvoices: DocumentRecord[] =
+    invoicesData?.items && invoicesData.items.length > 0
+      ? invoicesData.items
+      : invoicesData?.data && invoicesData.data.length > 0
+      ? invoicesData.data
+      : DEMO_INVOICES;
 
   // Tab filtering on client for instant responsiveness
   const filteredInvoices = useMemo(() => {

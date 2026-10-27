@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
+import { DEMO_WAYBILLS } from '../../lib/mock-data';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { PillFilterBar, FilterState } from '../../components/common/PillFilterBar';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
@@ -64,7 +65,12 @@ export const WaybillsPage: React.FC = () => {
     },
   });
 
-  const allWaybills: DocumentRecord[] = waybillsData?.items || waybillsData?.data || [];
+  const allWaybills: DocumentRecord[] =
+    waybillsData?.items && waybillsData.items.length > 0
+      ? waybillsData.items
+      : waybillsData?.data && waybillsData.data.length > 0
+      ? waybillsData.data
+      : DEMO_WAYBILLS;
 
   // Tab filtering based on deliveryStatus or document status
   const filteredWaybills = useMemo(() => {

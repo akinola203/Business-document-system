@@ -8,6 +8,8 @@ import {
   DocumentTemplate,
   AuditLog,
   DocumentNumberingConfig,
+  ReportsSummary,
+  NotificationItem,
 } from '../types';
 
 export const DEMO_CLIENTS: Client[] = [
@@ -875,3 +877,212 @@ export const DEMO_AUDIT_LOGS: AuditLog[] = [
     createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
+
+export const DEMO_REPORTS_SUMMARY: ReportsSummary = {
+  revenueAndCashflow: {
+    invoicedTotal: 48250000.0,
+    collectedTotal: 39720000.0,
+    outstandingTotal: 8530000.0,
+    recoveryRate: 82.3,
+    vatAccrued: 3618750.0,
+    vatCollected: 2979000.0,
+    monthlySeries: [
+      { month: 'Jan', invoicedTotal: 6800000, collectedTotal: 5400000, outstandingTotal: 1400000 },
+      { month: 'Feb', invoicedTotal: 7450000, collectedTotal: 6100000, outstandingTotal: 1350000 },
+      { month: 'Mar', invoicedTotal: 8900000, collectedTotal: 7200000, outstandingTotal: 1700000 },
+      { month: 'Apr', invoicedTotal: 7100000, collectedTotal: 6500000, outstandingTotal: 600000 },
+      { month: 'May', invoicedTotal: 9200000, collectedTotal: 7800000, outstandingTotal: 1400000 },
+      { month: 'Jun', invoicedTotal: 8800000, collectedTotal: 6720000, outstandingTotal: 2080000 },
+    ],
+  },
+  agingReceivables: {
+    bucket0_30: { amount: 4691500, count: 8, percent: 55 },
+    bucket31_60: { amount: 2132500, count: 4, percent: 25 },
+    bucket61_90: { amount: 1194200, count: 2, percent: 14 },
+    bucket90Plus: { amount: 511800, count: 1, percent: 6 },
+    totalOverdue: 8530000,
+  },
+  topClients: [
+    {
+      id: 'cli-dangote-001',
+      name: 'Dangote Industries Limited',
+      clientNumber: 'CLI-00100',
+      totalInvoiced: 18500000,
+      totalPaid: 15200000,
+      balanceDue: 3300000,
+      creditLimit: 20000000,
+      creditUtilization: 16.5,
+    },
+    {
+      id: 'cli-bua-002',
+      name: 'BUA Cement Plc',
+      clientNumber: 'CLI-00101',
+      totalInvoiced: 14200000,
+      totalPaid: 12000000,
+      balanceDue: 2200000,
+      creditLimit: 15000000,
+      creditUtilization: 14.7,
+    },
+    {
+      id: 'cli-julius-003',
+      name: 'Julius Berger Nigeria Plc',
+      clientNumber: 'CLI-00102',
+      totalInvoiced: 9800000,
+      totalPaid: 8500000,
+      balanceDue: 1300000,
+      creditLimit: 25000000,
+      creditUtilization: 5.2,
+    },
+    {
+      id: 'cli-lafarge-004',
+      name: 'Lafarge Africa Plc',
+      clientNumber: 'CLI-00103',
+      totalInvoiced: 5750000,
+      totalPaid: 4020000,
+      balanceDue: 1730000,
+      creditLimit: 10000000,
+      creditUtilization: 17.3,
+    },
+  ],
+  logisticsTelemetry: {
+    totalConsignments: 42,
+    statusBreakdown: {
+      PREPARING: 3,
+      READY_FOR_DISPATCH: 4,
+      IN_TRANSIT: 7,
+      DELIVERED: 26,
+      DELIVERY_FAILED: 2,
+      CANCELLED: 0,
+    },
+    onTimeDeliveryRate: 92.9,
+    averageTransitDays: 1.8,
+  },
+  documentVelocity: {
+    totalDocuments: 78,
+    byType: {
+      INVOICE: 38,
+      WAYBILL: 28,
+      LETTER: 12,
+    },
+    byStatus: {
+      DRAFT: 5,
+      PENDING_APPROVAL: 6,
+      APPROVED: 14,
+      ISSUED: 42,
+      CANCELLED: 2,
+      REJECTED: 1,
+    },
+    averageApprovalHours: 2.4,
+  },
+};
+
+export const DEMO_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'notif-001',
+    companyId: 'c0000000-0000-0000-0000-000000000001',
+    userId: 'usr-admin-1',
+    title: 'Approval Required: High-Value Commercial Invoice',
+    message: 'Invoice #INV-2026-000004 for Dangote Industries Limited (NGN 3,450,000.00) exceeds threshold and requires executive review.',
+    type: 'APPROVAL_REQUEST',
+    isRead: false,
+    metadata: {
+      documentId: 'inv-demo-004',
+      documentNumber: 'INV-2026-000004',
+      documentType: 'INVOICE',
+      actorName: 'Alade Adebayo',
+      amount: 3450000,
+      clientName: 'Dangote Industries Limited',
+      route: '/documents/invoices',
+    },
+    createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(), // 25 mins ago
+  },
+  {
+    id: 'notif-002',
+    companyId: 'c0000000-0000-0000-0000-000000000001',
+    userId: 'usr-admin-1',
+    title: 'Payment Received: Full Settlement',
+    message: 'Wire transfer of NGN 2,150,000.00 confirmed from BUA Cement Plc. Invoice #INV-2026-000002 has transitioned to PAID.',
+    type: 'INVOICE_PAID',
+    isRead: false,
+    metadata: {
+      documentId: 'inv-demo-002',
+      documentNumber: 'INV-2026-000002',
+      documentType: 'INVOICE',
+      actorName: 'Finance Gateway',
+      amount: 2150000,
+      clientName: 'BUA Cement Plc',
+      route: '/payments',
+    },
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hrs ago
+  },
+  {
+    id: 'notif-003',
+    companyId: 'c0000000-0000-0000-0000-000000000001',
+    userId: 'usr-admin-1',
+    title: 'Consignment Dispatched to Sagamu Hub',
+    message: 'Waybill #WB-2026-000002 has departed Ikeja Terminal. Carrier Mack 30T (Reg: KJA-482-XD), Driver: Ibrahim Musa.',
+    type: 'WAYBILL_DISPATCHED',
+    isRead: false,
+    metadata: {
+      documentId: 'wb-demo-002',
+      documentNumber: 'WB-2026-000002',
+      documentType: 'WAYBILL',
+      actorName: 'Ibrahim Musa',
+      clientName: 'BUA Cement Plc',
+      route: '/documents/waybills',
+    },
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hrs ago
+  },
+  {
+    id: 'notif-004',
+    companyId: 'c0000000-0000-0000-0000-000000000001',
+    userId: 'usr-admin-1',
+    title: 'Document Approved by Operations Director',
+    message: 'Letter #LTR-2026-000001 (Quarterly Haulage Tender) approved for formal corporate issuance.',
+    type: 'DOCUMENT_APPROVED',
+    isRead: true,
+    metadata: {
+      documentId: 'ltr-demo-001',
+      documentNumber: 'LTR-2026-000001',
+      documentType: 'LETTER',
+      actorName: 'Olumide Ogunlesi',
+      clientName: 'Julius Berger Nigeria Plc',
+      route: '/documents/letters',
+    },
+    createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(), // 14 hrs ago
+  },
+  {
+    id: 'notif-005',
+    companyId: 'c0000000-0000-0000-0000-000000000001',
+    userId: 'usr-admin-1',
+    title: 'Consignment Delivery Exception Reported',
+    message: 'Waybill #WB-2026-000005 delivery marked FAILED. Recipient site warehouse closed due to rainstorm.',
+    type: 'WAYBILL_FAILED',
+    isRead: true,
+    metadata: {
+      documentId: 'wb-demo-005',
+      documentNumber: 'WB-2026-000005',
+      documentType: 'WAYBILL',
+      actorName: 'Chidi Okonkwo',
+      clientName: 'Lafarge Africa Plc',
+      route: '/documents/waybills',
+    },
+    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(), // 1 day ago
+  },
+  {
+    id: 'notif-006',
+    companyId: 'c0000000-0000-0000-0000-000000000001',
+    userId: 'usr-admin-1',
+    title: 'Payment Reversal Audit Alert',
+    message: 'Payment PAY-2026-000005 reversed by Administrator due to duplicate teller; ledger recalculated.',
+    type: 'PAYMENT_REVERSED',
+    isRead: true,
+    metadata: {
+      actorName: 'Alade Adebayo',
+      amount: 150000,
+      route: '/payments',
+    },
+    createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), // 2 days ago
+  },
+];
+

@@ -70,7 +70,12 @@ export const UsersPage: React.FC = () => {
     },
   });
 
-  const allRoles: Role[] = rolesData && rolesData.length > 0 ? rolesData : DEMO_ROLES;
+  const allRoles: Role[] =
+    Array.isArray(rolesData) && rolesData.length > 0
+      ? rolesData
+      : (rolesData as any)?.data && Array.isArray((rolesData as any).data) && (rolesData as any).data.length > 0
+      ? (rolesData as any).data
+      : DEMO_ROLES;
 
   // Invite User Mutation
   const inviteMutation = useMutation({

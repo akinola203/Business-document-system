@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { formatCurrency, formatDate, formatRelativeTime } from '../../lib/utils';
+import { DEMO_INVOICES } from '../../lib/mock-data';
 import {
   FileText,
   Truck,
@@ -35,7 +36,12 @@ export const OverviewDashboard: React.FC = () => {
     },
   });
 
-  const documents = documentsData?.items || documentsData?.data || [];
+  const documents =
+    documentsData?.items && documentsData.items.length > 0
+      ? documentsData.items
+      : documentsData?.data && documentsData.data.length > 0
+      ? documentsData.data
+      : DEMO_INVOICES.slice(0, 5);
 
   return (
     <div className="space-y-8">

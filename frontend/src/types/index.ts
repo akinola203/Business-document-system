@@ -442,3 +442,79 @@ export interface DocumentNumberingConfig {
   resetPeriod: 'NONE' | 'YEARLY' | 'MONTHLY';
   pattern: string;
 }
+
+// =============================================================================
+// NOTIFICATIONS
+// =============================================================================
+
+export interface NotificationItem {
+  id: string;
+  companyId: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  metadata?: {
+    documentId?: string;
+    documentNumber?: string;
+    documentType?: DocumentType;
+    actorName?: string;
+    amount?: number | string;
+    clientName?: string;
+    route?: string;
+    [key: string]: any;
+  } | null;
+  createdAt: string;
+}
+
+// =============================================================================
+// FINANCIAL & OPERATIONAL REPORTS
+// =============================================================================
+
+export interface ReportsSummary {
+  revenueAndCashflow: {
+    invoicedTotal: number;
+    collectedTotal: number;
+    outstandingTotal: number;
+    recoveryRate: number;
+    vatAccrued: number;
+    vatCollected: number;
+    monthlySeries: Array<{
+      month: string;
+      invoicedTotal: number;
+      collectedTotal: number;
+      outstandingTotal: number;
+    }>;
+  };
+  agingReceivables: {
+    bucket0_30: { amount: number; count: number; percent: number };
+    bucket31_60: { amount: number; count: number; percent: number };
+    bucket61_90: { amount: number; count: number; percent: number };
+    bucket90Plus: { amount: number; count: number; percent: number };
+    totalOverdue: number;
+  };
+  topClients: Array<{
+    id: string;
+    name: string;
+    clientNumber: string;
+    totalInvoiced: number;
+    totalPaid: number;
+    balanceDue: number;
+    creditLimit: number | null;
+    creditUtilization: number;
+  }>;
+  logisticsTelemetry: {
+    totalConsignments: number;
+    statusBreakdown: Record<string, number>;
+    onTimeDeliveryRate: number;
+    averageTransitDays: number;
+  };
+  documentVelocity: {
+    totalDocuments: number;
+    byType: Record<string, number>;
+    byStatus: Record<string, number>;
+    averageApprovalHours: number;
+  };
+}
+

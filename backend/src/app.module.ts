@@ -22,6 +22,7 @@ import { IamModule } from './modules/iam/iam.module';
 import { FilesModule } from './modules/files/files.module';
 import { TemplatesModule } from './modules/templates/templates.module';
 import { PdfModule } from './modules/pdf/pdf.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -62,6 +63,7 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
     FilesModule,
     TemplatesModule,
     PdfModule,
+    ReportsModule,
   ],
   providers: [
     {

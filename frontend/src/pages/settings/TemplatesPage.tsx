@@ -26,7 +26,7 @@ export const TemplatesPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<DocumentType>('INVOICE');
 
   // Query templates with fallback
-  const { data: templatesData } = useQuery<DocumentTemplate[]>({
+  const { data: templatesData } = useQuery<any>({
     queryKey: ['templates', selectedType],
     queryFn: async () => {
       const res = await apiClient.get('/templates', { params: { documentType: selectedType } });
@@ -34,7 +34,14 @@ export const TemplatesPage: React.FC = () => {
     },
   });
 
-  const templates = templatesData && templatesData.length > 0 ? templatesData : DEMO_TEMPLATES;
+  const templates: DocumentTemplate[] =
+    Array.isArray(templatesData) && templatesData.length > 0
+      ? templatesData
+      : templatesData?.data && Array.isArray(templatesData.data) && templatesData.data.length > 0
+      ? templatesData.data
+      : templatesData?.items && Array.isArray(templatesData.items) && templatesData.items.length > 0
+      ? templatesData.items
+      : DEMO_TEMPLATES;
   const currentTemplate =
     templates.find((t) => t.documentType === selectedType) || templates[0] || DEMO_TEMPLATES[0];
 
