@@ -34,6 +34,8 @@ const invoiceItemSchema = z.object({
   taxRate: z.coerce.number().min(0).max(100).default(7.5),
 });
 
+type InvoiceItemValues = z.infer<typeof invoiceItemSchema>;
+
 const invoiceFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   clientId: z.string().min(1, 'Please select a recipient client'),
@@ -605,11 +607,11 @@ export const InvoiceBuilderPage: React.FC = () => {
             {/* Line Items List */}
             <div className="space-y-4">
               {fields.map((field, index) => {
-                const itemValues = formValues.items?.[index] || {};
-                const q = Number(itemValues.quantity) || 0;
-                const p = Number(itemValues.unitPrice) || 0;
-                const d = Number(itemValues.discountPercent) || 0;
-                const t = Number(itemValues.taxRate) || 0;
+                const itemValues = formValues.items?.[index] as Partial<InvoiceItemValues> | undefined;
+                const q = Number(itemValues?.quantity) || 0;
+                const p = Number(itemValues?.unitPrice) || 0;
+                const d = Number(itemValues?.discountPercent) || 0;
+                const t = Number(itemValues?.taxRate) || 0;
                 const base = q * p;
                 const discAmt = base * (d / 100);
                 const taxable = Math.max(0, base - discAmt);
