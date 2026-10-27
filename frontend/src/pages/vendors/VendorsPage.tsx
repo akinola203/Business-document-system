@@ -157,7 +157,7 @@ export const VendorsPage: React.FC = () => {
           className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Vendor Profile</span>
+          <span>New Vendor Profile</span>
         </button>
       </div>
 
@@ -166,7 +166,7 @@ export const VendorsPage: React.FC = () => {
       ========================================================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <BentoKpiCard
-          title="Total Active Vendors"
+          title="Active Suppliers"
           value={activeVendorsCount}
           subtitle={`${allVendors.length} registered suppliers`}
           icon={Building2}
@@ -175,7 +175,7 @@ export const VendorsPage: React.FC = () => {
         />
 
         <BentoKpiCard
-          title="Total Supplies Value"
+          title="Total Supplies Volume"
           value={formatCurrency(totalSuppliesValue, 'NGN')}
           subtitle="Cumulative historical delivery total"
           icon={Truck}
@@ -193,10 +193,10 @@ export const VendorsPage: React.FC = () => {
         />
 
         <BentoKpiCard
-          title="Top Supply Categories"
-          value={`${categoriesCount} Segments`}
-          subtitle="Raw materials, Haulage & Plant"
-          icon={Layers}
+          title="Linked Catalog SKUs"
+          value={`${allSupplies.length} SKUs`}
+          subtitle={`${categoriesCount} Supply categories cataloged`}
+          icon={Package}
           iconBgColor="bg-emerald-50"
           iconColor="text-emerald-600"
         />
@@ -213,6 +213,7 @@ export const VendorsPage: React.FC = () => {
             { id: 'RAW_MATERIALS', label: 'Raw Materials', count: allVendors.filter((v) => v.category === 'RAW_MATERIALS').length },
             { id: 'LOGISTICS_HAULAGE', label: 'Logistics', count: allVendors.filter((v) => v.category === 'LOGISTICS_HAULAGE').length },
             { id: 'EQUIPMENT', label: 'Equipment', count: allVendors.filter((v) => v.category === 'EQUIPMENT').length },
+            { id: 'PACKAGING', label: 'Packaging', count: allVendors.filter((v) => v.category === 'PACKAGING').length },
             { id: 'SERVICES', label: 'Services', count: allVendors.filter((v) => v.category === 'SERVICES').length },
           ].map((tab) => (
             <button

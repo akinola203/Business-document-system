@@ -211,6 +211,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   <option value="RAW_MATERIALS">Raw Materials & Commodities</option>
                   <option value="LOGISTICS_HAULAGE">Logistics & Haulage</option>
                   <option value="EQUIPMENT">Civil Equipment & Machinery</option>
+                  <option value="PACKAGING">Packaging & Industrial Consumables</option>
                   <option value="SERVICES">Industrial Services & Maintenance</option>
                   <option value="GENERAL">General Procurement</option>
                 </select>

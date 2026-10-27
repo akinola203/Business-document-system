@@ -151,6 +151,8 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
             id: `soi-local-${Date.now()}-${i}`,
             supplyOrderId: `so-local-${Date.now()}`,
             supplyItemId: r.supplyItemId,
+            description: matchedItem?.name || 'Supply Item',
+            unit: matchedItem?.unit || 'Units',
             quantity: r.quantity,
             unitCost: r.unitCost,
             lineTotal: r.quantity * r.unitCost,

@@ -99,6 +99,7 @@ enum VendorCategory {
   RAW_MATERIALS
   LOGISTICS_HAULAGE
   EQUIPMENT
+  PACKAGING
   SERVICES
   GENERAL
 }
@@ -925,6 +926,7 @@ model SupplyOrder {
   notes        String?
   receivedAt   DateTime?
   receivedById String?
+  createdById  String?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
 

@@ -1295,6 +1295,8 @@ export const DEMO_SUPPLIES: SupplyItem[] = [
   },
 ];
 
+export const DEMO_SUPPLY_ITEMS: SupplyItem[] = DEMO_SUPPLIES;
+
 // =============================================================================
 // DEMO VENDOR SUPPLY ORDERS (PURCHASE RECEIPTS)
 // =============================================================================
@@ -1326,6 +1328,8 @@ export const DEMO_SUPPLY_ORDERS: SupplyOrder[] = [
         id: 'soi-001-1',
         supplyOrderId: 'so-2026-001',
         supplyItemId: 'sup-log-003',
+        description: 'Interstate Haulage - 30T Flatbed Trucking',
+        unit: 'Trips',
         quantity: 10,
         unitCost: 350000,
         lineTotal: 3500000,
@@ -1359,6 +1363,8 @@ export const DEMO_SUPPLY_ORDERS: SupplyOrder[] = [
         id: 'soi-002-1',
         supplyOrderId: 'so-2026-002',
         supplyItemId: 'sup-cem-001',
+        description: 'Portland Cement Grade 42.5R (50kg)',
+        unit: 'Bags',
         quantity: 500,
         unitCost: 8500,
         lineTotal: 4250000,
@@ -1392,6 +1398,8 @@ export const DEMO_SUPPLY_ORDERS: SupplyOrder[] = [
         id: 'soi-003-1',
         supplyOrderId: 'so-2026-003',
         supplyItemId: 'sup-ago-002',
+        description: 'Industrial Diesel (Automotive Gas Oil - AGO)',
+        unit: 'Litres',
         quantity: 10000,
         unitCost: 1100,
         lineTotal: 11000000,

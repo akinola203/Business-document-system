@@ -526,6 +526,7 @@ export type VendorCategory =
   | 'RAW_MATERIALS' 
   | 'LOGISTICS_HAULAGE' 
   | 'EQUIPMENT' 
+  | 'PACKAGING' 
   | 'SERVICES' 
   | 'GENERAL';
 
@@ -607,7 +608,9 @@ export type SupplyOrderStatus =
 export interface SupplyOrderItem {
   id: string;
   supplyOrderId: string;
-  supplyItemId: string;
+  supplyItemId?: string | null;
+  description: string;
+  unit: string;
   quantity: number;
   unitCost: number;
   lineTotal: number;

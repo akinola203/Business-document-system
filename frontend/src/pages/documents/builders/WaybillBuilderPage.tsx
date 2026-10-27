@@ -10,7 +10,7 @@ import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4WaybillSheet } from '../../../components/builder/LiveA4WaybillSheet';
 import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
-import { DEMO_CLIENTS } from '../../../lib/mock-data';
+import { DEMO_CLIENTS, DEMO_SUPPLIES } from '../../../lib/mock-data';
 import {
   Truck,
   Plus,
@@ -98,6 +98,25 @@ export const WaybillBuilderPage: React.FC = () => {
     },
     enabled: isEdit,
   });
+
+  // 4. Fetch Supplies Catalog for Quick-Add
+  const { data: suppliesData } = useQuery<{ items?: SupplyItem[]; data?: SupplyItem[] }>({
+    queryKey: ['supplies-items'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/supplies/items', { params: { limit: 100 } });
+        return res.data;
+      } catch {
+        return { items: DEMO_SUPPLIES };
+      }
+    },
+  });
+  const catalogSupplies: SupplyItem[] =
+    suppliesData?.items && suppliesData.items.length > 0
+      ? suppliesData.items
+      : suppliesData?.data && suppliesData.data.length > 0
+      ? suppliesData.data
+      : DEMO_SUPPLIES;
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -513,6 +532,48 @@ export const WaybillBuilderPage: React.FC = () => {
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Cargo</span>
               </button>
+            </div>
+
+            {/* 1-Click Quick-Add from Supplies Catalog Pill Bar */}
+            <div className="p-3 rounded-2xl bg-white border border-slate-200/80 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-extrabold text-slate-700 flex items-center gap-1.5">
+                  <span>📦 Quick-Add from Supplies Catalog</span>
+                  <span className="text-[10px] text-sky-700 font-bold bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
+                    {catalogSupplies.length} SKUs
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveCatalogIndex(fields.length)}
+                  className="text-[11px] font-bold text-sky-600 hover:underline cursor-pointer"
+                >
+                  Browse Full Catalog →
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {catalogSupplies.slice(0, 6).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      append({
+                        description: item.name,
+                        quantity: 1,
+                        unit: item.unit,
+                        packageCount: 1,
+                        packageType: 'Standard Cargo',
+                        weightKg: 0,
+                      });
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="font-mono text-[10px] text-sky-600 font-bold">{item.sku}</span>
+                    <span>{item.name.split(' ')[0]}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Cargo Items List */}

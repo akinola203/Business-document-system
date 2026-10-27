@@ -10,7 +10,7 @@ import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4InvoiceSheet } from '../../../components/builder/LiveA4InvoiceSheet';
 import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
-import { DEMO_CLIENTS } from '../../../lib/mock-data';
+import { DEMO_CLIENTS, DEMO_SUPPLIES } from '../../../lib/mock-data';
 import {
   Plus,
   Trash2,
@@ -115,6 +115,25 @@ export const InvoiceBuilderPage: React.FC = () => {
     },
     enabled: isEdit,
   });
+
+  // 5. Fetch Supplies Catalog for Quick-Add
+  const { data: suppliesData } = useQuery<{ items?: SupplyItem[]; data?: SupplyItem[] }>({
+    queryKey: ['supplies-items'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/supplies/items', { params: { limit: 100 } });
+        return res.data;
+      } catch {
+        return { items: DEMO_SUPPLIES };
+      }
+    },
+  });
+  const catalogSupplies: SupplyItem[] =
+    suppliesData?.items && suppliesData.items.length > 0
+      ? suppliesData.items
+      : suppliesData?.data && suppliesData.data.length > 0
+      ? suppliesData.data
+      : DEMO_SUPPLIES;
 
   // Calculate default dates
   const todayStr = new Date().toISOString().split('T')[0];
@@ -614,6 +633,51 @@ export const InvoiceBuilderPage: React.FC = () => {
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Item</span>
               </button>
+            </div>
+
+            {/* 1-Click Quick-Add from Supplies Catalog Pill Bar */}
+            <div className="p-3 rounded-2xl bg-white border border-slate-200/80 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-extrabold text-slate-700 flex items-center gap-1.5">
+                  <span>📦 Quick-Add from Supplies Catalog</span>
+                  <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                    {catalogSupplies.length} SKUs
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveCatalogIndex(fields.length)}
+                  className="text-[11px] font-bold text-[#5847F6] hover:underline cursor-pointer"
+                >
+                  Browse Full Catalog →
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {catalogSupplies.slice(0, 6).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      append({
+                        description: item.name,
+                        quantity: 1,
+                        unit: item.unit,
+                        unitPrice: Number(item.sellingPrice),
+                        discountPercent: 0,
+                        taxRate: Number(item.taxRate || 7.5),
+                      });
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="font-mono text-[10px] text-indigo-600 font-bold">{item.sku}</span>
+                    <span>{item.name.split(' ')[0]}</span>
+                    <span className="text-[10px] text-emerald-600 font-mono font-bold">
+                      {formatCurrency(Number(item.sellingPrice), 'NGN')}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Line Items List */}
