@@ -29,8 +29,23 @@ export const LoginPage: React.FC = () => {
         password,
       });
 
-      const { accessToken, refreshToken, user } = response.data;
-      login({ accessToken, refreshToken }, user);
+      const payload = response.data?.data || response.data;
+      const accessToken = payload.accessToken;
+      const refreshToken = payload.refreshToken;
+      const rawUser = payload.user;
+
+      const normalizedUser = {
+        id: rawUser.id,
+        email: rawUser.email,
+        fullName: rawUser.fullName || `${rawUser.firstName || ''} ${rawUser.lastName || ''}`.trim() || 'Workspace User',
+        role: rawUser.role,
+        roleName: rawUser.role,
+        permissions: rawUser.permissions || ['*'],
+        companyId: rawUser.company?.id || rawUser.companyId || 'c0000000-0000-0000-0000-000000000001',
+        companyName: rawUser.company?.name || rawUser.companyName || 'AOA 77 COMPANY LTD',
+      };
+
+      login({ accessToken, refreshToken }, normalizedUser);
       navigate(from, { replace: true });
     } catch (err: any) {
       // If backend is offline or network error, seamlessly allow demo preview
@@ -77,22 +92,67 @@ export const LoginPage: React.FC = () => {
     setErrorMessage(null);
   };
 
-  const handleInstantDemoLogin = (role: 'Admin' | 'Manager') => {
+  const handleInstantDemoLogin = async (role: 'Admin' | 'Manager') => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setFeedbackMessage(null);
+
     const isManager = role === 'Manager';
-    login(
-      { accessToken: 'demo-access-token', refreshToken: 'demo-refresh-token' },
-      {
-        id: isManager ? 'usr-manager-1' : 'usr-admin-1',
-        email: isManager ? 'manager@aoa77.com' : 'admin@aoa77.com',
-        fullName: isManager ? 'Olumide Ogunlesi (Finance Manager)' : 'Alade Adebayo (Managing Director)',
-        role,
-        roleName: role,
-        permissions: ['*'],
-        companyId: 'c0000000-0000-0000-0000-000000000001',
-        companyName: 'AOA 77 COMPANY LTD',
+    const emailToUse = isManager ? 'manager@aoa77.com' : 'admin@aoa77.com';
+    const passwordToUse = 'Aoa77@Password2026!';
+
+    try {
+      const response = await apiClient.post('/auth/login', {
+        email: emailToUse,
+        password: passwordToUse,
+      });
+
+      const payload = response.data?.data || response.data;
+      const accessToken = payload.accessToken;
+      const refreshToken = payload.refreshToken;
+      const rawUser = payload.user;
+
+      const normalizedUser = {
+        id: rawUser.id,
+        email: rawUser.email,
+        fullName: rawUser.fullName || `${rawUser.firstName || ''} ${rawUser.lastName || ''}`.trim() || (isManager ? 'Olumide Ogunlesi (Finance Manager)' : 'Alade Adebayo (Managing Director)'),
+        role: rawUser.role,
+        roleName: rawUser.role,
+        permissions: rawUser.permissions || ['*'],
+        companyId: rawUser.company?.id || rawUser.companyId || 'c0000000-0000-0000-0000-000000000001',
+        companyName: rawUser.company?.name || rawUser.companyName || 'AOA 77 COMPANY LTD',
+      };
+
+      login({ accessToken, refreshToken }, normalizedUser);
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      // Only fall back to mock token if backend server is completely unreachable (!err.response)
+      if (!err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        login(
+          { accessToken: 'demo-access-token', refreshToken: 'demo-refresh-token' },
+          {
+            id: isManager ? 'usr-manager-1' : 'usr-admin-1',
+            email: emailToUse,
+            fullName: isManager ? 'Olumide Ogunlesi (Finance Manager)' : 'Alade Adebayo (Managing Director)',
+            role,
+            roleName: role,
+            permissions: ['*'],
+            companyId: 'c0000000-0000-0000-0000-000000000001',
+            companyName: 'AOA 77 COMPANY LTD',
+          }
+        );
+        navigate(from, { replace: true });
+        return;
       }
-    );
-    navigate(from, { replace: true });
+
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Live backend authentication failed.';
+      setErrorMessage(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -232,19 +292,21 @@ export const LoginPage: React.FC = () => {
               <button
                 id="instant-login-admin-btn"
                 type="button"
+                disabled={isLoading}
                 onClick={() => handleInstantDemoLogin('Admin')}
-                className="w-full py-2.5 px-3 rounded-2xl bg-[#16181F] hover:bg-slate-900 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-700 cursor-pointer active:scale-95"
+                className="w-full py-2.5 px-3 rounded-2xl bg-[#16181F] hover:bg-slate-900 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Enter as Admin</span>
+                <span>{isLoading ? 'Connecting...' : 'Enter as Admin'}</span>
               </button>
               <button
                 id="instant-login-manager-btn"
                 type="button"
+                disabled={isLoading}
                 onClick={() => handleInstantDemoLogin('Manager')}
-                className="w-full py-2.5 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-600 cursor-pointer active:scale-95"
+                className="w-full py-2.5 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-600 cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span>Enter as Manager</span>
+                <span>{isLoading ? 'Connecting...' : 'Enter as Manager'}</span>
               </button>
             </div>
           </div>
