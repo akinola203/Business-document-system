@@ -166,7 +166,8 @@ export interface Client {
   creditLimit?: number | string | null;
   paymentTermsDays?: number | null;
   isActive: boolean;
-  addresses: ClientAddress[];
+  address?: string | null;
+  addresses?: ClientAddress[];
   createdAt: string;
   updatedAt: string;
 }

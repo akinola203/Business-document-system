@@ -132,7 +132,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                 <MapPin className="w-3 h-3" /> Destination (Deliver To)
               </span>
               <span className="font-semibold text-white block mt-0.5">
-                {wb?.destinationAddress || document.client?.addresses?.[0]?.line1 || 'Client Site'}
+                {wb?.destinationAddress || document.client?.address || document.client?.addresses?.[0]?.line1 || 'Client Site'}
               </span>
             </div>
           </div>
