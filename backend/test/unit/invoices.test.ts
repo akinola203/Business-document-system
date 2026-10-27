@@ -94,6 +94,12 @@ test('InvoicesService Unit Tests', async (t) => {
       },
     },
     documentVersion: {
+      findFirst: async ({ where }: any) => {
+        const list = versionsDb
+          .filter((v) => v.documentId === where.documentId)
+          .sort((a, b) => b.versionNumber - a.versionNumber);
+        return list[0] ?? null;
+      },
       create: async ({ data }: any) => {
         const item = { id: `ver-${versionsDb.length + 1}`, ...data };
         versionsDb.push(item);
@@ -140,6 +146,15 @@ test('InvoicesService Unit Tests', async (t) => {
     assert.equal(invoice.balanceDue.toString(), '913750');
     assert.equal(auditLogs.length, 1);
     assert.equal(auditLogs[0].action, 'INVOICE_CREATED');
+  });
+
+  await t.test('issue rejects a DRAFT invoice (approval cannot be bypassed)', async () => {
+    const docId = documentsDb[0].id;
+    await assert.rejects(
+      async () => service.issue('comp-1', docId, 'usr-manager-2'),
+      BadRequestException,
+    );
+    assert.equal(versionsDb.length, 0);
   });
 
   await t.test('submitForApproval transitions status to PENDING_APPROVAL', async () => {

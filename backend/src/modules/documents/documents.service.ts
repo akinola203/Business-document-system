@@ -32,8 +32,9 @@ export class DocumentsService {
 
   /**
    * Retrieves paginated documents across all document types with search and filters.
+   * @param allowedTypes When provided, restricts results to the document types the caller may view.
    */
-  async findAll(companyId: string, query: QueryDocumentsDto) {
+  async findAll(companyId: string, query: QueryDocumentsDto, allowedTypes?: DocumentType[]) {
     const {
       page = 1,
       limit = 20,
@@ -55,7 +56,11 @@ export class DocumentsService {
     const where: Prisma.DocumentWhereInput = {
       companyId,
       isArchived,
-      ...(documentType ? { documentType } : {}),
+      ...(documentType
+        ? { documentType }
+        : allowedTypes
+          ? { documentType: { in: allowedTypes } }
+          : {}),
       ...(status ? { status } : {}),
       ...(clientId ? { clientId } : {}),
       ...(branchId ? { branchId } : {}),
@@ -170,7 +175,22 @@ export class DocumentsService {
   }
 
   /**
+   * Lightweight lookup used by the controller to authorize type-specific actions before executing them.
+   */
+  async getDocumentType(companyId: string, id: string): Promise<DocumentType> {
+    const document = await this.prisma.document.findFirst({
+      where: { id, companyId },
+      select: { documentType: true },
+    });
+    if (!document) {
+      throw new NotFoundException(`Document with ID "${id}" not found.`);
+    }
+    return document.documentType;
+  }
+
+  /**
    * Cancels a document with mandatory justification. Document number is NEVER reused.
+   * Invoices with active (non-reversed) payments cannot be cancelled; payments must be reversed first.
    */
   async cancel(
     companyId: string,
@@ -189,6 +209,19 @@ export class DocumentsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      if (document.documentType === DocumentType.INVOICE && document.invoice) {
+        // Serialize with PaymentsService (same lock) so a payment cannot land between check and cancel.
+        await tx.$queryRaw`SELECT "id" FROM "invoices" WHERE "id" = ${document.invoice.id} FOR UPDATE`;
+        const activePayments = await tx.payment.count({
+          where: { invoiceId: document.invoice.id, isReversed: false },
+        });
+        if (activePayments > 0) {
+          throw new BadRequestException(
+            `Invoice "${document.documentNumber}" has ${activePayments} active payment(s). Reverse them before cancelling the invoice.`,
+          );
+        }
+      }
+
       const result = await tx.document.update({
         where: { id: document.id },
         data: {

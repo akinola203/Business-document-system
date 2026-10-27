@@ -350,7 +350,8 @@ export class InvoicesService {
   async issue(companyId: string, id: string, actorId: string) {
     const document = await this.findOne(companyId, id);
 
-    if (document.status !== DocumentStatus.APPROVED && document.status !== DocumentStatus.DRAFT) {
+    // Financial documents must pass approval before issuance (Phase 0 decision #3). DRAFT is NOT accepted.
+    if (document.status !== DocumentStatus.APPROVED) {
       throw new BadRequestException(
         `Only APPROVED invoices can be issued. Current status is ${document.status}.`,
       );
@@ -375,11 +376,18 @@ export class InvoicesService {
         frozenAt: new Date().toISOString(),
       };
 
+      const latestVersion = await tx.documentVersion.findFirst({
+        where: { documentId: document.id },
+        orderBy: { versionNumber: 'desc' },
+        select: { versionNumber: true },
+      });
+      const versionNumber = (latestVersion?.versionNumber ?? 0) + 1;
+
       const version = await tx.documentVersion.create({
         data: {
           documentId: document.id,
-          versionNumber: 1,
-          snapshotData: snapshotData as unknown as Prisma.InputJsonValue,
+          versionNumber,
+          snapshotData: JSON.parse(JSON.stringify(snapshotData)) as Prisma.InputJsonValue,
           createdById: actorId,
           changeReason: 'Initial Official Issuance',
         },
@@ -400,7 +408,7 @@ export class InvoicesService {
           action: 'INVOICE_ISSUED',
           entityType: 'Document',
           entityId: document.id,
-          newValues: { versionNumber: 1, versionId: version.id },
+          newValues: { versionNumber, versionId: version.id },
         },
       });
 

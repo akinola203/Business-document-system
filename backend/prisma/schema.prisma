@@ -122,6 +122,7 @@ model Company {
   clients                 Client[]
   documents               Document[]
   documentNumberSequences DocumentNumberSequence[]
+  paymentNumberSequences  PaymentNumberSequence[]
   templates               Template[]
   files                   File[]
   auditLogs               AuditLog[]
@@ -560,7 +561,25 @@ model Payment {
   @@unique([companyId, paymentNumber])
   @@index([invoiceId, isReversed])
   @@index([companyId, paymentDate])
+  @@index([companyId, referenceNumber])
   @@map("payments")
+}
+
+// Atomic, per-company, annually-reset counter for payment receipt numbers (PAY-2026-000001).
+// Kept separate from DocumentNumberSequence because payments are ledger entries, not Documents.
+model PaymentNumberSequence {
+  id            String   @id @default(uuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  prefix        String   @default("PAY")
+  currentNumber Int      @default(0)
+  padding       Int      @default(6)
+  resetYear     Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([companyId, resetYear])
+  @@map("payment_number_sequences")
 }
 
 // -----------------------------------------------------------------------------
