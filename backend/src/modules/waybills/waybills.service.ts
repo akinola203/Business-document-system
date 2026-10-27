@@ -7,9 +7,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NumberingService } from '../numbering/numbering.service';
+import { DocumentsService } from '../documents/documents.service';
+import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateWaybillDto } from './dto/create-waybill.dto';
 import { UpdateWaybillDto } from './dto/update-waybill.dto';
-import { DispatchWaybillDto } from './dto/dispatch-waybill.dto';
+import { DispatchWaybillDto, dispatchWaybillSchema } from './dto/dispatch-waybill.dto';
+import { StageWaybillReadyDto, stageWaybillReadySchema } from './dto/stage-waybill-ready.dto';
+import { FailWaybillDto, failWaybillSchema } from './dto/fail-waybill.dto';
 import { CompleteWaybillDto } from './dto/complete-waybill.dto';
 import {
   DocumentStatus,
@@ -25,6 +30,9 @@ export class WaybillsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly numberingService: NumberingService,
+    private readonly documentsService: DocumentsService,
+    private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -99,7 +107,7 @@ export class WaybillsService {
       const document = await tx.document.create({
         data: {
           companyId,
-          clientId: client.id,
+          clientId: targetClientId,
           branchId: dto.branchId,
           departmentId: dto.departmentId,
           documentType: DocumentType.WAYBILL,
@@ -108,16 +116,18 @@ export class WaybillsService {
           status: DocumentStatus.DRAFT,
           issueDate: dto.shipmentDate ? new Date(dto.shipmentDate) : new Date(),
           createdById: actorId,
+          templateId: dto.templateId,
+          templateVersionId: dto.templateVersionId,
         },
       });
 
-      await tx.waybill.create({
+      const waybill = await tx.waybill.create({
         data: {
           documentId: document.id,
           invoiceId: linkedInvoiceId,
           shipmentDate: dto.shipmentDate ? new Date(dto.shipmentDate) : new Date(),
-          consignorSnapshot: consignorSnapshot as Prisma.InputJsonValue,
-          consigneeSnapshot: consigneeSnapshot as Prisma.InputJsonValue,
+          consignorSnapshot,
+          consigneeSnapshot,
           originAddress: dto.originAddress.trim(),
           destinationAddress: dto.destinationAddress.trim(),
           vehicleNumber: dto.vehicleNumber?.trim(),
@@ -126,14 +136,14 @@ export class WaybillsService {
           trackingNumber: dto.trackingNumber?.trim(),
           deliveryStatus: WaybillDeliveryStatus.PREPARING,
           items: {
-            create: dto.items.map((item, index) => ({
-              lineNumber: index + 1,
-              description: item.description.trim(),
-              quantity: item.quantity.toString(),
-              unit: item.unit.trim(),
-              weightKg: item.weightKg !== undefined ? item.weightKg.toString() : null,
-              packageCount: item.packageCount,
-              packageType: item.packageType?.trim(),
+            create: dto.items.map((it, idx) => ({
+              lineNumber: idx + 1,
+              description: it.description.trim(),
+              quantity: new Prisma.Decimal(it.quantity),
+              unit: it.unit.trim(),
+              weightKg: it.weightKg !== undefined ? new Prisma.Decimal(it.weightKg) : null,
+              packageCount: it.packageCount,
+              packageType: it.packageType?.trim(),
             })),
           },
         },
@@ -148,9 +158,8 @@ export class WaybillsService {
           entityId: document.id,
           newValues: {
             documentNumber: document.documentNumber,
-            clientName: client.name,
-            origin: dto.originAddress,
-            destination: dto.destinationAddress,
+            itemCount: dto.items.length,
+            deliveryStatus: WaybillDeliveryStatus.PREPARING,
           },
         },
       });
@@ -166,14 +175,7 @@ export class WaybillsService {
    * Updates an editable draft waybill.
    */
   async updateDraft(companyId: string, id: string, dto: UpdateWaybillDto, actorId: string) {
-    const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.WAYBILL },
-      include: { waybill: { include: { items: true } } },
-    });
-
-    if (!document || !document.waybill) {
-      throw new NotFoundException(`Waybill with ID "${id}" not found.`);
-    }
+    const document = await this.findOne(companyId, id);
 
     if (document.status !== DocumentStatus.DRAFT) {
       throw new BadRequestException(
@@ -181,52 +183,53 @@ export class WaybillsService {
       );
     }
 
-    // Optimistic Concurrency Control Check
     if (dto.expectedVersion !== undefined && document.versionCounter !== dto.expectedVersion) {
       throw new ConflictException(
-        `Document has been modified by another user or session. Current version is ${document.versionCounter}. Please refresh and review latest changes before reapplying edits.`,
+        `Waybill was modified concurrently. Expected version ${dto.expectedVersion}, but current version is ${document.versionCounter}.`,
       );
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.document.update({
+        where: { id: document.id },
+        data: {
+          title: dto.title !== undefined ? dto.title.trim() : undefined,
+          clientId: dto.clientId,
+          branchId: dto.branchId,
+          departmentId: dto.departmentId,
+          versionCounter: { increment: 1 },
+        },
+      });
+
       if (dto.items && dto.items.length > 0) {
         await tx.waybillItem.deleteMany({
           where: { waybillId: document.waybill!.id },
         });
 
         await tx.waybillItem.createMany({
-          data: dto.items.map((item, index) => ({
+          data: dto.items.map((it, idx) => ({
             waybillId: document.waybill!.id,
-            lineNumber: index + 1,
-            description: item.description.trim(),
-            quantity: item.quantity.toString(),
-            unit: item.unit.trim(),
-            weightKg: item.weightKg !== undefined ? item.weightKg.toString() : null,
-            packageCount: item.packageCount,
-            packageType: item.packageType?.trim(),
+            lineNumber: idx + 1,
+            description: it.description.trim(),
+            quantity: new Prisma.Decimal(it.quantity),
+            unit: it.unit.trim(),
+            weightKg: it.weightKg !== undefined ? new Prisma.Decimal(it.weightKg) : null,
+            packageCount: it.packageCount,
+            packageType: it.packageType?.trim(),
           })),
         });
       }
 
-      await tx.document.update({
-        where: { id: document.id },
-        data: {
-          title: dto.title !== undefined ? dto.title.trim() : undefined,
-          issueDate: dto.shipmentDate ? new Date(dto.shipmentDate) : undefined,
-          versionCounter: { increment: 1 },
-        },
-      });
-
       await tx.waybill.update({
         where: { id: document.waybill!.id },
         data: {
-          shipmentDate: dto.shipmentDate ? new Date(dto.shipmentDate) : undefined,
           originAddress: dto.originAddress !== undefined ? dto.originAddress.trim() : undefined,
-          destinationAddress: dto.destinationAddress !== undefined ? dto.destinationAddress.trim() : undefined,
-          vehicleNumber: dto.vehicleNumber !== undefined ? dto.vehicleNumber?.trim() : undefined,
-          driverName: dto.driverName !== undefined ? dto.driverName?.trim() : undefined,
-          driverPhone: dto.driverPhone !== undefined ? dto.driverPhone?.trim() : undefined,
-          trackingNumber: dto.trackingNumber !== undefined ? dto.trackingNumber?.trim() : undefined,
+          destinationAddress:
+            dto.destinationAddress !== undefined ? dto.destinationAddress.trim() : undefined,
+          vehicleNumber: dto.vehicleNumber !== undefined ? dto.vehicleNumber.trim() : undefined,
+          driverName: dto.driverName !== undefined ? dto.driverName.trim() : undefined,
+          driverPhone: dto.driverPhone !== undefined ? dto.driverPhone.trim() : undefined,
+          trackingNumber: dto.trackingNumber !== undefined ? dto.trackingNumber.trim() : undefined,
         },
       });
 
@@ -248,82 +251,208 @@ export class WaybillsService {
   }
 
   /**
-   * Dispatches the consignment, transitioning status to IN_TRANSIT / ISSUED.
+   * Stages consignment as READY for haulage / carrier pickup.
+   * Allowed from PREPARING (initial staging) or FAILED (re-staging after returned attempt).
+   * Requires parent Document to be APPROVED or ISSUED.
    */
-  async dispatch(companyId: string, id: string, dto: DispatchWaybillDto, actorId: string) {
+  async stageReady(companyId: string, id: string, dto: StageWaybillReadyDto, actorId: string) {
+    stageWaybillReadySchema.parse(dto);
     const document = await this.findOne(companyId, id);
 
-    if (document.status === DocumentStatus.CANCELLED || document.status === DocumentStatus.COMPLETED) {
-      throw new BadRequestException(`Cannot dispatch a document in status ${document.status}.`);
+    if (
+      document.status !== DocumentStatus.APPROVED &&
+      document.status !== DocumentStatus.ISSUED
+    ) {
+      throw new BadRequestException(
+        `Waybill cargo can only be staged READY when the parent document is APPROVED or ISSUED. Current status is ${document.status}.`,
+      );
+    }
+
+    const currentDelivery = document.waybill?.deliveryStatus;
+    if (
+      currentDelivery !== WaybillDeliveryStatus.PREPARING &&
+      currentDelivery !== WaybillDeliveryStatus.FAILED
+    ) {
+      throw new BadRequestException(
+        `Only PREPARING or FAILED waybills can be staged to READY. Current delivery status is ${currentDelivery}.`,
+      );
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      // 1. Create frozen snapshot
-      const snapshot = {
-        documentNumber: document.documentNumber,
-        consignor: document.waybill?.consignorSnapshot,
-        consignee: document.waybill?.consigneeSnapshot,
-        originAddress: document.waybill?.originAddress,
-        destinationAddress: document.waybill?.destinationAddress,
-        vehicleNumber: dto.vehicleNumber || document.waybill?.vehicleNumber,
-        driverName: dto.driverName || document.waybill?.driverName,
-        driverPhone: dto.driverPhone || document.waybill?.driverPhone,
-        trackingNumber: dto.trackingNumber || document.waybill?.trackingNumber,
-        items: document.waybill?.items,
-        dispatchedAt: new Date().toISOString(),
-      };
-
-      const latestVersion = await tx.documentVersion.findFirst({
-        where: { documentId: document.id },
-        orderBy: { versionNumber: 'desc' },
-        select: { versionNumber: true },
-      });
-      const versionNumber = (latestVersion?.versionNumber ?? 0) + 1;
-
-      const version = await tx.documentVersion.create({
+      await tx.waybill.update({
+        where: { id: document.waybill!.id },
         data: {
-          documentId: document.id,
-          versionNumber,
-          snapshotData: JSON.parse(JSON.stringify(snapshot)) as Prisma.InputJsonValue,
-          createdById: actorId,
-          changeReason: 'Waybill Consignment Dispatched',
+          deliveryStatus: WaybillDeliveryStatus.READY,
         },
       });
 
-      const doc = await tx.document.update({
-        where: { id: document.id },
-        data: {
-          status: DocumentStatus.ISSUED,
-          currentVersionId: version.id,
+      await this.auditService.logAction(
+        {
+          companyId,
+          actorId,
+          action: 'WAYBILL_STAGED_READY',
+          entityType: 'Document',
+          entityId: document.id,
+          oldValues: { deliveryStatus: currentDelivery },
+          newValues: { deliveryStatus: WaybillDeliveryStatus.READY, ...dto },
         },
-      });
+        tx,
+      );
 
+      return document;
+    });
+
+    await this.notificationsService.createNotification(
+      companyId,
+      document.createdById,
+      `Waybill Ready for Dispatch: ${document.documentNumber}`,
+      `Waybill "${document.documentNumber}" cargo has been staged and is READY for carrier pickup.`,
+      'WAYBILL_READY',
+      { documentId: document.id, documentNumber: document.documentNumber },
+    );
+
+    this.logger.log(`Waybill "${document.documentNumber}" staged READY by user "${actorId}".`);
+    return this.findOne(companyId, updated.id);
+  }
+
+  /**
+   * Dispatches the consignment, transitioning deliveryStatus to IN_TRANSIT.
+   * Can transition from either PREPARING or READY -> IN_TRANSIT.
+   * If parent document is APPROVED, automatically invokes issuance logic to become ISSUED.
+   */
+  async dispatch(companyId: string, id: string, dto: DispatchWaybillDto, actorId: string) {
+    dispatchWaybillSchema.parse(dto);
+    const document = await this.findOne(companyId, id);
+
+    if (
+      document.status === DocumentStatus.CANCELLED ||
+      document.status === DocumentStatus.COMPLETED
+    ) {
+      throw new BadRequestException(`Cannot dispatch a document in status ${document.status}.`);
+    }
+
+    const currentDelivery = document.waybill?.deliveryStatus;
+    if (
+      currentDelivery !== WaybillDeliveryStatus.PREPARING &&
+      currentDelivery !== WaybillDeliveryStatus.READY
+    ) {
+      throw new BadRequestException(
+        `Only PREPARING or READY waybills can be dispatched. Current delivery status is ${currentDelivery}.`,
+      );
+    }
+
+    // If parent document is APPROVED, invoke unified issuance to lock version and set ISSUED
+    if (document.status === DocumentStatus.APPROVED) {
+      return this.documentsService.issue(
+        companyId,
+        id,
+        {
+          vehicleNumber: dto.vehicleNumber,
+          driverName: dto.driverName,
+          driverPhone: dto.driverPhone,
+          trackingNumber: dto.trackingNumber,
+          notes: 'Dispatched for transit',
+        },
+        actorId,
+      );
+    }
+
+    // If document is already ISSUED (e.g. re-dispatching after a previous failure), update delivery status in tx
+    const updated = await this.prisma.$transaction(async (tx) => {
       await tx.waybill.update({
         where: { id: document.waybill!.id },
         data: {
           deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT,
-          vehicleNumber: dto.vehicleNumber !== undefined ? dto.vehicleNumber.trim() : undefined,
-          driverName: dto.driverName !== undefined ? dto.driverName.trim() : undefined,
-          driverPhone: dto.driverPhone !== undefined ? dto.driverPhone.trim() : undefined,
-          trackingNumber: dto.trackingNumber !== undefined ? dto.trackingNumber.trim() : undefined,
+          vehicleNumber: dto.vehicleNumber.trim(),
+          driverName: dto.driverName.trim(),
+          driverPhone: dto.driverPhone.trim(),
+          trackingNumber: dto.trackingNumber?.trim(),
         },
       });
 
-      await tx.auditLog.create({
-        data: {
+      await this.auditService.logAction(
+        {
           companyId,
           actorId,
           action: 'WAYBILL_DISPATCHED',
           entityType: 'Document',
           entityId: document.id,
+          oldValues: { deliveryStatus: currentDelivery },
           newValues: { deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT, ...dto },
+        },
+        tx,
+      );
+
+      return document;
+    });
+
+    await this.notificationsService.createNotification(
+      companyId,
+      document.createdById,
+      `Waybill Dispatched: ${document.documentNumber}`,
+      `Consignment "${document.documentNumber}" is now IN_TRANSIT with driver ${dto.driverName} (${dto.vehicleNumber}).`,
+      'WAYBILL_DISPATCHED',
+      { documentId: document.id, documentNumber: document.documentNumber },
+    );
+
+    this.logger.log(`Waybill "${document.documentNumber}" dispatched by user "${actorId}".`);
+    return this.findOne(companyId, updated.id);
+  }
+
+  /**
+   * Records a failed delivery attempt, transitioning deliveryStatus from IN_TRANSIT to FAILED.
+   * Parent Document remains ISSUED so it can be re-staged or cancelled.
+   */
+  async fail(companyId: string, id: string, dto: FailWaybillDto, actorId: string) {
+    failWaybillSchema.parse(dto);
+    const document = await this.findOne(companyId, id);
+
+    if (document.waybill?.deliveryStatus !== WaybillDeliveryStatus.IN_TRANSIT) {
+      throw new BadRequestException(
+        `Only IN_TRANSIT waybills can be marked as FAILED. Current delivery status is ${document.waybill?.deliveryStatus}.`,
+      );
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.waybill.update({
+        where: { id: document.waybill!.id },
+        data: {
+          deliveryStatus: WaybillDeliveryStatus.FAILED,
         },
       });
 
-      return doc;
+      await this.auditService.logAction(
+        {
+          companyId,
+          actorId,
+          action: 'WAYBILL_DELIVERY_FAILED',
+          entityType: 'Document',
+          entityId: document.id,
+          oldValues: { deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT },
+          newValues: {
+            deliveryStatus: WaybillDeliveryStatus.FAILED,
+            failureReason: dto.failureReason.trim(),
+            notes: dto.notes?.trim(),
+          },
+        },
+        tx,
+      );
+
+      return document;
     });
 
-    this.logger.log(`Waybill "${document.documentNumber}" dispatched by user "${actorId}".`);
+    await this.notificationsService.createNotification(
+      companyId,
+      document.createdById,
+      `Waybill Delivery Failed: ${document.documentNumber}`,
+      `Delivery attempt for "${document.documentNumber}" failed. Reason: ${dto.failureReason.trim()}`,
+      'WAYBILL_FAILED',
+      { documentId: document.id, documentNumber: document.documentNumber, failureReason: dto.failureReason },
+    );
+
+    this.logger.warn(
+      `Waybill "${document.documentNumber}" marked FAILED by user "${actorId}". Reason: ${dto.failureReason}`,
+    );
     return this.findOne(companyId, updated.id);
   }
 
@@ -333,8 +462,10 @@ export class WaybillsService {
   async complete(companyId: string, id: string, dto: CompleteWaybillDto, actorId: string) {
     const document = await this.findOne(companyId, id);
 
-    if (document.waybill?.deliveryStatus === WaybillDeliveryStatus.DELIVERED) {
-      throw new BadRequestException('Waybill delivery is already confirmed.');
+    if (document.waybill?.deliveryStatus !== WaybillDeliveryStatus.IN_TRANSIT) {
+      throw new BadRequestException(
+        `Only IN_TRANSIT waybills can be confirmed as DELIVERED. Current delivery status is ${document.waybill?.deliveryStatus}.`,
+      );
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -353,22 +484,33 @@ export class WaybillsService {
         },
       });
 
-      await tx.auditLog.create({
-        data: {
+      await this.auditService.logAction(
+        {
           companyId,
           actorId,
           action: 'WAYBILL_DELIVERED',
           entityType: 'Document',
           entityId: document.id,
+          oldValues: { deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT },
           newValues: {
             deliveryStatus: WaybillDeliveryStatus.DELIVERED,
             receivedByName: dto.receivedByName,
           },
         },
-      });
+        tx,
+      );
 
       return doc;
     });
+
+    await this.notificationsService.createNotification(
+      companyId,
+      document.createdById,
+      `Waybill Delivered: ${document.documentNumber}`,
+      `Consignment "${document.documentNumber}" was confirmed DELIVERED to ${dto.receivedByName}.`,
+      'WAYBILL_DELIVERED',
+      { documentId: document.id, documentNumber: document.documentNumber, receivedByName: dto.receivedByName },
+    );
 
     this.logger.log(`Waybill "${document.documentNumber}" delivery confirmed by user "${actorId}".`);
     return this.findOne(companyId, updated.id);

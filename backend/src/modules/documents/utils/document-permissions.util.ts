@@ -10,7 +10,8 @@ export type DocumentAction =
   | 'cancel'
   | 'archive'
   | 'duplicate'
-  | 'version';
+  | 'version'
+  | 'issue';
 
 /**
  * Maps generic /documents actions to the seeded, type-specific permission slugs.
@@ -30,6 +31,7 @@ export const DOCUMENT_PERMISSION_MATRIX: Record<DocumentType, Record<DocumentAct
     archive: 'invoice:archive',
     duplicate: 'invoice:create',
     version: 'invoice:update',
+    issue: 'invoice:issue',
   },
   [DocumentType.WAYBILL]: {
     view: 'waybill:view',
@@ -40,6 +42,7 @@ export const DOCUMENT_PERMISSION_MATRIX: Record<DocumentType, Record<DocumentAct
     archive: 'waybill:cancel', // ⚠
     duplicate: 'waybill:create',
     version: 'waybill:update',
+    issue: 'waybill:dispatch',
   },
   [DocumentType.LETTER]: {
     view: 'letter:view',
@@ -50,6 +53,7 @@ export const DOCUMENT_PERMISSION_MATRIX: Record<DocumentType, Record<DocumentAct
     archive: 'letter:archive',
     duplicate: 'letter:create',
     version: 'letter:update',
+    issue: 'letter:issue',
   },
 };
 

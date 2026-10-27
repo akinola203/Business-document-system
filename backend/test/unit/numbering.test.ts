@@ -16,6 +16,7 @@ test('NumberingService Unit Tests', async (t) => {
             s.resetYear === where.companyId_documentType_resetYear.resetYear,
         );
       },
+      findFirst: async () => null,
       upsert: async ({ create }: any) => {
         const item = { id: `seq-${sequencesDb.length + 1}`, ...create };
         sequencesDb.push(item);

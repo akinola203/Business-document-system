@@ -120,7 +120,13 @@ test('Optimistic Concurrency Control (OCC) Tests', async (t) => {
       $transaction: async (fn: any) => fn(mockPrisma),
     };
 
-    const service = new WaybillsService(mockPrisma, {} as any);
+    const service = new WaybillsService(
+      mockPrisma,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    );
 
     // Conflict: Stale version 4 provided
     await assert.rejects(
@@ -134,7 +140,7 @@ test('Optimistic Concurrency Control (OCC) Tests', async (t) => {
       },
       (err: any) => {
         assert.ok(err instanceof ConflictException);
-        assert.match(err.message, /Current version is 5/);
+        assert.match(err.message, /current version is 5/i);
         return true;
       },
     );

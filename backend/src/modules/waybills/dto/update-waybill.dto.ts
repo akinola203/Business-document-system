@@ -15,6 +15,21 @@ export class UpdateWaybillDto {
   @IsString()
   title?: string;
 
+  @ApiPropertyOptional({ description: 'Recipient Client ID' })
+  @IsOptional()
+  @IsString()
+  clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Dispatching branch or depot ID' })
+  @IsOptional()
+  @IsString()
+  branchId?: string;
+
+  @ApiPropertyOptional({ description: 'Dispatching department ID' })
+  @IsOptional()
+  @IsString()
+  departmentId?: string;
+
   @ApiPropertyOptional({ example: '2026-10-25', description: 'Scheduled shipment dispatch date' })
   @IsOptional()
   @IsDateString()

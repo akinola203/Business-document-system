@@ -17,6 +17,7 @@ import { ApproveDocumentDto } from './dto/approve-document.dto';
 import { RejectDocumentDto } from './dto/reject-document.dto';
 import { CreateVersionDto } from './dto/create-version.dto';
 import { CompareVersionsDto } from './dto/compare-versions.dto';
+import { IssueDocumentDto } from './dto/issue-document.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import {
   DocumentAction,
@@ -129,6 +130,20 @@ export class DocumentsController {
   ) {
     await this.authorize(user, id, 'reject');
     return this.documentsService.reject(user.companyId, id, dto, user.id);
+  }
+
+  @Post(':id/issue')
+  @ApiOperation({ summary: 'Issue an approved document and freeze official legal version' })
+  @ApiResponse({ status: 200, description: 'Document issued; version snapshot locked.' })
+  @ApiResponse({ status: 400, description: 'Document not approved or missing items.' })
+  @ApiResponse({ status: 409, description: 'Concurrent edit conflict (OCC).' })
+  async issue(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: IssueDocumentDto,
+  ) {
+    await this.authorize(user, id, 'issue');
+    return this.documentsService.issue(user.companyId, id, dto, user.id);
   }
 
   @Get(':id/approvals')

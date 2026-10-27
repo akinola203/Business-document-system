@@ -37,6 +37,16 @@ export class CreateWaybillDto {
   @IsString()
   departmentId?: string;
 
+  @ApiPropertyOptional({ description: 'Template ID' })
+  @IsOptional()
+  @IsString()
+  templateId?: string;
+
+  @ApiPropertyOptional({ description: 'Template Version ID' })
+  @IsOptional()
+  @IsString()
+  templateVersionId?: string;
+
   @ApiPropertyOptional({ example: '2026-10-24', description: 'Scheduled shipment dispatch date' })
   @IsOptional()
   @IsDateString()

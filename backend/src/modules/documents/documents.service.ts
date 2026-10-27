@@ -16,7 +16,14 @@ import { SubmitDocumentDto } from './dto/submit-document.dto';
 import { ApproveDocumentDto } from './dto/approve-document.dto';
 import { RejectDocumentDto } from './dto/reject-document.dto';
 import { CreateVersionDto } from './dto/create-version.dto';
-import { DocumentStatus, DocumentType, Prisma } from '@prisma/client';
+import { IssueDocumentDto } from './dto/issue-document.dto';
+import {
+  DocumentStatus,
+  DocumentType,
+  InvoicePaymentStatus,
+  Prisma,
+  WaybillDeliveryStatus,
+} from '@prisma/client';
 import Decimal from 'decimal.js';
 
 @Injectable()
@@ -128,6 +135,11 @@ export class DocumentsService {
         client: {
           include: {
             addresses: true,
+          },
+        },
+        company: {
+          include: {
+            settings: true,
           },
         },
         branch: true,
@@ -596,6 +608,183 @@ export class DocumentsService {
 
     this.logger.log(`Document "${document.documentNumber}" rejected by user "${rejectorId}".`);
     return this.findOne(companyId, updated.id);
+  }
+
+  /**
+   * Polymorphic issuance: transitions an APPROVED document to ISSUED status,
+   * executes domain-specific validations and side effects in a single transaction,
+   * creates an authoritative locked DocumentVersion snapshot, and dispatches audit + notification.
+   */
+  async issue(companyId: string, id: string, dto: IssueDocumentDto, actorId: string) {
+    const document = await this.findOne(companyId, id);
+
+    // Concurrency control: verify expectedVersion if provided
+    if (dto.expectedVersion !== undefined && document.versionCounter !== dto.expectedVersion) {
+      throw new ConflictException(
+        `Document was modified concurrently. Expected version ${dto.expectedVersion}, but current version is ${document.versionCounter}.`,
+      );
+    }
+
+    // Must be in APPROVED status (Financial & business rule policy)
+    if (document.status !== DocumentStatus.APPROVED) {
+      throw new BadRequestException(
+        `Only APPROVED documents can be issued. Current status is ${document.status}.`,
+      );
+    }
+
+    const issued = await this.prisma.$transaction(async (tx) => {
+      let snapshotData: Record<string, any> = {};
+
+      if (document.documentType === DocumentType.INVOICE) {
+        if (!document.invoice || !document.invoice.items || document.invoice.items.length === 0) {
+          throw new BadRequestException('Cannot issue an invoice without line items.');
+        }
+
+        await tx.invoice.update({
+          where: { id: document.invoice.id },
+          data: {
+            paymentStatus: InvoicePaymentStatus.UNPAID,
+          },
+        });
+
+        snapshotData = {
+          documentNumber: document.documentNumber,
+          title: document.title,
+          currency: document.currency,
+          subtotal: document.subtotal,
+          taxAmount: document.taxAmount,
+          discountAmount: document.discountAmount,
+          totalAmount: document.totalAmount,
+          balanceDue: document.balanceDue,
+          paymentTerms: document.invoice.paymentTerms,
+          poNumber: document.invoice.poNumber,
+          client: document.client,
+          items: document.invoice.items,
+          company: document.company,
+          issuedAt: new Date().toISOString(),
+          frozenAt: new Date().toISOString(),
+        };
+      } else if (document.documentType === DocumentType.WAYBILL) {
+        if (!document.waybill || !document.waybill.items || document.waybill.items.length === 0) {
+          throw new BadRequestException('Cannot issue a waybill without cargo items.');
+        }
+
+        const hasDispatchDetails = Boolean(
+          dto.vehicleNumber?.trim() || dto.driverName?.trim() || dto.driverPhone?.trim(),
+        );
+        const targetDeliveryStatus = hasDispatchDetails
+          ? WaybillDeliveryStatus.IN_TRANSIT
+          : document.waybill.deliveryStatus === WaybillDeliveryStatus.PREPARING
+            ? WaybillDeliveryStatus.READY
+            : document.waybill.deliveryStatus;
+
+        await tx.waybill.update({
+          where: { id: document.waybill.id },
+          data: {
+            deliveryStatus: targetDeliveryStatus,
+            vehicleNumber: dto.vehicleNumber?.trim() || document.waybill.vehicleNumber,
+            driverName: dto.driverName?.trim() || document.waybill.driverName,
+            driverPhone: dto.driverPhone?.trim() || document.waybill.driverPhone,
+            trackingNumber: dto.trackingNumber?.trim() || document.waybill.trackingNumber,
+          },
+        });
+
+        snapshotData = {
+          documentNumber: document.documentNumber,
+          title: document.title,
+          consignor: document.waybill.consignorSnapshot,
+          consignee: document.waybill.consigneeSnapshot,
+          originAddress: document.waybill.originAddress,
+          destinationAddress: document.waybill.destinationAddress,
+          vehicleNumber: dto.vehicleNumber?.trim() || document.waybill.vehicleNumber,
+          driverName: dto.driverName?.trim() || document.waybill.driverName,
+          driverPhone: dto.driverPhone?.trim() || document.waybill.driverPhone,
+          trackingNumber: dto.trackingNumber?.trim() || document.waybill.trackingNumber,
+          deliveryStatus: targetDeliveryStatus,
+          items: document.waybill.items,
+          issuedAt: new Date().toISOString(),
+        };
+      } else if (document.documentType === DocumentType.LETTER) {
+        if (!document.letter) {
+          throw new BadRequestException('Letter entity details missing.');
+        }
+
+        snapshotData = {
+          documentNumber: document.documentNumber,
+          title: document.title,
+          letterDate: document.letter.letterDate,
+          recipientName: document.letter.recipientName,
+          recipientTitle: document.letter.recipientTitle,
+          recipientOrganization: document.letter.recipientOrganization,
+          recipientAddress: document.letter.recipientAddress,
+          subject: document.letter.subject,
+          bodyHtml: document.letter.bodyHtml,
+          bodyText: document.letter.bodyText,
+          signatoryName: document.letter.signatoryName,
+          signatoryTitle: document.letter.signatoryTitle,
+          signatoryDepartment: document.letter.signatoryDepartment,
+          issuedAt: new Date().toISOString(),
+        };
+      }
+
+      const latestVersion = await tx.documentVersion.findFirst({
+        where: { documentId: document.id },
+        orderBy: { versionNumber: 'desc' },
+        select: { versionNumber: true },
+      });
+      const versionNumber = (latestVersion?.versionNumber ?? 0) + 1;
+
+      const version = await tx.documentVersion.create({
+        data: {
+          documentId: document.id,
+          versionNumber,
+          snapshotData: JSON.parse(JSON.stringify(snapshotData)) as Prisma.InputJsonValue,
+          createdById: actorId,
+          changeReason: dto.notes?.trim() || `Official ${document.documentType} Issuance`,
+        },
+      });
+
+      const updatedDoc = await tx.document.update({
+        where: { id: document.id },
+        data: {
+          status: DocumentStatus.ISSUED,
+          currentVersionId: version.id,
+          issueDate: document.issueDate ?? new Date(),
+          versionCounter: { increment: 1 },
+        },
+      });
+
+      await this.auditService.logAction(
+        {
+          companyId,
+          actorId,
+          action: `${document.documentType}_ISSUED`,
+          entityType: 'Document',
+          entityId: document.id,
+          newValues: {
+            documentNumber: document.documentNumber,
+            versionNumber,
+            versionId: version.id,
+            status: DocumentStatus.ISSUED,
+          },
+        },
+        tx,
+      );
+
+      return updatedDoc;
+    });
+
+    await this.notificationsService.createNotification(
+      companyId,
+      document.createdById,
+      `${document.documentType} Issued: ${document.documentNumber}`,
+      `Your ${document.documentType.toLowerCase()} "${document.documentNumber}" has been officially issued.`,
+      'DOCUMENT_ISSUED',
+      { documentId: document.id, documentNumber: document.documentNumber },
+    );
+
+    this.logger.log(`Document "${document.documentNumber}" issued by user "${actorId}".`);
+    return this.findOne(companyId, issued.id);
   }
 
   /**

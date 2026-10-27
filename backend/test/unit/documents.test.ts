@@ -6,6 +6,7 @@ import { DocumentStatus, DocumentType } from '@prisma/client';
 
 test('DocumentsService Unit Tests', async (t) => {
   let documentsDb: any[] = [];
+  let versionsDb: any[] = [];
   let auditLogs: any[] = [];
 
   const mockPrisma: any = {
@@ -22,7 +23,15 @@ test('DocumentsService Unit Tests', async (t) => {
         return list.length;
       },
       findFirst: async ({ where }: any) => {
-        return documentsDb.find((d) => d.id === where.id && d.companyId === where.companyId) || null;
+        const doc = documentsDb.find((d) => d.id === where.id && d.companyId === where.companyId);
+        if (!doc) return null;
+        return {
+          ...doc,
+          company: { id: doc.companyId, name: 'AOA 77 LTD', settings: {} },
+          client: { id: 'client-1', name: 'Dangote Ltd' },
+          approvals: [],
+          versions: versionsDb.filter((v) => v.documentId === doc.id),
+        };
       },
       create: async ({ data }: any) => {
         const item = { id: `doc-${documentsDb.length + 1}`, ...data };
@@ -33,6 +42,37 @@ test('DocumentsService Unit Tests', async (t) => {
         const idx = documentsDb.findIndex((d) => d.id === where.id);
         documentsDb[idx] = { ...documentsDb[idx], ...data };
         return documentsDb[idx];
+      },
+    },
+    invoice: {
+      update: async ({ where, data }: any) => {
+        const doc = documentsDb.find((d) => d.invoice?.id === where.id);
+        if (doc && doc.invoice) {
+          doc.invoice = { ...doc.invoice, ...data };
+        }
+        return doc?.invoice;
+      },
+    },
+    waybill: {
+      update: async ({ where, data }: any) => {
+        const doc = documentsDb.find((d) => d.waybill?.id === where.id);
+        if (doc && doc.waybill) {
+          doc.waybill = { ...doc.waybill, ...data };
+        }
+        return doc?.waybill;
+      },
+    },
+    documentVersion: {
+      findFirst: async ({ where }: any) => {
+        const list = versionsDb
+          .filter((v) => v.documentId === where.documentId)
+          .sort((a, b) => b.versionNumber - a.versionNumber);
+        return list[0] ?? null;
+      },
+      create: async ({ data }: any) => {
+        const item = { id: `ver-${versionsDb.length + 1}`, ...data };
+        versionsDb.push(item);
+        return item;
       },
     },
     auditLog: {
@@ -116,5 +156,81 @@ test('DocumentsService Unit Tests', async (t) => {
     assert.equal(duplicated.status, DocumentStatus.DRAFT);
     // Balance due should be reset to total amount
     assert.equal(duplicated.balanceDue, '107500');
+  });
+
+  await t.test('issue rejects documents not in APPROVED status', async () => {
+    documentsDb.push({
+      id: 'doc-draft-inv',
+      companyId: 'comp-1',
+      documentType: DocumentType.INVOICE,
+      documentNumber: 'INV-2026-000002',
+      status: DocumentStatus.DRAFT,
+      invoice: { id: 'inv-1', items: [{ id: 'item-1', quantity: 1, unitPrice: 100 }] },
+    });
+
+    await assert.rejects(
+      async () => {
+        await service.issue('comp-1', 'doc-draft-inv', {}, 'usr-manager-1');
+      },
+      BadRequestException,
+    );
+  });
+
+  await t.test('issue polymorphically issues an APPROVED invoice', async () => {
+    const docIdx = documentsDb.findIndex((d) => d.id === 'doc-draft-inv');
+    documentsDb[docIdx].status = DocumentStatus.APPROVED;
+
+    const issued = await service.issue('comp-1', 'doc-draft-inv', {}, 'usr-manager-1');
+    assert.equal(issued.status, DocumentStatus.ISSUED);
+    assert.equal(versionsDb.length, 1);
+  });
+
+  await t.test('issue polymorphically issues an APPROVED waybill and transitions deliveryStatus', async () => {
+    documentsDb.push({
+      id: 'doc-wb-approved',
+      companyId: 'comp-1',
+      documentType: DocumentType.WAYBILL,
+      documentNumber: 'WB-2026-000001',
+      status: DocumentStatus.APPROVED,
+      waybill: {
+        id: 'wb-1',
+        deliveryStatus: 'PREPARING',
+        items: [{ id: 'wb-item-1', description: 'Industrial Parts', quantity: 10 }],
+      },
+    });
+
+    const issued = await service.issue(
+      'comp-1',
+      'doc-wb-approved',
+      {
+        vehicleNumber: 'OG-500-ABC',
+        driverName: 'Lateef Gbadamosi',
+        driverPhone: '+234 803 111 2222',
+      },
+      'usr-ops-1',
+    );
+
+    assert.equal(issued.status, DocumentStatus.ISSUED);
+    assert.equal(versionsDb.length, 2);
+  });
+
+  await t.test('issue polymorphically issues an APPROVED letter', async () => {
+    documentsDb.push({
+      id: 'doc-let-approved',
+      companyId: 'comp-1',
+      documentType: DocumentType.LETTER,
+      documentNumber: 'AOA/LET/2026/0001',
+      status: DocumentStatus.APPROVED,
+      letter: {
+        id: 'let-1',
+        recipientName: 'Mr. Adewale',
+        subject: 'Partnership Agreement',
+        bodyHtml: '<p>Agreement details</p>',
+      },
+    });
+
+    const issued = await service.issue('comp-1', 'doc-let-approved', {}, 'usr-admin-1');
+    assert.equal(issued.status, DocumentStatus.ISSUED);
+    assert.equal(versionsDb.length, 3);
   });
 });

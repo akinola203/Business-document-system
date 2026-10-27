@@ -7,8 +7,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InvoicesService } from './invoices.service';
+import { DocumentsService } from '../documents/documents.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
+import { SubmitDocumentDto } from '../documents/dto/submit-document.dto';
+import { ApproveDocumentDto } from '../documents/dto/approve-document.dto';
+import { IssueDocumentDto } from '../documents/dto/issue-document.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
 
@@ -16,7 +20,10 @@ import { RequirePermissions } from '../../common/decorators/require-permissions.
 @ApiBearerAuth('JWT-auth')
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(
+    private readonly invoicesService: InvoicesService,
+    private readonly documentsService: DocumentsService,
+  ) {}
 
   @Post()
   @RequirePermissions('invoice:create')
@@ -46,38 +53,40 @@ export class InvoicesController {
 
   @Post(':id/submit')
   @RequirePermissions('invoice:submit')
-  @ApiOperation({ summary: 'Submit a draft invoice into PENDING_APPROVAL status' })
+  @ApiOperation({ summary: 'Submit a draft invoice into PENDING_APPROVAL status (delegates to DocumentsService)' })
   @ApiResponse({ status: 200, description: 'Invoice submitted for approval.' })
   @ApiResponse({ status: 400, description: 'Invalid status transition or empty items.' })
   async submitForApproval(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
+    @Body() dto?: SubmitDocumentDto,
   ) {
-    return this.invoicesService.submitForApproval(user.companyId, id, user.id);
+    return this.documentsService.submitForApproval(user.companyId, id, dto || {}, user.id);
   }
 
   @Post(':id/approve')
   @RequirePermissions('invoice:approve')
-  @ApiOperation({ summary: 'Approve an invoice (prohibits self-approval by policy)' })
+  @ApiOperation({ summary: 'Approve an invoice (prohibits self-approval by policy, delegates to DocumentsService)' })
   @ApiResponse({ status: 200, description: 'Invoice approved.' })
   @ApiResponse({ status: 403, description: 'Self-approval forbidden.' })
   async approve(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body('comment') comment?: string,
+    @Body() dto?: ApproveDocumentDto,
   ) {
-    return this.invoicesService.approve(user.companyId, id, user.id, comment);
+    return this.documentsService.approve(user.companyId, id, dto || {}, user.id);
   }
 
   @Post(':id/issue')
   @RequirePermissions('invoice:issue')
-  @ApiOperation({ summary: 'Issue an approved invoice, freezing legal snapshot and version 1' })
+  @ApiOperation({ summary: 'Issue an approved invoice, freezing legal snapshot and version (delegates to DocumentsService)' })
   @ApiResponse({ status: 200, description: 'Invoice officially issued.' })
   @ApiResponse({ status: 400, description: 'Invoice is not approved.' })
   async issue(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
+    @Body() dto?: IssueDocumentDto,
   ) {
-    return this.invoicesService.issue(user.companyId, id, user.id);
+    return this.documentsService.issue(user.companyId, id, dto || {}, user.id);
   }
 }

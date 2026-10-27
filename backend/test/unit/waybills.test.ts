@@ -104,12 +104,49 @@ test('WaybillsService Unit Tests', async (t) => {
     getNextDocumentNumber: async () => 'WB-2026-000001',
   };
 
-  const service = new WaybillsService(mockPrisma, mockNumberingService);
+  const mockDocumentsService: any = {
+    issue: async (companyId: string, id: string, dto: any, actorId: string) => {
+      const idx = documentsDb.findIndex((d) => d.id === id);
+      if (idx !== -1) {
+        documentsDb[idx].status = DocumentStatus.ISSUED;
+      }
+      const wbIdx = waybillsDb.findIndex((w) => w.documentId === id);
+      if (wbIdx !== -1) {
+        waybillsDb[wbIdx].deliveryStatus = WaybillDeliveryStatus.IN_TRANSIT;
+        waybillsDb[wbIdx].vehicleNumber = dto.vehicleNumber;
+        waybillsDb[wbIdx].driverName = dto.driverName;
+        waybillsDb[wbIdx].driverPhone = dto.driverPhone;
+        waybillsDb[wbIdx].trackingNumber = dto.trackingNumber;
+      }
+      versionsDb.push({ id: `ver-${versionsDb.length + 1}`, documentId: id, versionNumber: 1 });
+      return mockPrisma.document.findFirst({ where: { id, companyId } });
+    },
+  };
+
+  const mockAuditService: any = {
+    logAction: async (entry: any) => {
+      auditLogs.push(entry);
+    },
+  };
+
+  const mockNotificationsService: any = {
+    createNotification: async () => {},
+  };
+
+  const service = new WaybillsService(
+    mockPrisma,
+    mockNumberingService,
+    mockDocumentsService,
+    mockAuditService,
+    mockNotificationsService,
+  );
 
   await t.test('createDraft creates waybill with consignor/consignee snapshots and WB number', async () => {
     documentsDb = [];
     waybillsDb = [];
     waybillItemsDb = [];
+    versionsDb = [];
+    auditLogs = [];
 
     const waybill = await service.createDraft(
       'comp-1',
@@ -131,7 +168,23 @@ test('WaybillsService Unit Tests', async (t) => {
     assert.equal(waybill.waybill?.items.length, 1);
   });
 
-  await t.test('dispatch transitions delivery to IN_TRANSIT and status to ISSUED', async () => {
+  await t.test('stageReady rejects DRAFT documents without prior approval', async () => {
+    const docId = documentsDb[0].id;
+    await assert.rejects(
+      () => service.stageReady('comp-1', docId, { notes: 'Ready for loading' }, 'usr-ops-1'),
+      BadRequestException,
+    );
+  });
+
+  await t.test('stageReady transitions PREPARING -> READY when parent document is APPROVED', async () => {
+    const docId = documentsDb[0].id;
+    documentsDb[0].status = DocumentStatus.APPROVED;
+
+    const staged = await service.stageReady('comp-1', docId, { notes: 'Loaded and palletized' }, 'usr-ops-1');
+    assert.equal(staged.waybill?.deliveryStatus, WaybillDeliveryStatus.READY);
+  });
+
+  await t.test('dispatch transitions READY -> IN_TRANSIT and issues the document', async () => {
     const docId = documentsDb[0].id;
     const dispatched = await service.dispatch(
       'comp-1',
@@ -151,7 +204,52 @@ test('WaybillsService Unit Tests', async (t) => {
     assert.equal(versionsDb.length, 1);
   });
 
-  await t.test('complete transitions delivery to DELIVERED and status to COMPLETED', async () => {
+  await t.test('fail transitions IN_TRANSIT -> FAILED with mandatory failureReason', async () => {
+    const docId = documentsDb[0].id;
+    const failed = await service.fail(
+      'comp-1',
+      docId,
+      {
+        failureReason: 'Haulage truck experienced mechanical breakdown at Sagamu interchange.',
+      },
+      'usr-ops-1',
+    );
+
+    assert.equal(failed.status, DocumentStatus.ISSUED);
+    assert.equal(failed.waybill?.deliveryStatus, WaybillDeliveryStatus.FAILED);
+  });
+
+  await t.test('stageReady re-stages FAILED -> READY for second delivery attempt', async () => {
+    const docId = documentsDb[0].id;
+    const reStaged = await service.stageReady(
+      'comp-1',
+      docId,
+      { notes: 'Transferred cargo to replacement haulage truck' },
+      'usr-ops-1',
+    );
+
+    assert.equal(reStaged.waybill?.deliveryStatus, WaybillDeliveryStatus.READY);
+  });
+
+  await t.test('dispatch transitions re-staged READY -> IN_TRANSIT with new driver details', async () => {
+    const docId = documentsDb[0].id;
+    const redispatched = await service.dispatch(
+      'comp-1',
+      docId,
+      {
+        vehicleNumber: 'LA-999-EKY',
+        driverName: 'Sunday Babatunde',
+        driverPhone: '+234 802 333 4444',
+        trackingNumber: 'TRK-2026-002',
+      },
+      'usr-ops-1',
+    );
+
+    assert.equal(redispatched.waybill?.deliveryStatus, WaybillDeliveryStatus.IN_TRANSIT);
+    assert.equal(redispatched.waybill?.vehicleNumber, 'LA-999-EKY');
+  });
+
+  await t.test('complete transitions IN_TRANSIT -> DELIVERED and status to COMPLETED', async () => {
     const docId = documentsDb[0].id;
     const completed = await service.complete(
       'comp-1',
