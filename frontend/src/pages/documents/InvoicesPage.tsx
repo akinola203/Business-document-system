@@ -13,6 +13,7 @@ import {
   LifecycleActionType,
 } from '../../components/workspace/LifecycleActionModal';
 import { VersionAndAuditDrawer } from '../../components/workspace/VersionAndAuditDrawer';
+import { RecordPaymentModal } from '../../components/payments/RecordPaymentModal';
 import {
   ArrowLeft,
   Plus,
@@ -45,6 +46,7 @@ export const InvoicesPage: React.FC = () => {
   // Modals state
   const [activeActionModal, setActiveActionModal] = useState<LifecycleActionType | null>(null);
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
 
   // Query invoices from backend
   const { data: invoicesData, isLoading } = useQuery({
@@ -316,12 +318,22 @@ export const InvoicesPage: React.FC = () => {
               document={selectedDocument}
               onActionClick={(action) => setActiveActionModal(action)}
               onOpenHistory={() => setIsHistoryDrawerOpen(true)}
-              onRecordPayment={() => navigate('/payments')}
+              onRecordPayment={() => setIsRecordPaymentOpen(true)}
               onEditDraft={(id) => navigate(`/documents/invoices/${id}/edit`)}
             />
           )
         }
       />
+
+      {/* Record Payment Modal */}
+      {selectedDocument && (
+        <RecordPaymentModal
+          isOpen={isRecordPaymentOpen}
+          onClose={() => setIsRecordPaymentOpen(false)}
+          defaultInvoiceId={selectedDocument.id}
+          invoices={allInvoices}
+        />
+      )}
 
       {/* Lifecycle Action Modal */}
       {activeActionModal && selectedDocument && (

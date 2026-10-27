@@ -366,3 +366,79 @@ export interface PaginatedResult<T> {
   limit: number;
   totalPages: number;
 }
+
+// =============================================================================
+// TEMPLATES & BRANDING LAYOUTS
+// =============================================================================
+
+export interface TemplateLayoutConfig {
+  primaryColor: string;
+  accentColor: string;
+  fontFamily: string;
+  logoPosition: 'left' | 'center' | 'right';
+  showBankDetails: boolean;
+  showStamp: boolean;
+  showSignature: boolean;
+  showQrCode: boolean;
+}
+
+export interface TemplateVersion {
+  id: string;
+  templateId: string;
+  versionNumber: number;
+  config: TemplateLayoutConfig;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface DocumentTemplate {
+  id: string;
+  companyId: string;
+  code: string;
+  name: string;
+  documentType: DocumentType;
+  description?: string | null;
+  isDefault: boolean;
+  config: TemplateLayoutConfig;
+  versions?: TemplateVersion[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// =============================================================================
+// AUDIT LOGS
+// =============================================================================
+
+export interface AuditLog {
+  id: string;
+  companyId: string;
+  actorId?: string | null;
+  actor?: {
+    id: string;
+    fullName: string;
+    email: string;
+  } | null;
+  action: string;
+  entityType: string;
+  entityId: string;
+  oldValues?: Record<string, any> | null;
+  newValues?: Record<string, any> | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  createdAt: string;
+}
+
+// =============================================================================
+// NUMBERING CONFIG
+// =============================================================================
+
+export interface DocumentNumberingConfig {
+  id: string;
+  documentType: DocumentType;
+  prefix: string;
+  suffix?: string | null;
+  nextNumber: number;
+  padding: number;
+  resetPeriod: 'NONE' | 'YEARLY' | 'MONTHLY';
+  pattern: string;
+}

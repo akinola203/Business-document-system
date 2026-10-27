@@ -3,17 +3,19 @@ import { RecessedTabNotch, TabItem } from './RecessedTabNotch';
 import { SelectableDocumentFeed } from './SelectableDocumentFeed';
 import { DocumentRecord, DocumentType } from '../../types';
 
-interface ObsidianMasterDetailShellProps {
-  tabs: TabItem[];
-  activeTab: string;
-  onTabChange: (key: string) => void;
-  documents: DocumentRecord[];
-  selectedDocument: DocumentRecord | null;
-  onSelectDocument: (doc: DocumentRecord) => void;
+export interface ObsidianMasterDetailShellProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (key: string) => void;
+  documents?: DocumentRecord[];
+  selectedDocument?: DocumentRecord | null;
+  onSelectDocument?: (doc: DocumentRecord) => void;
   isLoading?: boolean;
-  documentType: DocumentType;
-  inspector: React.ReactNode;
+  documentType?: DocumentType;
+  inspector?: React.ReactNode;
   emptyFeedMessage?: string;
+  leftPane?: React.ReactNode;
+  rightPane?: React.ReactNode;
 }
 
 export const ObsidianMasterDetailShell: React.FC<ObsidianMasterDetailShellProps> = ({
@@ -27,33 +29,45 @@ export const ObsidianMasterDetailShell: React.FC<ObsidianMasterDetailShellProps>
   documentType,
   inspector,
   emptyFeedMessage,
+  leftPane,
+  rightPane,
 }) => {
   return (
     <div className="w-full bg-[#16181F] text-white rounded-[32px] p-6 md:p-8 shadow-2xl border border-slate-800">
-      {/* 1. Top Center Recessed Tab Notch */}
-      <RecessedTabNotch
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-      />
+      {/* 1. Top Center Recessed Tab Notch (if tabs provided) */}
+      {tabs && activeTab !== undefined && onTabChange && (
+        <RecessedTabNotch
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+        />
+      )}
 
       {/* 2. 40% / 60% Split Workspace Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Pane (40% width / 5 cols) */}
         <div className="lg:col-span-5">
-          <SelectableDocumentFeed
-            documents={documents}
-            selectedId={selectedDocument?.id || null}
-            onSelect={onSelectDocument}
-            isLoading={isLoading}
-            documentType={documentType}
-            emptyMessage={emptyFeedMessage}
-          />
+          {leftPane ? (
+            leftPane
+          ) : (
+            documents && onSelectDocument && documentType ? (
+              <SelectableDocumentFeed
+                documents={documents}
+                selectedId={selectedDocument?.id || null}
+                onSelect={onSelectDocument}
+                isLoading={isLoading}
+                documentType={documentType}
+                emptyMessage={emptyFeedMessage}
+              />
+            ) : null
+          )}
         </div>
 
         {/* Right Pane (60% width / 7 cols) */}
         <div className="lg:col-span-7">
-          {selectedDocument ? (
+          {rightPane ? (
+            rightPane
+          ) : selectedDocument ? (
             inspector
           ) : (
             <div className="w-full h-80 rounded-[28px] bg-[#1E2029] border border-[#282B37] flex flex-col items-center justify-center text-center p-8 text-slate-400">
