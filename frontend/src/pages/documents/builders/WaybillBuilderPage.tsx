@@ -9,6 +9,7 @@ import { Client, Company, DocumentRecord } from '../../../types';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4WaybillSheet } from '../../../components/builder/LiveA4WaybillSheet';
+import { DEMO_CLIENTS } from '../../../lib/mock-data';
 import {
   Truck,
   Plus,
@@ -75,7 +76,8 @@ export const WaybillBuilderPage: React.FC = () => {
       return res.data;
     },
   });
-  const clients: Client[] = clientsData?.items || [];
+  const clients: Client[] =
+    clientsData?.items && clientsData.items.length > 0 ? clientsData.items : DEMO_CLIENTS;
 
   // 3. Fetch Existing Document if in Edit Mode
   const { data: existingDoc, isLoading: isDocLoading } = useQuery<DocumentRecord>({
@@ -325,13 +327,35 @@ export const WaybillBuilderPage: React.FC = () => {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Consignee Client <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Consignee Client <span className="text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <span className="text-[10px] text-sky-600 font-bold bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
+                    {clients.length} Clients Available
+                  </span>
+                </div>
+                {/* 1-Tap Consignee Quick-Fill Pills */}
+                <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                  {clients.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => handleClientChange(c.id)}
+                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${
+                        formValues.clientId === c.id
+                          ? 'bg-sky-600 text-white border-sky-600 shadow-sm shadow-sky-500/20'
+                          : 'bg-white hover:bg-sky-50 hover:border-sky-300 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      ⚡ {c.companyName?.split(' ')[0] || c.name.split(' ')[0]}
+                    </button>
+                  ))}
+                </div>
                 <select
                   value={formValues.clientId || ''}
                   onChange={(e) => handleClientChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
                 >
                   <option value="">Select a consignee client...</option>
                   {clients.map((c) => (

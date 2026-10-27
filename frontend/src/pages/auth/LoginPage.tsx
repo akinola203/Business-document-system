@@ -13,6 +13,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   const from = location.state?.from?.pathname || '/overview';
 
@@ -20,6 +21,7 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage(null);
+    setFeedbackMessage(null);
 
     try {
       const response = await apiClient.post('/auth/login', {
@@ -62,9 +64,16 @@ export const LoginPage: React.FC = () => {
   };
 
   // Demo credential autofill helper matching seed.ts
-  const handleDemoFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
+  const handleDemoFill = (role: 'Admin' | 'Manager') => {
+    if (role === 'Admin') {
+      setEmail('admin@aoa77.com');
+      setPassword('Aoa77@Password2026!');
+      setFeedbackMessage('Admin (MD) credentials populated into form.');
+    } else {
+      setEmail('manager@aoa77.com');
+      setPassword('Aoa77@Password2026!');
+      setFeedbackMessage('Manager (Finance) credentials populated into form.');
+    }
     setErrorMessage(null);
   };
 
@@ -100,6 +109,14 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Feedback Alert */}
+        {feedbackMessage && !errorMessage && (
+          <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold">{feedbackMessage}</span>
+          </div>
+        )}
+
         {/* Error Alert */}
         {errorMessage && (
           <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-3">
@@ -122,7 +139,10 @@ export const LoginPage: React.FC = () => {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setFeedbackMessage(null);
+                }}
                 placeholder="name@company.com"
                 className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:bg-white transition-all"
               />
@@ -139,7 +159,10 @@ export const LoginPage: React.FC = () => {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setFeedbackMessage(null);
+                }}
                 placeholder="••••••••••••"
                 className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:bg-white transition-all"
               />
@@ -149,7 +172,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-2 py-3.5 px-6 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-sm font-bold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+            className="w-full mt-2 py-3.5 px-6 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-sm font-bold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -163,35 +186,68 @@ export const LoginPage: React.FC = () => {
         </form>
 
         {/* Quick Demo Access Pills */}
-        <div className="mt-8 pt-6 border-t border-slate-100">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center mb-3">
-            Quick Fill Demo Accounts
-          </p>
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <button
-              type="button"
-              onClick={() => handleDemoFill('admin@aoa77.com', 'Aoa77@Password2026!')}
-              className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-700 transition-colors text-center"
-            >
-              Fill Admin (MD)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoFill('manager@aoa77.com', 'Aoa77@Password2026!')}
-              className="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-700 transition-colors text-center"
-            >
-              Fill Manager (Finance)
-            </button>
+        <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Quick-Fill Demo Credentials
+              </span>
+              <span className="text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                Fills inputs
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                id="quick-fill-admin-btn"
+                type="button"
+                onClick={() => handleDemoFill('Admin')}
+                className="px-3 py-2.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 text-[11px] font-bold text-[#5847F6] transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Quick-Fill: Admin</span>
+              </button>
+              <button
+                id="quick-fill-manager-btn"
+                type="button"
+                onClick={() => handleDemoFill('Manager')}
+                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200/80 text-[11px] font-bold text-slate-700 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+              >
+                <span>Quick-Fill: Manager</span>
+              </button>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleInstantDemoLogin('Admin')}
-            className="w-full py-2.5 px-4 rounded-full bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] border border-indigo-200/70 text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-sm"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>1-Click Instant Demo Login</span>
-          </button>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                1-Click Instant Demo Login
+              </span>
+              <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Direct access
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                id="instant-login-admin-btn"
+                type="button"
+                onClick={() => handleInstantDemoLogin('Admin')}
+                className="w-full py-2.5 px-3 rounded-2xl bg-[#16181F] hover:bg-slate-900 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-700 cursor-pointer active:scale-95"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Enter as Admin</span>
+              </button>
+              <button
+                id="instant-login-manager-btn"
+                type="button"
+                onClick={() => handleInstantDemoLogin('Manager')}
+                className="w-full py-2.5 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-600 cursor-pointer active:scale-95"
+              >
+                <span>Enter as Manager</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
+import { DEMO_LETTERS } from '../../lib/mock-data';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { PillFilterBar, FilterState } from '../../components/common/PillFilterBar';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
@@ -57,7 +58,12 @@ export const LettersPage: React.FC = () => {
     },
   });
 
-  const allLetters: DocumentRecord[] = lettersData?.items || lettersData?.data || [];
+  const allLetters: DocumentRecord[] =
+    lettersData?.items && lettersData.items.length > 0
+      ? lettersData.items
+      : lettersData?.data && lettersData.data.length > 0
+      ? lettersData.data
+      : DEMO_LETTERS;
 
   const filteredLetters = useMemo(() => {
     return allLetters.filter((letDoc) => {
