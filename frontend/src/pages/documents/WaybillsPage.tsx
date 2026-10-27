@@ -64,7 +64,7 @@ export const WaybillsPage: React.FC = () => {
     },
   });
 
-  const allWaybills: DocumentRecord[] = waybillsData?.data || [];
+  const allWaybills: DocumentRecord[] = waybillsData?.items || waybillsData?.data || [];
 
   // Tab filtering based on deliveryStatus or document status
   const filteredWaybills = useMemo(() => {

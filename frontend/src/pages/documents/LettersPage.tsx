@@ -57,7 +57,7 @@ export const LettersPage: React.FC = () => {
     },
   });
 
-  const allLetters: DocumentRecord[] = lettersData?.data || [];
+  const allLetters: DocumentRecord[] = lettersData?.items || lettersData?.data || [];
 
   const filteredLetters = useMemo(() => {
     return allLetters.filter((letDoc) => {

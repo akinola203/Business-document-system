@@ -35,7 +35,7 @@ export const OverviewDashboard: React.FC = () => {
     },
   });
 
-  const documents = documentsData?.data || [];
+  const documents = documentsData?.items || documentsData?.data || [];
 
   return (
     <div className="space-y-8">

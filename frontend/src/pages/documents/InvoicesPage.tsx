@@ -64,7 +64,7 @@ export const InvoicesPage: React.FC = () => {
     },
   });
 
-  const allInvoices: DocumentRecord[] = invoicesData?.data || [];
+  const allInvoices: DocumentRecord[] = invoicesData?.items || invoicesData?.data || [];
 
   // Tab filtering on client for instant responsiveness
   const filteredInvoices = useMemo(() => {
