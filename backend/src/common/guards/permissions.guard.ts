@@ -29,7 +29,13 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const hasPermission = requiredPermissions.every((perm) => user.permissions.includes(perm));
+    const hasPermission = requiredPermissions.every((perm) => {
+      if (user.permissions.includes(perm)) return true;
+      const [domain] = perm.split(':');
+      if (user.permissions.includes(`${domain}:manage`)) return true;
+      if (user.permissions.includes('*')) return true;
+      return false;
+    });
 
     if (!hasPermission) {
       throw new ForbiddenException(

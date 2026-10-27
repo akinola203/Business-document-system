@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/main.js",
-    "test": "ts-node test/unit/guards.test.ts && ts-node test/unit/auth.test.ts && ts-node test/unit/companies.test.ts && ts-node test/unit/organization.test.ts && ts-node test/unit/clients.test.ts && ts-node test/unit/numbering.test.ts && ts-node test/unit/financial-math.test.ts && ts-node test/unit/invoices.test.ts && ts-node test/unit/waybills.test.ts && ts-node test/unit/letters.test.ts && ts-node test/unit/documents.test.ts && ts-node test/unit/audit.test.ts && ts-node test/unit/idempotency.test.ts && ts-node test/unit/notifications.test.ts && ts-node test/unit/approvals.test.ts && ts-node test/unit/versions.test.ts && ts-node test/unit/concurrency.test.ts && ts-node test/unit/payments.test.ts",
+    "test": "ts-node test/unit/guards.test.ts && ts-node test/unit/auth.test.ts && ts-node test/unit/companies.test.ts && ts-node test/unit/organization.test.ts && ts-node test/unit/clients.test.ts && ts-node test/unit/numbering.test.ts && ts-node test/unit/financial-math.test.ts && ts-node test/unit/invoices.test.ts && ts-node test/unit/waybills.test.ts && ts-node test/unit/letters.test.ts && ts-node test/unit/documents.test.ts && ts-node test/unit/audit.test.ts && ts-node test/unit/idempotency.test.ts && ts-node test/unit/notifications.test.ts && ts-node test/unit/approvals.test.ts && ts-node test/unit/versions.test.ts && ts-node test/unit/concurrency.test.ts && ts-node test/unit/payments.test.ts && ts-node test/unit/iam.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",

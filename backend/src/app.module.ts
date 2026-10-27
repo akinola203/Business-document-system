@@ -18,6 +18,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { IdempotencyModule } from './modules/idempotency/idempotency.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { IamModule } from './modules/iam/iam.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -54,6 +55,7 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
     WaybillsModule,
     LettersModule,
     PaymentsModule,
+    IamModule,
   ],
   providers: [
     {
