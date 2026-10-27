@@ -16,6 +16,9 @@ import { TemplatesPage } from './pages/settings/TemplatesPage';
 import { CompanySettingsPage } from './pages/settings/CompanySettingsPage';
 import { UsersPage } from './pages/settings/UsersPage';
 import { NotificationsPage } from './pages/notifications/NotificationsPage';
+import { InvoiceBuilderPage } from './pages/documents/builders/InvoiceBuilderPage';
+import { WaybillBuilderPage } from './pages/documents/builders/WaybillBuilderPage';
+import { LetterBuilderPage } from './pages/documents/builders/LetterBuilderPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,8 +49,14 @@ export const App: React.FC = () => {
             <Route index element={<Navigate to="/overview" replace />} />
             <Route path="/overview" element={<OverviewDashboard />} />
             <Route path="/documents/invoices" element={<InvoicesPage />} />
+            <Route path="/documents/invoices/new" element={<InvoiceBuilderPage />} />
+            <Route path="/documents/invoices/:id/edit" element={<InvoiceBuilderPage />} />
             <Route path="/documents/waybills" element={<WaybillsPage />} />
+            <Route path="/documents/waybills/new" element={<WaybillBuilderPage />} />
+            <Route path="/documents/waybills/:id/edit" element={<WaybillBuilderPage />} />
             <Route path="/documents/letters" element={<LettersPage />} />
+            <Route path="/documents/letters/new" element={<LetterBuilderPage />} />
+            <Route path="/documents/letters/:id/edit" element={<LetterBuilderPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/reports" element={<ReportsPage />} />

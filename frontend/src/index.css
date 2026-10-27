@@ -61,3 +61,25 @@
   background: rgba(255, 255, 255, 0.18);
   border-color: rgba(255, 255, 255, 0.25);
 }
+
+/* Printable Document & A4 Sheet Optimization */
+@media print {
+  body, html {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #000000 !important;
+  }
+  
+  header, nav, button, .no-print, [data-no-print] {
+    display: none !important;
+  }
+
+  main {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+

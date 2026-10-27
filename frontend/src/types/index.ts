@@ -291,6 +291,8 @@ export interface DocumentRecord {
   branchId?: string | null;
   departmentId?: string | null;
   createdById: string;
+  templateId?: string | null;
+  bankDetailsVisible?: boolean | null;
   createdAt: string;
   updatedAt: string;
 
