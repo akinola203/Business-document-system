@@ -59,6 +59,11 @@ export const App: React.FC = () => {
             <Route path="/documents/letters" element={<LettersPage />} />
             <Route path="/documents/letters/new" element={<LetterBuilderPage />} />
             <Route path="/documents/letters/:id/edit" element={<LetterBuilderPage />} />
+            {/* Direct Route Aliases */}
+            <Route path="/invoices" element={<Navigate to="/documents/invoices" replace />} />
+            <Route path="/waybills" element={<Navigate to="/documents/waybills" replace />} />
+            <Route path="/letters" element={<Navigate to="/documents/letters" replace />} />
+            <Route path="/ledger" element={<Navigate to="/payments" replace />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/vendors" element={<VendorsPage />} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
@@ -31,6 +31,7 @@ import {
 
 export const WaybillsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<FilterState>({
@@ -42,6 +43,25 @@ export const WaybillsPage: React.FC = () => {
   });
 
   const [activeTab, setActiveTab] = useState('ALL');
+
+  // React to URL filter query parameter (e.g. /documents/waybills?filter=in_transit)
+  const filterParam = searchParams.get('filter') || searchParams.get('tab') || searchParams.get('status');
+  useEffect(() => {
+    if (filterParam) {
+      const upper = filterParam.toUpperCase();
+      if (upper === 'IN_TRANSIT' || upper === 'ACTIVE' || upper === 'TRANSIT') {
+        setActiveTab('IN_TRANSIT');
+      } else if (upper === 'READY' || upper === 'READY_FOR_DISPATCH') {
+        setActiveTab('READY');
+      } else if (upper === 'DELIVERED' || upper === 'COMPLETED') {
+        setActiveTab('DELIVERED');
+      } else if (upper === 'DRAFT') {
+        setActiveTab('DRAFT');
+      } else if (upper === 'ALL') {
+        setActiveTab('ALL');
+      }
+    }
+  }, [filterParam]);
   const [selectedDocument, setSelectedDocument] = useState<DocumentRecord | null>(null);
 
   const [activeActionModal, setActiveActionModal] = useState<LifecycleActionType | null>(null);

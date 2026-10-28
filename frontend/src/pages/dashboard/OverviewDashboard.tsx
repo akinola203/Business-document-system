@@ -101,13 +101,16 @@ export const OverviewDashboard: React.FC = () => {
       {/* 2. 4-Column Bento KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
         {/* KPI 1: Overdue & Action Required */}
-        <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div
+          onClick={() => navigate('/documents/invoices?filter=overdue')}
+          className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-rose-300 hover:shadow-md transition-all cursor-pointer group"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Action Required
               </span>
-              <span className="p-2 rounded-2xl bg-rose-50 text-rose-600">
+              <span className="p-2 rounded-2xl bg-rose-50 text-rose-600 group-hover:scale-105 transition-transform">
                 <AlertCircle className="w-4 h-4" />
               </span>
             </div>
@@ -121,18 +124,31 @@ export const OverviewDashboard: React.FC = () => {
           </div>
           <div className="pt-4 mt-4 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span>Requires settlement notice</span>
-            <span className="font-bold text-slate-700">Follow up &rarr;</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/documents/invoices?filter=overdue');
+              }}
+              className="font-bold text-rose-700 hover:text-rose-900 flex items-center gap-1 transition-colors cursor-pointer group-hover:underline"
+            >
+              <span>Follow up</span>
+              <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </button>
           </div>
         </div>
 
         {/* KPI 2: Pending Approval with Mini-Chart */}
-        <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div
+          onClick={() => navigate('/documents/invoices?filter=pending_approval')}
+          className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Pending Approval
               </span>
-              <span className="p-2 rounded-2xl bg-indigo-50 text-[#5847F6]">
+              <span className="p-2 rounded-2xl bg-indigo-50 text-[#5847F6] group-hover:scale-105 transition-transform">
                 <Clock className="w-4 h-4" />
               </span>
             </div>
@@ -155,18 +171,31 @@ export const OverviewDashboard: React.FC = () => {
           </div>
           <div className="pt-4 mt-4 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span>Oldest: 2 days in queue</span>
-            <span className="font-bold text-[#5847F6]">Review Queue &rarr;</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/documents/invoices?filter=pending_approval');
+              }}
+              className="font-bold text-[#5847F6] hover:text-[#4939E3] flex items-center gap-1 transition-colors cursor-pointer group-hover:underline"
+            >
+              <span>Review Queue</span>
+              <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </button>
           </div>
         </div>
 
         {/* KPI 3: Logistics In-Transit Turnaround */}
-        <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div
+          onClick={() => navigate('/documents/waybills?filter=in_transit')}
+          className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-amber-300 hover:shadow-md transition-all cursor-pointer group"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Logistics Dispatch
               </span>
-              <span className="p-2 rounded-2xl bg-amber-50 text-amber-600">
+              <span className="p-2 rounded-2xl bg-amber-50 text-amber-600 group-hover:scale-105 transition-transform">
                 <Truck className="w-4 h-4" />
               </span>
             </div>
@@ -187,18 +216,31 @@ export const OverviewDashboard: React.FC = () => {
 
           <div className="pt-4 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span>Avg delivery: 24h</span>
-            <span className="font-bold text-slate-700">Track All &rarr;</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/documents/waybills?filter=in_transit');
+              }}
+              className="font-bold text-slate-700 hover:text-[#5847F6] flex items-center gap-1 transition-colors cursor-pointer group-hover:underline"
+            >
+              <span>Track All</span>
+              <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </button>
           </div>
         </div>
 
         {/* KPI 4: Settled Volume & Multi-Currency */}
-        <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div
+          onClick={() => navigate('/payments')}
+          className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/70 shadow-sm flex flex-col justify-between hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer group"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Total Settled
               </span>
-              <span className="p-2 rounded-2xl bg-emerald-50 text-emerald-600">
+              <span className="p-2 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:scale-105 transition-transform">
                 <CheckCircle2 className="w-4 h-4" />
               </span>
             </div>
@@ -219,7 +261,17 @@ export const OverviewDashboard: React.FC = () => {
           </div>
           <div className="pt-4 mt-4 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span>0 unallocated deposits</span>
-            <span className="font-bold text-emerald-700">Ledger &rarr;</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/payments');
+              }}
+              className="font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 transition-colors cursor-pointer group-hover:underline"
+            >
+              <span>Ledger</span>
+              <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </button>
           </div>
         </div>
       </div>

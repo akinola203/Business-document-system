@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
@@ -27,6 +27,7 @@ import {
 
 export const InvoicesPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
   // Filter state
@@ -38,8 +39,29 @@ export const InvoicesPage: React.FC = () => {
     endDate: '',
   });
 
-  // Top tab notch state ('ALL' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'ISSUED' | 'OVERDUE')
+  // Top tab notch state ('ALL' | 'OVERDUE' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'ISSUED')
   const [activeTab, setActiveTab] = useState('ALL');
+
+  // React to URL filter query parameter (e.g. /documents/invoices?filter=overdue)
+  const filterParam = searchParams.get('filter') || searchParams.get('tab') || searchParams.get('status');
+  useEffect(() => {
+    if (filterParam) {
+      const upper = filterParam.toUpperCase();
+      if (upper === 'OVERDUE' || upper === 'UNPAID') {
+        setActiveTab('OVERDUE');
+      } else if (upper === 'PENDING' || upper === 'PENDING_APPROVAL') {
+        setActiveTab('PENDING_APPROVAL');
+      } else if (upper === 'DRAFT') {
+        setActiveTab('DRAFT');
+      } else if (upper === 'APPROVED') {
+        setActiveTab('APPROVED');
+      } else if (upper === 'ISSUED') {
+        setActiveTab('ISSUED');
+      } else if (upper === 'ALL') {
+        setActiveTab('ALL');
+      }
+    }
+  }, [filterParam]);
 
   // Currently selected document for the right-hand inspector
   const [selectedDocument, setSelectedDocument] = useState<DocumentRecord | null>(null);
@@ -130,8 +152,17 @@ export const InvoicesPage: React.FC = () => {
   }, [allInvoices]);
 
   // Tab items with dynamic counts
+  const overdueCount = useMemo(() => {
+    return allInvoices.filter((d) => d.isOverdue || (d.status === 'ISSUED' && Number(d.balanceDue) > 0)).length;
+  }, [allInvoices]);
+
   const tabItems = [
     { key: 'ALL', label: 'All Invoices', count: allInvoices.length },
+    {
+      key: 'OVERDUE',
+      label: 'Past Due / Unpaid',
+      count: overdueCount,
+    },
     { key: 'DRAFT', label: 'Draft', count: allInvoices.filter((d) => d.status === 'DRAFT').length },
     {
       key: 'PENDING_APPROVAL',
