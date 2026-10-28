@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
-import { DocumentType, DocumentTemplate, TemplateLayoutConfig } from '../../types';
+import { DocumentType, DocumentTemplate, TemplateLayoutConfig, Company, Client } from '../../types';
 import { DEMO_TEMPLATES, DEMO_COMPANY } from '../../lib/mock-data';
+import { LiveA4InvoiceSheet, InvoiceLiveFormValues } from '../../components/builder/LiveA4InvoiceSheet';
+import { LiveA4WaybillSheet, WaybillLiveFormValues } from '../../components/builder/LiveA4WaybillSheet';
+import { LiveA4LetterSheet, LetterLiveFormValues } from '../../components/builder/LiveA4LetterSheet';
 import {
   Palette,
   Layout,
@@ -25,7 +28,18 @@ export const TemplatesPage: React.FC = () => {
 
   const [selectedType, setSelectedType] = useState<DocumentType>('INVOICE');
 
-  // Query templates with fallback
+  // 1. Fetch Company Profile
+  const { data: companyData } = useQuery<Company>({
+    queryKey: ['company-current'],
+    queryFn: async () => {
+      const res = await apiClient.get('/companies/current');
+      return res.data;
+    },
+  });
+
+  const company: Company = (companyData as any)?.data || companyData || DEMO_COMPANY;
+
+  // 2. Query templates with fallback
   const { data: templatesData } = useQuery<any>({
     queryKey: ['templates', selectedType],
     queryFn: async () => {
@@ -42,6 +56,7 @@ export const TemplatesPage: React.FC = () => {
       : templatesData?.items && Array.isArray(templatesData.items) && templatesData.items.length > 0
       ? templatesData.items
       : DEMO_TEMPLATES;
+
   const currentTemplate =
     templates.find((t) => t.documentType === selectedType) || templates[0] || DEMO_TEMPLATES[0];
 
@@ -73,11 +88,37 @@ export const TemplatesPage: React.FC = () => {
 
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  // When switching document type, adapt colors
+  // Sync customizer controls when switching document type or when templatesData updates
+  useEffect(() => {
+    const match = templates.find((t) => t.documentType === selectedType);
+    if (match?.config) {
+      if (match.config.primaryColor) setPrimaryColor(match.config.primaryColor);
+      if (match.config.accentColor) setAccentColor(match.config.accentColor);
+      if (match.config.fontFamily) setFontFamily(match.config.fontFamily);
+      if (match.config.logoPosition) setLogoPosition(match.config.logoPosition);
+      if (match.config.showBankDetails !== undefined) setShowBankDetails(match.config.showBankDetails);
+      if (match.config.showStamp !== undefined) setShowStamp(match.config.showStamp);
+      if (match.config.showSignature !== undefined) setShowSignature(match.config.showSignature);
+      if (match.config.showQrCode !== undefined) setShowQrCode(match.config.showQrCode);
+    } else {
+      if (selectedType === 'INVOICE') {
+        setPrimaryColor('#5847F6');
+        setAccentColor('#4939E3');
+      } else if (selectedType === 'WAYBILL') {
+        setPrimaryColor('#0284C7');
+        setAccentColor('#0369A1');
+      } else if (selectedType === 'LETTER') {
+        setPrimaryColor('#0F172A');
+        setAccentColor('#D97706');
+      }
+    }
+  }, [selectedType, templatesData]);
+
+  // When switching document type, adapt colors & controls immediately
   const handleTypeChange = (type: DocumentType) => {
     setSelectedType(type);
     const match = templates.find((t) => t.documentType === type);
-    if (match) {
+    if (match?.config) {
       setPrimaryColor(match.config.primaryColor);
       setAccentColor(match.config.accentColor);
       setFontFamily(match.config.fontFamily);
@@ -87,9 +128,16 @@ export const TemplatesPage: React.FC = () => {
       setShowSignature(match.config.showSignature);
       setShowQrCode(match.config.showQrCode);
     } else {
-      if (type === 'INVOICE') setPrimaryColor('#5847F6');
-      if (type === 'WAYBILL') setPrimaryColor('#0284C7');
-      if (type === 'LETTER') setPrimaryColor('#059669');
+      if (type === 'INVOICE') {
+        setPrimaryColor('#5847F6');
+        setAccentColor('#4939E3');
+      } else if (type === 'WAYBILL') {
+        setPrimaryColor('#0284C7');
+        setAccentColor('#0369A1');
+      } else if (type === 'LETTER') {
+        setPrimaryColor('#0F172A');
+        setAccentColor('#D97706');
+      }
     }
     setFeedback(null);
   };
@@ -126,9 +174,100 @@ export const TemplatesPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
-      setFeedback('✓ Layout template saved & published as active version.');
+      setFeedback(`✓ Layout template for ${selectedType} saved & published as active version.`);
     },
   });
+
+  // Sample client data for realistic A4 preview
+  const sampleClient: Client = {
+    id: 'demo-client-1',
+    companyId: company.id || 'comp-1',
+    clientNumber: 'CLI-00142',
+    type: 'COMPANY',
+    name: 'Engr. Babajide Adeleke',
+    companyName: 'Dangote Industries Limited',
+    email: 'procurement@dangote.com',
+    phone: '+234 803 123 4567',
+    address: 'Plot 10 Commercial Avenue, Victoria Island, Lagos, Nigeria',
+    taxNumber: 'TIN-992014-001',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Sample mock values for each distinct archetype
+  const sampleInvoiceValues: InvoiceLiveFormValues = {
+    title: 'Commercial Supply of Certified Portland Cement',
+    clientId: sampleClient.id,
+    currency: 'NGN',
+    issueDate: new Date().toISOString(),
+    dueDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+    paymentTerms: 'Net 30 Days',
+    poNumber: 'PO-2026-9041',
+    bankDetailsVisible: showBankDetails,
+    notes: 'Payment is due within 30 days of invoice date. Please quote invoice number on bank transfer advice.',
+    items: [
+      {
+        description: 'Elephant Certified Portland Limestone Cement (50kg Bag)',
+        quantity: 250,
+        unit: 'Bags',
+        unitPrice: 5200,
+        discountPercent: 0,
+        taxRate: 7.5,
+      },
+      {
+        description: 'Heavy Duty Reinforced Deformed Rebar Steel Rods (16mm x 12m)',
+        quantity: 80,
+        unit: 'Lengths',
+        unitPrice: 9400,
+        discountPercent: 5,
+        taxRate: 7.5,
+      },
+    ],
+  };
+
+  const sampleWaybillValues: WaybillLiveFormValues = {
+    title: 'Consignment Dispatch — Construction Materials',
+    originAddress: company.address || 'Central Loading Bay & Depot, Ewupe, Ota, Ogun State',
+    destinationAddress: sampleClient.address || 'Plot 10 Commercial Avenue, Victoria Island, Lagos',
+    shipmentDate: new Date().toISOString(),
+    vehicleNumber: 'KJA-829XA (Mack 30-Tonne Haulier)',
+    driverName: 'Ibrahim Babatunde Alabi',
+    driverPhone: '+234 802 333 4455',
+    trackingNumber: 'TRK-2026-08912',
+    items: [
+      {
+        description: 'Elephant Certified Portland Limestone Cement (50kg)',
+        quantity: 250,
+        unit: 'Bags',
+        packageCount: 250,
+        packageType: 'Moisture-Sealed Paper Sacks',
+        weightKg: 12500,
+      },
+      {
+        description: '16mm High-Yield Deformed Steel Rebar (12-Meter Rods)',
+        quantity: 80,
+        unit: 'Lengths',
+        packageCount: 8,
+        packageType: 'Banded Steel Bundles',
+        weightKg: 1520,
+      },
+    ],
+  };
+
+  const sampleLetterValues: LetterLiveFormValues = {
+    title: 'Formal Notice of Contract Execution & Consignment Schedule',
+    letterDate: new Date().toISOString(),
+    recipientName: sampleClient.name,
+    recipientTitle: 'Director of Procurement & Infrastructure',
+    recipientOrganization: sampleClient.companyName || 'Dangote Industries Limited',
+    recipientAddress: sampleClient.address || 'Plot 10 Commercial Avenue, Victoria Island, Lagos, Nigeria',
+    subject: 'EXECUTION OF FY2026 COMMERCIAL SUPPLY FRAMEWORK AND CONSIGNMENT DELIVERY TIMELINE',
+    bodyText: `We write to formally confirm the execution of the FY2026 Commercial Supply Agreement between ${company.legalName || company.name || 'AOA 77 COMPANY LIMITED'} and ${sampleClient.companyName || 'Dangote Industries Limited'}.\n\nIn accordance with Section 4 of the procurement charter, our logistics division has scheduled the initial delivery of construction materials to your Victoria Island infrastructure project site commencing on Monday, 3rd November 2026.\n\nPlease find attached the preliminary cargo manifest and waybill schedule for your receiving team's verification. Our haulier fleet has been cleared through logistics protocol, and delivery notes will require physical endorsement upon offloading.\n\nWe appreciate your continued partnership and remain committed to ensuring seamless supply delivery.`,
+    signatoryName: 'Alhaji O. Akinola',
+    signatoryTitle: 'Managing Director & CEO',
+    signatoryDepartment: 'Executive Directorate',
+  };
 
   return (
     <div className="space-y-6">
@@ -162,7 +301,7 @@ export const TemplatesPage: React.FC = () => {
           ) : (
             <>
               <Save className="w-4 h-4" />
-              <span>Save Template Version</span>
+              <span>Save {selectedType} Template</span>
             </>
           )}
         </button>
@@ -178,7 +317,7 @@ export const TemplatesPage: React.FC = () => {
       {/* Split-Screen Studio: Left Form 45% / Right Obsidian A4 Stage 55% */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Form Customizer (45% -> 5.5 cols / 6 cols) */}
-        <div className="lg:col-span-6 space-y-6">
+        <div className="lg:col-span-5 space-y-6">
           {/* 1. Document Type Switcher */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
@@ -206,7 +345,7 @@ export const TemplatesPage: React.FC = () => {
                     onClick={() => handleTypeChange(item.type)}
                     className={`p-3 rounded-2xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-2 cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#16181F] text-white border-slate-800 shadow-md'
+                        ? 'bg-[#16181F] text-white border-slate-800 shadow-md ring-2 ring-[#5847F6]/30'
                         : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200/80'
                     }`}
                   >
@@ -318,21 +457,23 @@ export const TemplatesPage: React.FC = () => {
 
               {/* Toggles */}
               <div className="pt-2 border-t border-slate-200/60 space-y-3">
-                <label className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200/80 cursor-pointer">
-                  <div className="flex items-center gap-2.5">
-                    <Landmark className="w-4 h-4 text-[#5847F6]" />
-                    <div>
-                      <span className="font-bold text-slate-900">Settlement Bank Strip</span>
-                      <p className="text-[11px] text-slate-400">Globus Bank NUBAN details printed at footer</p>
+                {selectedType === 'INVOICE' && (
+                  <label className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200/80 cursor-pointer">
+                    <div className="flex items-center gap-2.5">
+                      <Landmark className="w-4 h-4 text-[#5847F6]" />
+                      <div>
+                        <span className="font-bold text-slate-900">Settlement Bank Strip</span>
+                        <p className="text-[11px] text-slate-400">Globus Bank NUBAN details printed at footer</p>
+                      </div>
                     </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={showBankDetails}
-                    onChange={(e) => setShowBankDetails(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#5847F6] focus:ring-[#5847F6]"
-                  />
-                </label>
+                    <input
+                      type="checkbox"
+                      checked={showBankDetails}
+                      onChange={(e) => setShowBankDetails(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#5847F6] focus:ring-[#5847F6]"
+                    />
+                  </label>
+                )}
 
                 <label className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200/80 cursor-pointer">
                   <div className="flex items-center gap-2.5">
@@ -370,134 +511,50 @@ export const TemplatesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Obsidian Live A4 Miniature Stage (55% -> 6 cols) */}
-        <div className="lg:col-span-6 sticky top-6">
+        {/* Right Obsidian Live A4 Canvas (55% -> 7 cols) */}
+        <div className="lg:col-span-7 sticky top-6">
           <div className="bg-[#16181F] rounded-[32px] p-6 shadow-2xl border border-slate-800 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-xs font-extrabold text-white uppercase tracking-wider">
-                  Live A4 Layout Canvas
+                  Live A4 Layout Canvas — {selectedType}
                 </span>
               </div>
               <span className="text-[11px] font-mono text-slate-400">
-                Miniature Scaling (1:1.414)
+                Full Specialized A4 Rendering
               </span>
             </div>
 
-            {/* A4 Sheet Container */}
-            <div className="flex justify-center p-2 bg-[#0F1117] rounded-2xl overflow-hidden border border-slate-800/80">
+            {/* A4 Sheet Container with Dynamic Component Switching */}
+            <div className="flex justify-center p-3 bg-[#0F1117] rounded-2xl overflow-y-auto max-h-[850px] dark-scroll border border-slate-800/80">
               <div
-                className="w-full max-w-[420px] aspect-[1/1.414] bg-white rounded-lg p-6 shadow-2xl text-slate-900 flex flex-col justify-between"
+                className="w-full flex justify-center transition-all duration-300"
                 style={{ fontFamily }}
               >
-                {/* Header */}
-                <div
-                  className={`flex items-start pb-4 border-b border-slate-200 ${
-                    logoPosition === 'center'
-                      ? 'flex-col items-center text-center'
-                      : logoPosition === 'right'
-                      ? 'flex-row-reverse justify-between'
-                      : 'justify-between'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-md"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      AOA
-                    </div>
-                    <div className={logoPosition === 'center' ? 'mt-2' : ''}>
-                      <h2 className="text-xs font-black tracking-tight leading-tight">
-                        AOA 77 COMPANY LTD
-                      </h2>
-                      <p className="text-[9px] text-slate-500">RC-1849204 • TIN: 24891044-0001</p>
-                    </div>
-                  </div>
-
-                  <div className={`text-right ${logoPosition === 'center' ? 'mt-2' : ''}`}>
-                    <span
-                      className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded text-white"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      {selectedType}
-                    </span>
-                    <p className="text-[9px] font-mono font-bold text-slate-500 mt-1">
-                      AOA/{selectedType.slice(0, 3)}/2026/0001
-                    </p>
-                  </div>
-                </div>
-
-                {/* Body Content Representation */}
-                <div className="space-y-3 my-auto py-2">
-                  <div className="flex justify-between text-[9px] text-slate-600 bg-slate-50 p-2 rounded">
-                    <div>
-                      <span className="font-bold">BILLED TO:</span>
-                      <p className="font-semibold text-slate-900">Dangote Industries Limited</p>
-                      <p>Plot 12 Commercial Way, Ikeja</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold">DATE:</span>
-                      <p>27 Oct 2026</p>
-                    </div>
-                  </div>
-
-                  {/* Table Skeleton */}
-                  <div className="border border-slate-200 rounded text-[9px] overflow-hidden">
-                    <div
-                      className="p-1.5 font-bold text-white flex justify-between"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      <span>Item Description</span>
-                      <span>Amount</span>
-                    </div>
-                    <div className="p-1.5 flex justify-between border-b border-slate-100">
-                      <span>Certified Industrial Grade 42.5R Portland</span>
-                      <span className="font-bold">₦12,500,000.00</span>
-                    </div>
-                    <div className="p-1.5 flex justify-between bg-slate-50 font-black">
-                      <span>TOTAL PAYABLE</span>
-                      <span style={{ color: primaryColor }}>₦12,500,000.00</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer Strip */}
-                <div className="pt-3 border-t border-slate-200 space-y-2">
-                  {showBankDetails && (
-                    <div className="p-2 rounded bg-slate-50 border border-slate-200 text-[8px] flex justify-between items-center">
-                      <div>
-                        <span className="font-bold text-slate-700">GLOBUS BANK PLC</span>
-                        <p className="font-mono font-bold text-slate-900">A/C: 1000294819</p>
-                      </div>
-                      <span className="text-[8px] text-slate-400 font-mono">SORT: 001042</span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-1">
-                    {showQrCode ? (
-                      <div className="w-8 h-8 rounded bg-slate-100 border border-slate-300 flex items-center justify-center">
-                        <QrCode className="w-6 h-6 text-slate-800" />
-                      </div>
-                    ) : (
-                      <div />
-                    )}
-
-                    {showStamp && (
-                      <div className="w-10 h-10 rounded-full border-2 border-rose-500/80 text-rose-600 font-bold text-[7px] flex items-center justify-center text-center uppercase tracking-tighter leading-none p-1 rotate-[-12deg]">
-                        AOA 77 VERIFIED
-                      </div>
-                    )}
-
-                    {showSignature && (
-                      <div className="text-right">
-                        <div className="h-4 border-b border-slate-400 w-16 mb-0.5" />
-                        <span className="text-[8px] font-bold text-slate-700">Managing Director</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {selectedType === 'INVOICE' && (
+                  <LiveA4InvoiceSheet
+                    formValues={sampleInvoiceValues}
+                    company={company}
+                    selectedClient={sampleClient}
+                    documentNumber="INV-2026-000042"
+                  />
+                )}
+                {selectedType === 'WAYBILL' && (
+                  <LiveA4WaybillSheet
+                    formValues={sampleWaybillValues}
+                    company={company}
+                    selectedClient={sampleClient}
+                    documentNumber="WB-2026-000018"
+                  />
+                )}
+                {selectedType === 'LETTER' && (
+                  <LiveA4LetterSheet
+                    formValues={sampleLetterValues}
+                    company={company}
+                    documentNumber="LTR-2026-0007"
+                  />
+                )}
               </div>
             </div>
           </div>
