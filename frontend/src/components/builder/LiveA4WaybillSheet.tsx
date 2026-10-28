@@ -44,7 +44,7 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
   const totalWeight = items.reduce((acc, it) => acc + (Number(it.weightKg) || 0), 0);
 
   return (
-    <div className="aspect-[1/1.414] w-full max-w-[680px] bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300">
+    <div className="aspect-[1/1.414] w-full max-w-[680px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300 my-auto">
       {/* 1. Header & Logistics Brand Identity */}
       <div>
         {/* Logistics Industrial Banner */}

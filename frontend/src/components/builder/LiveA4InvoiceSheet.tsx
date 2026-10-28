@@ -101,7 +101,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   const showBank = formValues?.bankDetailsVisible ?? company?.settings?.showBankDetailsOnInvoice ?? true;
 
   return (
-    <div className="aspect-[1/1.414] w-full max-w-[680px] bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300">
+    <div className="aspect-[1/1.414] w-full max-w-[680px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300 my-auto">
       {/* 1. Header & Financial Ledger Brand Identity */}
       <div>
         {/* Ledger Top Bar */}

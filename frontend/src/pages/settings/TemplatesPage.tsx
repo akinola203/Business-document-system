@@ -527,7 +527,7 @@ export const TemplatesPage: React.FC = () => {
             </div>
 
             {/* A4 Sheet Container with Dynamic Component Switching */}
-            <div className="flex justify-center p-3 bg-[#0F1117] rounded-2xl overflow-y-auto max-h-[850px] dark-scroll border border-slate-800/80">
+            <div className="flex justify-center py-8 md:py-12 px-3 md:px-6 bg-[#0F1117] rounded-2xl overflow-y-auto max-h-[calc(100vh-200px)] min-h-[640px] a4-scroll dark-scroll border border-slate-800/80">
               <div
                 className="w-full flex justify-center transition-all duration-300"
                 style={{ fontFamily }}

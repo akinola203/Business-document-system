@@ -23,8 +23,8 @@
 
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -40,13 +40,37 @@
   background: rgba(100, 116, 139, 0.6);
 }
 
-/* Dark Surface Scrollbars */
-.dark-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+/* Visible, Sleek A4 Stage & Dark Container Scrollbar */
+.a4-scroll,
+.dark-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) rgba(15, 23, 42, 0.75);
 }
 
-.dark-scroll::-webkit-scrollbar-thumb:hover {
+.a4-scroll::-webkit-scrollbar,
+.dark-scroll::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.a4-scroll::-webkit-scrollbar-track,
+.dark-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.75);
+  border-radius: 9999px;
+  margin: 8px 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.a4-scroll::-webkit-scrollbar-thumb,
+.dark-scroll::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.35);
+  border-radius: 9999px;
+  border: 2px solid rgba(15, 23, 42, 0.75);
+}
+
+.a4-scroll::-webkit-scrollbar-thumb:hover,
+.dark-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
 }
 
 /* Glassmorphism helpers */

@@ -157,7 +157,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
       </div>
 
       {/* 2. Main Stage Stage Viewing Area */}
-      <div className="w-full flex-1 flex justify-center items-start overflow-y-auto max-h-[calc(100vh-210px)] py-4 px-2 custom-scrollbar">
+      <div className="w-full flex-1 flex justify-center items-start overflow-y-auto max-h-[calc(100vh-210px)] min-h-[640px] py-8 md:py-12 px-3 md:px-6 a4-scroll dark-scroll">
         {previewMode === 'LIVE' ? (
           <div
             className="w-full flex justify-center transition-transform duration-200 origin-top"
