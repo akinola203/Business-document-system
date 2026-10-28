@@ -18,13 +18,17 @@ import {
 interface CreateVendorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  vendorToEdit?: Vendor | null;
   onVendorCreated?: (vendor: Vendor) => void;
+  onVendorSaved?: (vendor: Vendor) => void;
 }
 
 export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
   isOpen,
   onClose,
+  vendorToEdit,
   onVendorCreated,
+  onVendorSaved,
 }) => {
   const queryClient = useQueryClient();
 
@@ -47,24 +51,85 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
   const [notes, setNotes] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const createMutation = useMutation({
+  // Sync state when editing existing vendor or opening fresh
+  React.useEffect(() => {
+    if (vendorToEdit) {
+      setName(vendorToEdit.name || '');
+      setCategory(vendorToEdit.category || 'RAW_MATERIALS');
+      setContactPerson(vendorToEdit.contactPerson || '');
+      setEmail(vendorToEdit.email || '');
+      setPhone(vendorToEdit.phone || '');
+      setTaxId(vendorToEdit.taxId || '');
+      setRegistrationNumber(vendorToEdit.registrationNumber || '');
+      setAddress(vendorToEdit.address || '');
+      setCity(vendorToEdit.city || 'Lagos');
+      setState(vendorToEdit.state || 'Lagos State');
+      setBankName(vendorToEdit.bankName || '');
+      setBankAccountName(vendorToEdit.bankAccountName || '');
+      setBankAccountNumber(vendorToEdit.bankAccountNumber || '');
+      setPaymentTerms(vendorToEdit.paymentTerms || 'NET 30');
+      setCurrency(vendorToEdit.currency || 'NGN');
+      setNotes(vendorToEdit.notes || '');
+    } else {
+      setName('');
+      setCategory('RAW_MATERIALS');
+      setContactPerson('');
+      setEmail('');
+      setPhone('');
+      setTaxId('');
+      setRegistrationNumber('');
+      setAddress('');
+      setCity('Lagos');
+      setState('Lagos State');
+      setBankName('');
+      setBankAccountName('');
+      setBankAccountNumber('');
+      setPaymentTerms('NET 30');
+      setCurrency('NGN');
+      setNotes('');
+    }
+    setErrorMessage(null);
+  }, [vendorToEdit, isOpen]);
+
+  const saveMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await apiClient.post('/vendors', payload);
-      return res.data;
+      if (vendorToEdit) {
+        const res = await apiClient.patch(`/vendors/${vendorToEdit.id}`, payload);
+        return res.data;
+      } else {
+        const res = await apiClient.post('/vendors', payload);
+        return res.data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      if (vendorToEdit) {
+        queryClient.invalidateQueries({ queryKey: ['vendors', vendorToEdit.id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['overview-summary'] });
+      if (onVendorSaved && data) {
+        onVendorSaved(data);
+      }
       if (onVendorCreated && data) {
         onVendorCreated(data);
       }
       handleClose();
     },
     onError: (err: any) => {
+      const serverMessage = Array.isArray(err?.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : err?.response?.data?.message;
+
+      if (serverMessage) {
+        setErrorMessage(serverMessage);
+        return;
+      }
+
       // In offline/demo mode, construct local mock vendor
       const fallbackVendor: Vendor = {
-        id: `vnd-local-${Date.now()}`,
-        companyId: 'c0000000-0000-0000-0000-000000000001',
-        vendorCode: `VND-${Math.floor(1000 + Math.random() * 9000)}`,
+        id: vendorToEdit?.id || `vnd-local-${Date.now()}`,
+        companyId: vendorToEdit?.companyId || 'c0000000-0000-0000-0000-000000000001',
+        vendorCode: vendorToEdit?.vendorCode || `VND-${Math.floor(1000 + Math.random() * 9000)}`,
         name,
         category,
         contactPerson: contactPerson || null,
@@ -81,14 +146,17 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
         bankAccountNumber: bankAccountNumber || null,
         paymentTerms,
         currency,
-        status: 'ACTIVE',
+        status: vendorToEdit?.status || 'ACTIVE',
         notes: notes || null,
-        totalSuppliedAmount: 0,
-        outstandingPayable: 0,
-        createdAt: new Date().toISOString(),
-        _count: { items: 0, orders: 0 },
+        totalSuppliedAmount: vendorToEdit?.totalSuppliedAmount || 0,
+        outstandingPayable: vendorToEdit?.outstandingPayable || 0,
+        createdAt: vendorToEdit?.createdAt || new Date().toISOString(),
+        _count: vendorToEdit?._count || { items: 0, orders: 0 },
       };
 
+      if (onVendorSaved) {
+        onVendorSaved(fallbackVendor);
+      }
       if (onVendorCreated) {
         onVendorCreated(fallbackVendor);
       }
@@ -143,7 +211,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
       notes: notes.trim() || undefined,
     };
 
-    createMutation.mutate(payload);
+    saveMutation.mutate(payload);
   };
 
   if (!isOpen) return null;
@@ -158,9 +226,13 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900 tracking-tight">Add Vendor Profile</h2>
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                {vendorToEdit ? 'Edit Vendor Profile' : 'Add Vendor Profile'}
+              </h2>
               <p className="text-xs text-slate-500 font-medium">
-                Register a new corporate supplier, contractor, or logistics partner
+                {vendorToEdit
+                  ? `Update banking settlement, registration numbers, and contact details for ${vendorToEdit.name}`
+                  : 'Register a new corporate supplier, contractor, or logistics partner'}
               </p>
             </div>
           </div>
@@ -407,10 +479,12 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={createMutation.isPending}
+              disabled={saveMutation.isPending}
               className="px-6 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
-              {createMutation.isPending ? 'Saving...' : 'Create Vendor Profile'}
+              {saveMutation.isPending
+                ? (vendorToEdit ? 'Saving Changes...' : 'Creating Profile...')
+                : (vendorToEdit ? 'Save Changes' : 'Create Vendor Profile')}
             </button>
           </div>
         </form>

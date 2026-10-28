@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { Vendor, SupplyItem, SupplyOrder, VendorCategory } from '../../types';
 import { DEMO_VENDORS, DEMO_SUPPLIES, DEMO_SUPPLY_ORDERS } from '../../lib/mock-data';
@@ -8,6 +8,7 @@ import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
 import { VendorDetailInspector } from '../../components/workspace/inspectors/VendorDetailInspector';
 import { CreateVendorModal } from '../../components/vendors/CreateVendorModal';
+import { RecordSupplyDeliveryModal } from '../../components/supplies/RecordSupplyDeliveryModal';
 import {
   Building2,
   Plus,
@@ -24,11 +25,15 @@ import {
 } from 'lucide-react';
 
 export const VendorsPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
+  const [isRecordDeliveryOpen, setIsRecordDeliveryOpen] = useState(false);
+  const [deliveryVendor, setDeliveryVendor] = useState<Vendor | null>(null);
 
   // 1. Fetch Vendors from Backend with Mock Fallback
   const { data: vendorsData } = useQuery<any>({
@@ -144,7 +149,10 @@ export const VendorsPage: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={() => {
+            setEditingVendor(null);
+            setIsCreateModalOpen(true);
+          }}
           className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
         >
           <Plus className="w-4 h-4" />
@@ -317,16 +325,53 @@ export const VendorsPage: React.FC = () => {
             vendor={selectedVendor}
             items={allSupplies}
             orders={allOrders}
+            onRecordSupply={(vendor) => {
+              setDeliveryVendor(vendor);
+              setIsRecordDeliveryOpen(true);
+            }}
+            onEditVendor={(vendor) => {
+              setEditingVendor(vendor);
+              setIsCreateModalOpen(true);
+            }}
           />
         }
       />
 
-      {/* Add New Vendor Modal */}
+      {/* Create / Edit Vendor Modal */}
       <CreateVendorModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        vendorToEdit={editingVendor}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingVendor(null);
+        }}
+        onVendorSaved={(savedVendor) => {
+          setSelectedVendor(savedVendor);
+          queryClient.invalidateQueries({ queryKey: ['vendors'] });
+          queryClient.invalidateQueries({ queryKey: ['overview-summary'] });
+        }}
         onVendorCreated={(newVendor) => {
           setSelectedVendor(newVendor);
+          queryClient.invalidateQueries({ queryKey: ['vendors'] });
+          queryClient.invalidateQueries({ queryKey: ['overview-summary'] });
+        }}
+      />
+
+      {/* Record Incoming Supply Delivery Modal */}
+      <RecordSupplyDeliveryModal
+        isOpen={isRecordDeliveryOpen}
+        onClose={() => {
+          setIsRecordDeliveryOpen(false);
+          setDeliveryVendor(null);
+        }}
+        vendors={allVendors}
+        supplies={allSupplies}
+        preselectedVendorId={deliveryVendor?.id || selectedVendor?.id}
+        onOrderRecorded={() => {
+          queryClient.invalidateQueries({ queryKey: ['vendors'] });
+          queryClient.invalidateQueries({ queryKey: ['supplies-orders'] });
+          queryClient.invalidateQueries({ queryKey: ['supplies-items'] });
+          queryClient.invalidateQueries({ queryKey: ['overview-summary'] });
         }}
       />
     </div>

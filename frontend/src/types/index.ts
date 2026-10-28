@@ -562,9 +562,13 @@ export interface Vendor {
   updatedAt?: string;
   items?: SupplyItem[];
   orders?: SupplyOrder[];
+  supplyItems?: SupplyItem[];
+  supplyOrders?: SupplyOrder[];
   _count?: {
     items?: number;
     orders?: number;
+    supplyItems?: number;
+    supplyOrders?: number;
   };
 }
 

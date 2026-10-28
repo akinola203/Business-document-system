@@ -119,7 +119,16 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
       }
       handleClose();
     },
-    onError: () => {
+    onError: (err: any) => {
+      const serverMessage = Array.isArray(err?.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : err?.response?.data?.message;
+
+      if (serverMessage) {
+        setErrorMessage(serverMessage);
+        return;
+      }
+
       // Offline fallback
       const chosenVendor = vendors.find((v) => v.id === vendorId);
       const fallbackOrder: SupplyOrder = {

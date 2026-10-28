@@ -49,14 +49,25 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
     );
   }
 
-  // Filter vendor-linked items and orders
-  const vendorItems = items.filter(
-    (it) => it.preferredVendorId === vendor.id || (vendor.items && vendor.items.some((vi) => vi.id === it.id))
-  );
+  // Resolve vendor-linked items and orders (from global props or nested relations)
+  const directItems = vendor.supplyItems || vendor.items || [];
+  const directOrders = vendor.supplyOrders || vendor.orders || [];
 
-  const vendorOrders = orders.filter(
-    (o) => o.vendorId === vendor.id || (vendor.orders && vendor.orders.some((vo) => vo.id === o.id))
-  );
+  const vendorItems = items.length > 0
+    ? items.filter(
+        (it) =>
+          it.preferredVendorId === vendor.id ||
+          directItems.some((vi) => vi.id === it.id)
+      )
+    : directItems;
+
+  const vendorOrders = orders.length > 0
+    ? orders.filter(
+        (o) =>
+          o.vendorId === vendor.id ||
+          directOrders.some((vo) => vo.id === o.id)
+      )
+    : directOrders;
 
   const initials = vendor.name
     .split(' ')
