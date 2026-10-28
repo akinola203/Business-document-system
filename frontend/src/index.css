@@ -106,7 +106,8 @@
     margin: 0 !important;
   }
 
-  .print-receipt-sheet {
+  .print-receipt-sheet,
+  .print-statement-sheet {
     position: fixed;
     top: 0;
     left: 0;

@@ -8,6 +8,7 @@ import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
 import { ClientDetailInspector } from '../../components/workspace/inspectors/ClientDetailInspector';
 import { CreateClientModal } from '../../components/clients/CreateClientModal';
+import { ClientStatementModal } from '../../components/clients/ClientStatementModal';
 import {
   Building2,
   Plus,
@@ -19,6 +20,7 @@ import {
   CheckCircle2,
   ShieldCheck,
   MapPin,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 export const ClientsPage: React.FC = () => {
@@ -26,6 +28,8 @@ export const ClientsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
+  const [statementClient, setStatementClient] = useState<Client | null>(null);
 
   // 1. Fetch Clients from Backend with Mock Fallback
   const { data: clientsData } = useQuery<{ items?: Client[]; data?: Client[] }>({
@@ -111,13 +115,28 @@ export const ClientsPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Client</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {selectedClient && (
+            <button
+              onClick={() => {
+                setStatementClient(selectedClient);
+                setIsStatementModalOpen(true);
+              }}
+              className="px-4 py-3 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-[#5847F6]" />
+              <span>Statement of Account</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Client</span>
+          </button>
+        </div>
       </div>
 
       {/* =========================================================================
@@ -286,6 +305,10 @@ export const ClientsPage: React.FC = () => {
           <ClientDetailInspector
             client={selectedClient}
             documents={allInvoices}
+            onOpenStatement={(client) => {
+              setStatementClient(client);
+              setIsStatementModalOpen(true);
+            }}
           />
         }
       />
@@ -297,6 +320,16 @@ export const ClientsPage: React.FC = () => {
         onClientCreated={(newClient) => {
           setSelectedClient(newClient);
         }}
+      />
+
+      {/* Official Customer Statement of Account Modal */}
+      <ClientStatementModal
+        isOpen={isStatementModalOpen}
+        onClose={() => {
+          setIsStatementModalOpen(false);
+          setStatementClient(null);
+        }}
+        client={statementClient || selectedClient}
       />
     </div>
   );

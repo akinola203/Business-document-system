@@ -10,6 +10,7 @@ import {
   MapPin,
   CreditCard,
   FileText,
+  FileSpreadsheet,
   Truck,
   Plus,
   ExternalLink,
@@ -23,11 +24,13 @@ import {
 interface ClientDetailInspectorProps {
   client: Client | null;
   documents?: DocumentRecord[];
+  onOpenStatement?: (client: Client) => void;
 }
 
 export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
   client,
   documents = [],
+  onOpenStatement,
 }) => {
   const navigate = useNavigate();
 
@@ -109,10 +112,21 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
 
         {/* Quick Action Dock */}
         <div className="flex items-center gap-2 flex-wrap">
+          {onOpenStatement && (
+            <button
+              type="button"
+              onClick={() => onOpenStatement(client)}
+              className="px-3.5 py-2 rounded-xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Statement of Account</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => navigate(`/documents/invoices/new?clientId=${client.id}`)}
-            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+            className="px-3.5 py-2 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Invoice Client</span>
@@ -121,7 +135,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
           <button
             type="button"
             onClick={() => navigate(`/documents/waybills/new?clientId=${client.id}`)}
-            className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+            className="px-3.5 py-2 rounded-xl bg-sky-600/80 hover:bg-sky-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
           >
             <Truck className="w-3.5 h-3.5" />
             <span>+ Dispatch Waybill</span>
@@ -130,11 +144,83 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
           <button
             type="button"
             onClick={() => navigate(`/documents/letters/new?clientId=${client.id}`)}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+            className="px-3.5 py-2 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>+ Draft Letter</span>
           </button>
+        </div>
+
+        {/* Recent Client Invoices & Waybills */}
+        <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 text-slate-300 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                Recent Documents ({clientDocs.length})
+              </span>
+            </div>
+            {onOpenStatement && (
+              <button
+                type="button"
+                onClick={() => onOpenStatement(client)}
+                className="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 cursor-pointer"
+              >
+                <span>Full Ledger &rarr;</span>
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {clientDocs.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-2">No documents created for this client yet.</p>
+            ) : (
+              clientDocs.slice(0, 4).map((doc) => (
+                <div
+                  key={doc.id}
+                  onClick={() =>
+                    navigate(
+                      doc.documentType === 'INVOICE'
+                        ? '/documents/invoices'
+                        : doc.documentType === 'WAYBILL'
+                        ? '/documents/waybills'
+                        : '/documents/letters'
+                    )
+                  }
+                  className="p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800/70 border border-slate-700/60 flex items-center justify-between text-xs transition-colors cursor-pointer"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-white">{doc.documentNumber}</span>
+                      <span
+                        className={`px-2 py-0.2 rounded-full text-[9px] font-bold ${
+                          doc.status === 'ISSUED' || doc.paymentStatus === 'PAID'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        }`}
+                      >
+                        {doc.status}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 mt-0.5 block truncate max-w-[180px]">
+                      {doc.title || doc.documentType}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="font-black text-white tabular-nums">
+                      {formatCurrency(Number(doc.totalAmount) || 0, doc.currency || 'NGN')}
+                    </span>
+                    {Number(doc.balanceDue) > 0 && (
+                      <span className="text-[10px] text-amber-400 block font-semibold">
+                        Due: {formatCurrency(Number(doc.balanceDue), doc.currency || 'NGN')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Corporate Profile & Credentials */}
