@@ -138,12 +138,16 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
         throw err;
       }
     },
-    onSuccess: (savedPayment) => {
+    onSuccess: (savedResult) => {
+      const paymentRecord = savedResult?.payment || savedResult;
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
-      queryClient.invalidateQueries({ queryKey: ['invoice-ledger', selectedInvoiceId] });
-      if (onPaymentSuccess) onPaymentSuccess(savedPayment);
+      queryClient.invalidateQueries({ queryKey: ['document-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice-ledger'] });
+      if (onPaymentSuccess) onPaymentSuccess(paymentRecord);
       onClose();
     },
     onError: (err: any) => {

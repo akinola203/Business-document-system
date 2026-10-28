@@ -16,9 +16,11 @@ import {
   ShieldAlert,
   ArrowRight,
   ExternalLink,
+  Eye,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ReversePaymentModal } from '../../payments/ReversePaymentModal';
+import { PaymentReceiptModal } from '../../payments/PaymentReceiptModal';
 
 interface PaymentInspectorProps {
   payment: PaymentRecord | null;
@@ -30,6 +32,7 @@ export const PaymentInspector: React.FC<PaymentInspectorProps> = ({
   onPaymentReversed,
 }) => {
   const [isReverseModalOpen, setIsReverseModalOpen] = useState(false);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
   if (!payment) {
     return (
@@ -174,11 +177,11 @@ export const PaymentInspector: React.FC<PaymentInspectorProps> = ({
       <div className="pt-4 border-t border-slate-800 flex items-center gap-3">
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={() => setIsReceiptModalOpen(true)}
           className="flex-1 py-3 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm border border-slate-700"
         >
           <Printer className="w-4 h-4 text-slate-400" />
-          <span>Print Receipt</span>
+          <span>Official Receipt</span>
         </button>
 
         {!isReversed && (
@@ -192,6 +195,13 @@ export const PaymentInspector: React.FC<PaymentInspectorProps> = ({
           </button>
         )}
       </div>
+
+      {/* Official Printable Payment Receipt Modal */}
+      <PaymentReceiptModal
+        isOpen={isReceiptModalOpen}
+        payment={payment}
+        onClose={() => setIsReceiptModalOpen(false)}
+      />
 
       {/* Reversal Confirmation Modal */}
       <ReversePaymentModal

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { DocumentRecord, InvoiceItem } from '../../../types';
+import { DocumentRecord, InvoiceItem, PaymentRecord } from '../../../types';
 import { formatCurrency, formatDate } from '../../../lib/utils';
 import { useAuthStore } from '../../../store/auth.store';
 import { apiClient } from '../../../lib/api-client';
 import { usePermissions } from '../../../hooks/usePermissions';
+import { PaymentReceiptModal } from '../../payments/PaymentReceiptModal';
 import {
   FileText,
   Download,
@@ -21,6 +22,7 @@ import {
   Send,
   FileCheck,
   Lock,
+  Receipt,
 } from 'lucide-react';
 
 interface InvoiceInspectorProps {
@@ -40,9 +42,11 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
 }) => {
   const { isAdmin, canApprove, canIssue, canCancel, canRecordPayment, hasPermission } = usePermissions();
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [selectedReceiptPayment, setSelectedReceiptPayment] = useState<PaymentRecord | null>(null);
 
   const inv = document.invoice;
   const items: InvoiceItem[] = inv?.items || [];
+  const payments: PaymentRecord[] = inv?.payments || [];
   const status = document.status;
   const paymentStatus = document.paymentStatus || 'UNPAID';
 
@@ -243,6 +247,53 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
           )}
         </div>
 
+        {/* Recorded Settlements Ledger */}
+        {payments.length > 0 && (
+          <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 space-y-2.5 text-xs animate-in fade-in duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <span className="font-extrabold uppercase tracking-wider text-[10px] text-white/90 flex items-center gap-1.5">
+                <Receipt className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Recorded Settlements ({payments.length})</span>
+              </span>
+              <span className="text-[10px] font-bold text-emerald-300">
+                Paid: {formatCurrency(payments.reduce((s, p) => s + Number(p.amount), 0), document.currency)}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 max-h-36 overflow-y-auto dark-scroll pr-1">
+              {payments.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedReceiptPayment(p)}
+                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all flex items-center justify-between cursor-pointer border border-white/5 group shadow-xs"
+                  title="Click to view & print official receipt"
+                >
+                  <div>
+                    <div className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <span>{p.paymentNumber}</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-400/25 text-emerald-200 font-extrabold uppercase">
+                        {p.method.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-white/60 mt-0.5 font-mono">
+                      {formatDate(p.paymentDate)} &bull; Ref: {p.referenceNumber}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-black text-xs tabular-nums text-emerald-300 block">
+                      -{formatCurrency(p.amount, document.currency)}
+                    </span>
+                    <span className="text-[10px] text-white/70 group-hover:text-white flex items-center justify-end gap-0.5 transition-colors underline">
+                      <Receipt className="w-2.5 h-2.5" />
+                      <span>Receipt Slip</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Action Controls Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Secondary Utility Icons */}
@@ -359,6 +410,16 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Official Payment Receipt Modal */}
+      {selectedReceiptPayment && (
+        <PaymentReceiptModal
+          isOpen={!!selectedReceiptPayment}
+          payment={selectedReceiptPayment}
+          invoice={document}
+          onClose={() => setSelectedReceiptPayment(null)}
+        />
+      )}
     </div>
   );
 };

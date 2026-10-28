@@ -105,5 +105,19 @@
     padding: 0 !important;
     margin: 0 !important;
   }
+
+  .print-receipt-sheet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: auto;
+    margin: 0 !important;
+    padding: 12mm 15mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    z-index: 999999;
+  }
 }
 

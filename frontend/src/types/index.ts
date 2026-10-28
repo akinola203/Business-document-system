@@ -197,6 +197,7 @@ export interface InvoiceSpecialization {
   dueDate?: string | null;
   notes?: string | null;
   items: InvoiceItem[];
+  payments?: PaymentRecord[];
 }
 
 export interface WaybillItem {
