@@ -378,6 +378,7 @@ export const InvoicesPage: React.FC = () => {
           onClose={() => setIsHistoryDrawerOpen(false)}
           documentId={activeDocument.id}
           documentNumber={activeDocument.documentNumber}
+          document={activeDocument}
         />
       )}
     </div>

@@ -324,6 +324,7 @@ export const LettersPage: React.FC = () => {
           onClose={() => setIsHistoryDrawerOpen(false)}
           documentId={activeDocument.id}
           documentNumber={activeDocument.documentNumber}
+          document={activeDocument}
         />
       )}
     </div>
