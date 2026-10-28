@@ -1,6 +1,7 @@
 import React from 'react';
 import { Company, Client, ClientAddress } from '../../types';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import { Landmark, ShieldCheck, CreditCard } from 'lucide-react';
 
 export interface InvoiceLiveFormValues {
   title: string;
@@ -62,7 +63,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
     const qty = Math.max(0, Number(item.quantity) || 0);
     const price = Math.max(0, Number(item.unitPrice) || 0);
     const discPercent = Math.max(0, Math.min(100, Number(item.discountPercent) || 0));
-    const taxRate = Math.max(0, Number(item.taxRate) || 0);
+    const taxRate = item.taxRate !== undefined && item.taxRate !== '' ? Math.max(0, Number(item.taxRate)) : 7.5;
 
     const baseAmount = Math.round((qty * price + Number.EPSILON) * 100) / 100;
     const discountAmount = Math.round((baseAmount * (discPercent / 100) + Number.EPSILON) * 100) / 100;
@@ -100,142 +101,175 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   const showBank = formValues?.bankDetailsVisible ?? company?.settings?.showBankDetailsOnInvoice ?? true;
 
   return (
-    <div className="aspect-[1/1.414] w-full max-w-[680px] bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-200">
-      {/* 1. Header & Brand Identity */}
+    <div className="aspect-[1/1.414] w-full max-w-[680px] bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300">
+      {/* 1. Header & Financial Ledger Brand Identity */}
       <div>
-        <div className="flex justify-between items-start pb-6 border-b border-slate-200">
+        {/* Ledger Top Bar */}
+        <div className="flex items-center justify-between pb-2 mb-4 border-b-2 border-slate-900">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">
+              COMMERCIAL TAX INVOICE
+            </span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+              Financial Accounts Ledger
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-slate-600">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>FIRS TIN: {company?.tin || '24891044-0001'}</span>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-start pb-4 border-b border-slate-200">
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase">
-              {company?.name || 'AOA 77 COMPANY LTD'}
-            </h2>
-            {company?.rcNumber && (
-              <p className="text-[11px] font-mono text-slate-500 font-semibold mt-0.5">
-                RC: {company.rcNumber}
-              </p>
-            )}
-            <p className="text-[11px] text-slate-600 max-w-xs mt-1 leading-snug">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-xs tracking-tighter">
+                AOA
+              </div>
+              <div>
+                <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight uppercase">
+                  {company?.name || 'AOA 77 COMPANY LTD'}
+                </h2>
+                {company?.rcNumber && (
+                  <p className="text-[10px] font-mono text-slate-500 font-bold">
+                    CAC RC: {company.rcNumber}
+                  </p>
+                )}
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-600 max-w-xs mt-1.5 leading-snug">
               {company?.address || '1 Alade Ibukun Close, Ayo Irewolede CDA, Ewupe, Ota, Ogun State, Nigeria'}
             </p>
-            {company?.tin && (
-              <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
-                TIN: <span className="font-semibold">{company.tin}</span>
-              </p>
-            )}
+            <div className="flex items-center gap-3 text-[10px] text-slate-500 mt-1">
+              <span>Email: {company?.email || 'billing@aoa77.com'}</span>
+              <span>Tel: {company?.phone || '+234 803 000 0001'}</span>
+            </div>
           </div>
 
           <div className="text-right">
-            <h1 className="text-2xl md:text-3xl font-black text-[#5847F6] tracking-tighter uppercase">
-              INVOICE
-            </h1>
-            <p className="text-xs font-mono font-bold text-slate-700 mt-1">
-              {documentNumber ? `#${documentNumber}` : 'AUTO-GENERATED ON SAVE'}
-            </p>
+            <div className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">
+              INVOICE NUMBER
+            </div>
+            <div className="text-xl md:text-2xl font-black text-[#5847F6] font-mono tracking-tight mt-0.5">
+              {documentNumber ? `#${documentNumber}` : 'AUTO-ALLOCATED'}
+            </div>
             <div className="mt-2 space-y-0.5 text-[11px] text-slate-600">
               <div>
-                <span className="text-slate-400">Date: </span>
-                <span className="font-semibold">{formatDate(formValues?.issueDate || new Date().toISOString())}</span>
+                <span className="text-slate-400 font-medium">Issue Date: </span>
+                <span className="font-bold text-slate-800">{formatDate(formValues?.issueDate || new Date().toISOString())}</span>
               </div>
               {formValues?.dueDate && (
                 <div>
-                  <span className="text-slate-400">Due Date: </span>
-                  <span className="font-semibold text-rose-600">{formatDate(formValues.dueDate)}</span>
+                  <span className="text-slate-400 font-medium">Payment Due: </span>
+                  <span className="font-bold text-rose-600">{formatDate(formValues.dueDate)}</span>
                 </div>
               )}
               {formValues?.poNumber && (
                 <div>
-                  <span className="text-slate-400">PO Ref: </span>
-                  <span className="font-semibold font-mono">{formValues.poNumber}</span>
+                  <span className="text-slate-400 font-medium">Customer PO: </span>
+                  <span className="font-bold font-mono text-slate-900">{formValues.poNumber}</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* 2. Bill To & Payment Terms Strip */}
-        <div className="grid grid-cols-2 gap-6 my-6 text-xs">
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
-              Billed To
-            </span>
+        {/* 2. Bill To (Client Ledger) & Settlement Terms Grid */}
+        <div className="grid grid-cols-2 gap-4 my-4 text-xs">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between mb-1 pb-1 border-b border-slate-200/80">
+              <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">
+                Bill To (Customer Account)
+              </span>
+              {selectedClient?.taxNumber && (
+                <span className="text-[9px] font-mono font-bold text-slate-600">
+                  TIN: {selectedClient.taxNumber}
+                </span>
+              )}
+            </div>
             <div className="font-extrabold text-slate-900 text-sm">
-              {selectedClient?.companyName || selectedClient?.name || 'Client Name / Entity'}
+              {selectedClient?.companyName || selectedClient?.name || 'Walk-in / Valued Customer'}
             </div>
             {selectedClient?.name && selectedClient?.companyName && (
-              <div className="text-slate-600 font-medium text-[11px]">Attn: {selectedClient.name}</div>
+              <div className="text-slate-600 font-semibold text-[11px] mt-0.5">
+                Attn: {selectedClient.name}
+              </div>
             )}
             <div className="text-slate-600 mt-1 text-[11px] leading-relaxed">
               {formattedAddress}
             </div>
-            {selectedClient?.taxNumber && (
-              <div className="text-[10px] font-mono text-slate-500 mt-1">
-                Client TIN: {selectedClient.taxNumber}
+            {selectedClient?.phone && (
+              <div className="text-[10px] text-slate-500 mt-1">
+                Tel: {selectedClient.phone}
               </div>
             )}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
-                Settlement Terms
-              </span>
-              <div className="font-bold text-slate-800 text-xs">
-                {formValues.paymentTerms || 'Net 30 Days'}
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-wider mb-1 pb-1 border-b border-slate-200/80">
+                Payment & Credit Terms
               </div>
-              <div className="text-[11px] text-slate-500 mt-1">
-                Currency: <span className="font-bold text-slate-700">{currency}</span>
+              <div className="flex items-center justify-between text-xs mt-1">
+                <span className="text-slate-500">Terms of Settlement:</span>
+                <span className="font-bold text-slate-900">{formValues.paymentTerms || 'Net 30 Days'}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs mt-1">
+                <span className="text-slate-500">Base Currency:</span>
+                <span className="font-bold font-mono text-slate-900">{currency}</span>
               </div>
             </div>
             {formValues.title && (
-              <div className="pt-2 border-t border-slate-200/60 text-[11px] text-slate-600 truncate">
-                <span className="font-semibold text-slate-700">Project / Order:</span> {formValues.title}
+              <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-600 truncate mt-1">
+                <span className="font-semibold text-slate-700">Order Description:</span> {formValues.title}
               </div>
             )}
           </div>
         </div>
 
-        {/* 3. Line Items Table */}
-        <div className="overflow-hidden border border-slate-200 rounded-lg">
+        {/* 3. Line Items Table (Financial Ledger Layout) */}
+        <div className="overflow-hidden border border-slate-300 rounded-lg">
           <table className="w-full text-left text-[11px]">
-            <thead className="bg-slate-100/80 text-slate-600 font-bold uppercase text-[9px] tracking-wider border-b border-slate-200">
+            <thead className="bg-slate-900 text-white font-bold uppercase text-[9px] tracking-wider">
               <tr>
                 <th className="py-2.5 px-3 w-8 text-center">#</th>
-                <th className="py-2.5 px-3">Description</th>
+                <th className="py-2.5 px-3">Item Description</th>
                 <th className="py-2.5 px-3 text-right">Qty</th>
-                <th className="py-2.5 px-3 text-right">Unit Price</th>
+                <th className="py-2.5 px-3 text-right">Unit Price ({currency})</th>
                 <th className="py-2.5 px-3 text-right">Disc</th>
-                <th className="py-2.5 px-3 text-right">VAT</th>
-                <th className="py-2.5 px-3 text-right">Amount</th>
+                <th className="py-2.5 px-3 text-right">VAT (7.5%)</th>
+                <th className="py-2.5 px-3 text-right">Line Total ({currency})</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-200">
               {calculatedItems.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-6 text-slate-400 italic">
-                    No line items added. Add items in the form studio.
+                    No items added. Add products or services in the invoice studio.
                   </td>
                 </tr>
               ) : (
                 calculatedItems.map((item) => (
-                  <tr key={item.lineNumber} className="hover:bg-slate-50/50">
+                  <tr key={item.lineNumber} className="hover:bg-slate-50/70 even:bg-slate-50/40">
                     <td className="py-2 px-3 text-center text-slate-400 font-mono text-[10px]">
                       {item.lineNumber}
                     </td>
-                    <td className="py-2 px-3 font-medium text-slate-800 max-w-[200px] break-words">
+                    <td className="py-2 px-3 font-semibold text-slate-900 max-w-[200px] break-words">
                       {item.description}
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums font-semibold text-slate-700 whitespace-nowrap">
+                    <td className="py-2 px-3 text-right tabular-nums font-medium text-slate-700 whitespace-nowrap">
                       {Number(item.quantity || 0).toLocaleString()} {item.unit || 'Units'}
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums text-slate-700 whitespace-nowrap">
+                    <td className="py-2 px-3 text-right tabular-nums text-slate-700 whitespace-nowrap font-mono">
                       {formatCurrency(item.unitPrice, currency)}
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums text-emerald-600 whitespace-nowrap">
+                    <td className="py-2 px-3 text-right tabular-nums text-emerald-600 whitespace-nowrap font-medium">
                       {item.discountPercent > 0 ? `${item.discountPercent}%` : '—'}
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums text-slate-500 whitespace-nowrap">
-                      {item.taxRate > 0 ? `${item.taxRate}%` : '—'}
+                    <td className="py-2 px-3 text-right tabular-nums text-slate-600 whitespace-nowrap font-mono">
+                      {item.taxRate > 0 ? formatCurrency(item.taxAmount, currency) : '—'}
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                    <td className="py-2 px-3 text-right tabular-nums font-bold text-slate-900 whitespace-nowrap font-mono">
                       {formatCurrency(item.lineTotal, currency)}
                     </td>
                   </tr>
@@ -246,29 +280,40 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
         </div>
       </div>
 
-      {/* 4. Bottom Section: Bank Settlement & Precision Financial Calculation */}
-      <div className="pt-4 mt-6 border-t border-slate-200">
+      {/* 4. Bottom Section: Official Banking Settlement & Ledger Summary */}
+      <div className="pt-4 mt-4 border-t-2 border-slate-900">
         <div className="grid grid-cols-12 gap-6 items-start">
-          {/* Left: Settlement Instructions & Notes */}
-          <div className="col-span-7 space-y-3 text-[10px]">
+          {/* Left: Official Banking Settlement Account Details */}
+          <div className="col-span-7 space-y-2.5 text-[10px]">
             {showBank && company?.settings?.bankName && (
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="font-extrabold text-slate-800 uppercase tracking-wider block mb-1">
-                  Bank Settlement Details
-                </span>
-                <div className="text-slate-600 space-y-0.5 font-medium">
-                  <div>
-                    Bank: <span className="font-bold text-slate-900">{company.settings.bankName}</span>
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-300 space-y-1.5">
+                <div className="flex items-center gap-1.5 pb-1 border-b border-slate-200">
+                  <Landmark className="w-3.5 h-3.5 text-indigo-600" />
+                  <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[10px]">
+                    Official Banking Payout Account
+                  </span>
+                </div>
+                <div className="text-slate-700 space-y-0.5 font-medium leading-relaxed">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Bank Name:</span>
+                    <span className="font-bold text-slate-900">{company.settings.bankName}</span>
                   </div>
-                  <div>
-                    Account Number:{' '}
-                    <span className="font-bold font-mono text-slate-900">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-slate-500">Account Number:</span>
+                    <span className="font-bold font-mono text-slate-900 text-xs tracking-wider">
                       {company.settings.bankAccountNumber || '1000652112'}
                     </span>
                   </div>
                   {company.settings.bankAccountName && (
-                    <div>
-                      Account Name: <span className="font-semibold text-slate-800">{company.settings.bankAccountName}</span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Account Name:</span>
+                      <span className="font-bold text-slate-800">{company.settings.bankAccountName}</span>
+                    </div>
+                  )}
+                  {company.settings.bankSortCode && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Sort Code / CBN:</span>
+                      <span className="font-mono text-slate-800">{company.settings.bankSortCode}</span>
                     </div>
                   )}
                 </div>
@@ -276,55 +321,62 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
             )}
 
             {formValues.notes && (
-              <div className="text-slate-500 italic leading-relaxed">
-                <span className="font-semibold text-slate-700 not-italic">Notes / Terms:</span> {formValues.notes}
+              <div className="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200 text-amber-900 text-[10px] leading-relaxed">
+                <span className="font-bold uppercase tracking-wider block text-[9px] mb-0.5">
+                  Payment Instructions & Notes:
+                </span>
+                {formValues.notes}
               </div>
             )}
           </div>
 
-          {/* Right: Subtotal, VAT & Grand Total Breakdown */}
-          <div className="col-span-5 space-y-1.5 text-xs">
+          {/* Right: Subtotal, VAT (7.5%), & Grand Total Ledger */}
+          <div className="col-span-5 space-y-1.5 text-xs p-3 rounded-xl bg-slate-50 border border-slate-200">
             <div className="flex justify-between text-slate-600 text-[11px]">
-              <span>Subtotal:</span>
-              <span className="font-semibold tabular-nums text-slate-800">
+              <span>Gross Subtotal:</span>
+              <span className="font-bold tabular-nums text-slate-800 font-mono">
                 {formatCurrency(subtotal, currency)}
               </span>
             </div>
 
             {discountTotal > 0 && (
               <div className="flex justify-between text-emerald-600 text-[11px]">
-                <span>Total Discount:</span>
-                <span className="font-semibold tabular-nums">
+                <span>Trade Discount:</span>
+                <span className="font-bold tabular-nums font-mono">
                   -{formatCurrency(discountTotal, currency)}
                 </span>
               </div>
             )}
 
-            <div className="flex justify-between text-slate-600 text-[11px]">
-              <span>Value Added Tax (VAT 7.5%):</span>
-              <span className="font-semibold tabular-nums text-slate-800">
+            <div className="flex justify-between text-slate-600 text-[11px] pb-1.5 border-b border-slate-200">
+              <span>Standard VAT (7.5%):</span>
+              <span className="font-bold tabular-nums text-slate-800 font-mono">
                 {formatCurrency(taxTotal, currency)}
               </span>
             </div>
 
-            <div className="pt-2 border-t-2 border-slate-900 flex justify-between items-baseline">
-              <span className="font-black text-slate-900 text-sm uppercase">Total Payable:</span>
-              <span className="font-black text-slate-900 text-base md:text-lg tabular-nums">
+            <div className="pt-1.5 flex justify-between items-baseline">
+              <span className="font-black text-slate-900 text-xs uppercase tracking-tight">
+                Grand Total:
+              </span>
+              <span className="font-black text-slate-950 text-base md:text-lg tabular-nums font-mono">
                 {formatCurrency(grandTotal, currency)}
               </span>
             </div>
           </div>
         </div>
 
-        {/* 5. Document Signatory & Stamp Footer */}
-        <div className="flex justify-between items-end pt-6 mt-4 border-t border-slate-100 text-[9px] text-slate-400">
+        {/* 5. Authorised Signature & Financial Verification Footer */}
+        <div className="flex justify-between items-end pt-5 mt-3 border-t border-slate-200 text-[9px] text-slate-400">
           <div>
-            <span>Computer generated invoice by </span>
-            <span className="font-semibold text-slate-600">{company?.name || 'AOA 77 COMPANY LTD'}</span>
+            <span>Corporate Electronic Invoice &bull; Generated by </span>
+            <span className="font-bold text-slate-700">{company?.name || 'AOA 77 COMPANY LTD'}</span>
           </div>
           <div className="text-right">
-            <div className="w-32 border-b border-slate-300 mb-1" />
-            <span>Authorized Signature & Stamp</span>
+            <div className="w-36 border-b border-slate-400 mb-1" />
+            <span className="font-semibold text-slate-600 uppercase tracking-wider">
+              Authorized Financial Signatory & Stamp
+            </span>
           </div>
         </div>
       </div>
