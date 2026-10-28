@@ -116,14 +116,23 @@ export const InvoiceBuilderPage: React.FC = () => {
   }, [clientsData]);
 
   // 3. Fetch Templates for Invoices
-  const { data: templatesData } = useQuery<any[]>({
+  const { data: templatesData } = useQuery<any>({
     queryKey: ['templates-invoice'],
     queryFn: async () => {
-      const res = await apiClient.get('/templates', { params: { documentType: 'INVOICE' } });
-      return res.data;
+      try {
+        const res = await apiClient.get('/templates', { params: { documentType: 'INVOICE' } });
+        return res.data;
+      } catch {
+        return [];
+      }
     },
   });
-  const templates = templatesData || [];
+  const templates: any[] = useMemo(() => {
+    const raw = Array.isArray(templatesData)
+      ? templatesData
+      : (templatesData as any)?.data || (templatesData as any)?.items || [];
+    return Array.isArray(raw) ? raw : [];
+  }, [templatesData]);
 
   // 4. Fetch Existing Document if in Edit Mode
   const { data: existingDoc, isLoading: isDocLoading } = useQuery<DocumentRecord>({
@@ -218,23 +227,23 @@ export const InvoiceBuilderPage: React.FC = () => {
         items:
           inv?.items && inv.items.length > 0
             ? inv.items.map((it) => ({
-                description: it.description,
-                quantity: Number(it.quantity),
-                unit: it.unit || 'Units',
-                unitPrice: Number(it.unitPrice),
-                discountPercent: Number(it.discountPercent || 0),
-                taxRate: Number(it.taxRate ?? 7.5),
-              }))
+              description: it.description,
+              quantity: Number(it.quantity),
+              unit: it.unit || 'Units',
+              unitPrice: Number(it.unitPrice),
+              discountPercent: Number(it.discountPercent || 0),
+              taxRate: Number(it.taxRate ?? 7.5),
+            }))
             : [
-                {
-                  description: 'General Supply Item',
-                  quantity: 1,
-                  unit: 'Units',
-                  unitPrice: 0,
-                  discountPercent: 0,
-                  taxRate: 7.5,
-                },
-              ],
+              {
+                description: 'General Supply Item',
+                quantity: 1,
+                unit: 'Units',
+                unitPrice: 0,
+                discountPercent: 0,
+                taxRate: 7.5,
+              },
+            ],
       });
     }
   }, [existingDoc, isEdit, reset, todayStr, defaultDueDate]);
@@ -411,479 +420,478 @@ export const InvoiceBuilderPage: React.FC = () => {
       <ErrorBoundary fallbackTitle="Invoice Studio Workspace Error">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Interactive Form Studio (45% -> 5.5 cols / 6 cols) */}
-        <div className="lg:col-span-6 space-y-6">
-          {/* Card 1: Client & Recipient Information */}
-          <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-            <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5847F6]">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-extrabold text-slate-900">Client & Billing Address</h3>
-                <p className="text-[11px] text-slate-500">Select corporate debtor to auto-fill registered billing address</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700">
-                    Recipient Client <span className="text-rose-500">*</span>
-                  </label>
-                  <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                    {clients.length} Clients Available
-                  </span>
+          <div className="lg:col-span-6 space-y-6">
+            {/* Card 1: Client & Recipient Information */}
+            <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5847F6]">
+                  <Building2 className="w-4 h-4" />
                 </div>
-                {/* 1-Tap Client Quick-Fill Pills */}
-                <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                  {clients.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => handleClientChange(c.id)}
-                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${
-                        formValues?.clientId === c.id
-                          ? 'bg-[#5847F6] text-white border-[#5847F6] shadow-sm shadow-indigo-500/20'
-                          : 'bg-white hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border-slate-200'
-                      }`}
-                    >
-                      ⚡ {(c.companyName || c.name || 'Client').split(' ')[0]}
-                    </button>
-                  ))}
-                </div>
-                <select
-                  value={formValues?.clientId || ''}
-                  onChange={(e) => handleClientChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6] cursor-pointer"
-                >
-                  <option value="">Select a client from directory...</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''} — {c.clientNumber || 'ID'}
-                    </option>
-                  ))}
-                </select>
-                {errors.clientId && (
-                  <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors.clientId.message}</p>
-                )}
-              </div>
-
-              {/* 1:N Address Selector if Client has multiple registered addresses */}
-              {selectedClient?.addresses && Array.isArray(selectedClient.addresses) && selectedClient.addresses.length > 0 && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Select Billing Address ({selectedClient.addresses.length} on file)
-                  </label>
+                  <h3 className="text-sm font-extrabold text-slate-900">Client & Billing Address</h3>
+                  <p className="text-[11px] text-slate-500">Select corporate debtor to auto-fill registered billing address</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Recipient Client <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                      {clients.length} Clients Available
+                    </span>
+                  </div>
+                  {/* 1-Tap Client Quick-Fill Pills */}
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                    {clients.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleClientChange(c.id)}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${formValues?.clientId === c.id
+                            ? 'bg-[#5847F6] text-white border-[#5847F6] shadow-sm shadow-indigo-500/20'
+                            : 'bg-white hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border-slate-200'
+                          }`}
+                      >
+                        ⚡ {(c.companyName || c.name || 'Client').split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
                   <select
-                    {...register('selectedAddressId')}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    value={formValues?.clientId || ''}
+                    onChange={(e) => handleClientChange(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6] cursor-pointer"
                   >
-                    {selectedClient.addresses.map((addr) => (
-                      <option key={addr.id} value={addr.id}>
-                        [{addr.type || 'ADDR'}] {addr.line1 || ''}, {addr.city || ''}, {addr.state || ''} {addr.isDefault ? '(Default)' : ''}
+                    <option value="">Select a client from directory...</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''} — {c.clientNumber || 'ID'}
                       </option>
                     ))}
                   </select>
+                  {errors.clientId && (
+                    <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors.clientId.message}</p>
+                  )}
                 </div>
-              )}
 
-              {/* Manual Override / Custom Address */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Custom Address Override <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
-                <textarea
-                  {...register('customBillingAddress')}
-                  rows={2}
-                  placeholder="Leave empty to use client's standard address..."
-                  className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Document Context & Settlement Terms */}
-          <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-            <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
-                <Calendar className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-extrabold text-slate-900">Document Meta & Terms</h3>
-                <p className="text-[11px] text-slate-500">Order reference, currencies, and settlement duration</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Document Title <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  {...register('title')}
-                  placeholder="e.g. Commercial Supply of Portland Cement"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                />
-                {errors.title && (
-                  <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors.title.message}</p>
+                {/* 1:N Address Selector if Client has multiple registered addresses */}
+                {selectedClient?.addresses && Array.isArray(selectedClient.addresses) && selectedClient.addresses.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Select Billing Address ({selectedClient.addresses.length} on file)
+                    </label>
+                    <select
+                      {...register('selectedAddressId')}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    >
+                      {selectedClient.addresses.map((addr) => (
+                        <option key={addr.id} value={addr.id}>
+                          [{addr.type || 'ADDR'}] {addr.line1 || ''}, {addr.city || ''}, {addr.state || ''} {addr.isDefault ? '(Default)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Currency</label>
-                  <select
-                    {...register('currency')}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                  >
-                    <option value="NGN">NGN (Nigerian Naira - ₦)</option>
-                    <option value="USD">USD (US Dollar - $)</option>
-                    <option value="GBP">GBP (British Pound - £)</option>
-                    <option value="EUR">EUR (Euro - €)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Payment Terms</label>
-                  <select
-                    {...register('paymentTerms')}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                  >
-                    <option value="Net 30 Days">Net 30 Days</option>
-                    <option value="Net 15 Days">Net 15 Days</option>
-                    <option value="Due on Receipt">Due on Receipt</option>
-                    <option value="50% Advance, 50% on Delivery">50% Advance, 50% Delivery</option>
-                    <option value="Net 60 Days">Net 60 Days</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Issue Date</label>
-                  <input
-                    type="date"
-                    {...register('issueDate')}
-                    className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    {...register('dueDate')}
-                    className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+                {/* Manual Override / Custom Address */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Client PO Number <span className="text-slate-400 font-normal">(Optional)</span>
+                    Custom Address Override <span className="text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <textarea
+                    {...register('customBillingAddress')}
+                    rows={2}
+                    placeholder="Leave empty to use client's standard address..."
+                    className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Document Context & Settlement Terms */}
+            <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
+                <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">Document Meta & Terms</h3>
+                  <p className="text-[11px] text-slate-500">Order reference, currencies, and settlement duration</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Document Title <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
-                    {...register('poNumber')}
-                    placeholder="e.g. PO-DANGOTE-2026-901"
-                    className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    {...register('title')}
+                    placeholder="e.g. Commercial Supply of Portland Cement"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
                   />
+                  {errors.title && (
+                    <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors.title.message}</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Print Template</label>
-                  <select
-                    {...register('templateId')}
-                    className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                  >
-                    <option value="">Default Clean Corporate</option>
-                    {templates.map((tpl: any) => (
-                      <option key={tpl.id} value={tpl.id}>
-                        {tpl.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Currency</label>
+                    <select
+                      {...register('currency')}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    >
+                      <option value="NGN">NGN (Nigerian Naira - ₦)</option>
+                      <option value="USD">USD (US Dollar - $)</option>
+                      <option value="GBP">GBP (British Pound - £)</option>
+                      <option value="EUR">EUR (Euro - €)</option>
+                    </select>
+                  </div>
 
-              {/* Settlement Bank Details Visibility Toggle */}
-              <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    {...register('bankDetailsVisible')}
-                    className="w-4 h-4 rounded text-[#5847F6] focus:ring-[#5847F6] border-slate-300"
-                  />
-                  <span className="text-xs font-bold text-slate-700">
-                    Include Company Bank Settlement Instructions on Invoice
-                  </span>
-                </label>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Payment Terms</label>
+                    <select
+                      {...register('paymentTerms')}
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    >
+                      <option value="Net 30 Days">Net 30 Days</option>
+                      <option value="Net 15 Days">Net 15 Days</option>
+                      <option value="Due on Receipt">Due on Receipt</option>
+                      <option value="50% Advance, 50% on Delivery">50% Advance, 50% Delivery</option>
+                      <option value="Net 60 Days">Net 60 Days</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Issue Date</label>
+                    <input
+                      type="date"
+                      {...register('issueDate')}
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Due Date</label>
+                    <input
+                      type="date"
+                      {...register('dueDate')}
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Client PO Number <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      {...register('poNumber')}
+                      placeholder="e.g. PO-DANGOTE-2026-901"
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Print Template</label>
+                    <select
+                      {...register('templateId')}
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    >
+                      <option value="">Default Clean Corporate</option>
+                      {(Array.isArray(templates) ? templates : []).map((tpl: any) => (
+                        <option key={tpl.id} value={tpl.id}>
+                          {tpl.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Settlement Bank Details Visibility Toggle */}
+                <div className="pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      {...register('bankDetailsVisible')}
+                      className="w-4 h-4 rounded text-[#5847F6] focus:ring-[#5847F6] border-slate-300"
+                    />
+                    <span className="text-xs font-bold text-slate-700">
+                      Include Company Bank Settlement Instructions on Invoice
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Card 3: Dynamic Line Items (useFieldArray) */}
-          <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                  <FileSpreadsheet className="w-4 h-4" />
+            {/* Card 3: Dynamic Line Items (useFieldArray) */}
+            <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <FileSpreadsheet className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900">Line Items & Financial Breakdown</h3>
+                    <p className="text-[11px] text-slate-500">VAT (7.5%), line item discounts, and unit pricing</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">Line Items & Financial Breakdown</h3>
-                  <p className="text-[11px] text-slate-500">VAT (7.5%), line item discounts, and unit pricing</p>
-                </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() =>
-                  append({
-                    description: '',
-                    quantity: 1,
-                    unit: 'Units',
-                    unitPrice: 0,
-                    discountPercent: 0,
-                    taxRate: 7.5,
-                  })
-                }
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Item</span>
-              </button>
-            </div>
-
-            {/* 1-Click Quick-Add from Supplies Catalog Pill Bar */}
-            <div className="p-3 rounded-2xl bg-white border border-slate-200/80 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-slate-700 flex items-center gap-1.5">
-                  <span>📦 Quick-Add from Supplies Catalog</span>
-                  <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                    {catalogSupplies.length} SKUs
-                  </span>
-                </span>
                 <button
                   type="button"
-                  onClick={() => setActiveCatalogIndex(fields.length)}
-                  className="text-[11px] font-bold text-[#5847F6] hover:underline cursor-pointer"
+                  onClick={() =>
+                    append({
+                      description: '',
+                      quantity: 1,
+                      unit: 'Units',
+                      unitPrice: 0,
+                      discountPercent: 0,
+                      taxRate: 7.5,
+                    })
+                  }
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all"
                 >
-                  Browse Full Catalog →
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Item</span>
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {catalogSupplies.slice(0, 6).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      append({
-                        description: item.name || item.sku || 'Catalog Item',
-                        quantity: 1,
-                        unit: item.unit || 'Units',
-                        unitPrice: Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0) || 0,
-                        discountPercent: 0,
-                        taxRate: Number(item.taxRate ?? 7.5) || 7.5,
-                      });
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span className="font-mono text-[10px] text-indigo-600 font-bold">{item.sku}</span>
-                    <span>{(item.name || item.sku || 'Item').split(' ')[0]}</span>
-                    <span className="text-[10px] text-emerald-600 font-mono font-bold">
-                      {formatCurrency(Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0), 'NGN')}
+              {/* 1-Click Quick-Add from Supplies Catalog Pill Bar */}
+              <div className="p-3 rounded-2xl bg-white border border-slate-200/80 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-extrabold text-slate-700 flex items-center gap-1.5">
+                    <span>📦 Quick-Add from Supplies Catalog</span>
+                    <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                      {catalogSupplies.length} SKUs
                     </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Line Items List */}
-            <div className="space-y-4">
-              {fields.map((field, index) => {
-                const itemValues = formValues?.items?.[index] as Partial<InvoiceItemValues> | undefined;
-                const q = Number(itemValues?.quantity) || 0;
-                const p = Number(itemValues?.unitPrice) || 0;
-                const d = Number(itemValues?.discountPercent) || 0;
-                const t = Number(itemValues?.taxRate) || 0;
-                const base = q * p;
-                const discAmt = base * (d / 100);
-                const taxable = Math.max(0, base - discAmt);
-                const rowTotal = taxable + taxable * (t / 100);
-
-                return (
-                  <div
-                    key={field.id}
-                    className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3 relative group"
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveCatalogIndex(fields.length)}
+                    className="text-[11px] font-bold text-[#5847F6] hover:underline cursor-pointer"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-slate-100 font-mono text-[11px] font-bold text-slate-600 flex items-center justify-center">
-                          #{index + 1}
-                        </span>
-                        <span className="text-xs font-bold text-slate-800">Item Position</span>
-                        <button
-                          type="button"
-                          onClick={() => setActiveCatalogIndex(index)}
-                          className="ml-2 px-2.5 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[10px] font-bold border border-indigo-200 flex items-center gap-1 transition-colors cursor-pointer"
-                        >
-                          <span>📦 Pick from Supplies Catalog</span>
-                        </button>
+                    Browse Full Catalog →
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  {catalogSupplies.slice(0, 6).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        append({
+                          description: item.name || item.sku || 'Catalog Item',
+                          quantity: 1,
+                          unit: item.unit || 'Units',
+                          unitPrice: Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0) || 0,
+                          discountPercent: 0,
+                          taxRate: Number(item.taxRate ?? 7.5) || 7.5,
+                        });
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span className="font-mono text-[10px] text-indigo-600 font-bold">{item.sku}</span>
+                      <span>{(item.name || item.sku || 'Item').split(' ')[0]}</span>
+                      <span className="text-[10px] text-emerald-600 font-mono font-bold">
+                        {formatCurrency(Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0), 'NGN')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Line Items List */}
+              <div className="space-y-4">
+                {fields.map((field, index) => {
+                  const itemValues = formValues?.items?.[index] as Partial<InvoiceItemValues> | undefined;
+                  const q = Number(itemValues?.quantity) || 0;
+                  const p = Number(itemValues?.unitPrice) || 0;
+                  const d = Number(itemValues?.discountPercent) || 0;
+                  const t = Number(itemValues?.taxRate) || 0;
+                  const base = q * p;
+                  const discAmt = base * (d / 100);
+                  const taxable = Math.max(0, base - discAmt);
+                  const rowTotal = taxable + taxable * (t / 100);
+
+                  return (
+                    <div
+                      key={field.id}
+                      className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3 relative group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-slate-100 font-mono text-[11px] font-bold text-slate-600 flex items-center justify-center">
+                            #{index + 1}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800">Item Position</span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveCatalogIndex(index)}
+                            className="ml-2 px-2.5 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[10px] font-bold border border-indigo-200 flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <span>📦 Pick from Supplies Catalog</span>
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-900 tabular-nums">
+                            {formatCurrency(rowTotal, formValues?.currency || 'NGN')}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = formValues?.items?.[index];
+                              if (current) {
+                                append({
+                                  description: current.description ? `${current.description} (Copy)` : 'Copy of Item',
+                                  quantity: Number(current.quantity) || 1,
+                                  unit: current.unit || 'Units',
+                                  unitPrice: Number(current.unitPrice) || 0,
+                                  discountPercent: Number(current.discountPercent) || 0,
+                                  taxRate: Number(current.taxRate ?? 7.5) || 7.5,
+                                });
+                              }
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="Duplicate line item"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            disabled={fields.length === 1}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
+                            title="Delete line item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900 tabular-nums">
-                          {formatCurrency(rowTotal, formValues?.currency || 'NGN')}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const current = formValues?.items?.[index];
-                            if (current) {
-                              append({
-                                description: current.description ? `${current.description} (Copy)` : 'Copy of Item',
-                                quantity: Number(current.quantity) || 1,
-                                unit: current.unit || 'Units',
-                                unitPrice: Number(current.unitPrice) || 0,
-                                discountPercent: Number(current.discountPercent) || 0,
-                                taxRate: Number(current.taxRate ?? 7.5) || 7.5,
-                              });
-                            }
-                          }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                          title="Duplicate line item"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          disabled={fields.length === 1}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
-                          title="Delete line item"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <input
-                        type="text"
-                        {...register(`items.${index}.description` as const)}
-                        placeholder="Item description (e.g. Industrial Portland Cement 50kg)..."
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                      />
-                      {errors.items?.[index]?.description && (
-                        <p className="text-[10px] text-rose-500 mt-0.5">
-                          {errors.items[index]?.description?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Quantity</label>
-                        <input
-                          type="number"
-                          step="any"
-                          {...register(`items.${index}.quantity` as const)}
-                          className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Unit</label>
                         <input
                           type="text"
-                          {...register(`items.${index}.unit` as const)}
-                          placeholder="e.g. Bags"
-                          className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                          {...register(`items.${index}.description` as const)}
+                          placeholder="Item description (e.g. Industrial Portland Cement 50kg)..."
+                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
                         />
+                        {errors.items?.[index]?.description && (
+                          <p className="text-[10px] text-rose-500 mt-0.5">
+                            {errors.items[index]?.description?.message}
+                          </p>
+                        )}
                       </div>
 
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">Unit Price</label>
-                        <input
-                          type="number"
-                          step="any"
-                          {...register(`items.${index}.unitPrice` as const)}
-                          className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                        />
-                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Quantity</label>
+                          <input
+                            type="number"
+                            step="any"
+                            {...register(`items.${index}.quantity` as const)}
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                          />
+                        </div>
 
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">VAT %</label>
-                        <input
-                          type="number"
-                          step="any"
-                          {...register(`items.${index}.taxRate` as const)}
-                          className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                        />
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Unit</label>
+                          <input
+                            type="text"
+                            {...register(`items.${index}.unit` as const)}
+                            placeholder="e.g. Bags"
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Unit Price</label>
+                          <input
+                            type="number"
+                            step="any"
+                            {...register(`items.${index}.unitPrice` as const)}
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">VAT %</label>
+                          <input
+                            type="number"
+                            step="any"
+                            {...register(`items.${index}.taxRate` as const)}
+                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+
+              {/* Quick Live Totals Badge inside Card */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/80 space-y-1.5 text-xs">
+                <div className="flex justify-between text-slate-500">
+                  <span>Calculated Subtotal:</span>
+                  <span className="font-bold tabular-nums text-slate-800">
+                    {formatCurrency(summaryCalculations.subtotal, formValues?.currency || 'NGN')}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-500">
+                  <span>Value Added Tax (VAT 7.5%):</span>
+                  <span className="font-bold tabular-nums text-slate-800">
+                    {formatCurrency(summaryCalculations.tax, formValues?.currency || 'NGN')}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm font-black pt-2 border-t border-slate-100 text-[#5847F6]">
+                  <span>Grand Total:</span>
+                  <span className="tabular-nums">
+                    {formatCurrency(summaryCalculations.total, formValues?.currency || 'NGN')}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Quick Live Totals Badge inside Card */}
-            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 space-y-1.5 text-xs">
-              <div className="flex justify-between text-slate-500">
-                <span>Calculated Subtotal:</span>
-                <span className="font-bold tabular-nums text-slate-800">
-                  {formatCurrency(summaryCalculations.subtotal, formValues?.currency || 'NGN')}
-                </span>
-              </div>
-              <div className="flex justify-between text-slate-500">
-                <span>Value Added Tax (VAT 7.5%):</span>
-                <span className="font-bold tabular-nums text-slate-800">
-                  {formatCurrency(summaryCalculations.tax, formValues?.currency || 'NGN')}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm font-black pt-2 border-t border-slate-100 text-[#5847F6]">
-                <span>Grand Total:</span>
-                <span className="tabular-nums">
-                  {formatCurrency(summaryCalculations.total, formValues?.currency || 'NGN')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: Notes & Remittance Advice */}
-          <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-3">
-            <h3 className="text-sm font-extrabold text-slate-900">Notes & Payment Instructions</h3>
-            <textarea
-              {...register('notes')}
-              rows={3}
-              placeholder="Add payment terms, banking notes, or project milestones..."
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-            />
-          </div>
-        </div>
-
-        {/* Right Sticky Dark Obsidian A4 Stage (55% -> 6 cols) */}
-        <div className="lg:col-span-6">
-          <ErrorBoundary fallbackTitle="Live A4 Invoice Preview Error">
-            <A4StageContainer
-              previewMode={previewMode}
-              documentId={existingDoc?.id}
-              onSaveDraft={onSaveDraft}
-            >
-              <LiveA4InvoiceSheet
-                formValues={formValues}
-                company={company}
-                selectedClient={selectedClient}
-                selectedAddress={selectedAddress}
-                documentNumber={existingDoc?.documentNumber}
+            {/* Card 4: Notes & Remittance Advice */}
+            <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-3">
+              <h3 className="text-sm font-extrabold text-slate-900">Notes & Payment Instructions</h3>
+              <textarea
+                {...register('notes')}
+                rows={3}
+                placeholder="Add payment terms, banking notes, or project milestones..."
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
               />
-            </A4StageContainer>
-          </ErrorBoundary>
+            </div>
+          </div>
+
+          {/* Right Sticky Dark Obsidian A4 Stage (55% -> 6 cols) */}
+          <div className="lg:col-span-6">
+            <ErrorBoundary fallbackTitle="Live A4 Invoice Preview Error">
+              <A4StageContainer
+                previewMode={previewMode}
+                documentId={existingDoc?.id}
+                onSaveDraft={onSaveDraft}
+              >
+                <LiveA4InvoiceSheet
+                  formValues={formValues}
+                  company={company}
+                  selectedClient={selectedClient}
+                  selectedAddress={selectedAddress}
+                  documentNumber={existingDoc?.documentNumber}
+                />
+              </A4StageContainer>
+            </ErrorBoundary>
+          </div>
         </div>
-      </div>
       </ErrorBoundary>
 
       {/* 1-Click Supplies Catalog Picker Modal */}

@@ -10,6 +10,7 @@ import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4WaybillSheet } from '../../../components/builder/LiveA4WaybillSheet';
 import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
+import { ErrorBoundary } from '../../../components/common/ErrorBoundary';
 import { DEMO_CLIENTS, DEMO_SUPPLIES } from '../../../lib/mock-data';
 import {
   Truck,
@@ -59,14 +60,6 @@ export const WaybillBuilderPage: React.FC = () => {
   const [previewMode, setPreviewMode] = React.useState<'LIVE' | 'SERVER'>('LIVE');
   const [activeCatalogIndex, setActiveCatalogIndex] = React.useState<number | null>(null);
 
-  const handleSelectCatalogItem = (item: SupplyItem) => {
-    if (activeCatalogIndex !== null) {
-      setValue(`items.${activeCatalogIndex}.description`, item.name, { shouldValidate: true, shouldDirty: true });
-      setValue(`items.${activeCatalogIndex}.unit`, item.unit, { shouldValidate: true, shouldDirty: true });
-      setActiveCatalogIndex(null);
-    }
-  };
-
   // 1. Fetch Company Profile (for default origin address)
   const { data: companyData } = useQuery<{ data?: Company } | Company>({
     queryKey: ['company-current'],
@@ -78,15 +71,20 @@ export const WaybillBuilderPage: React.FC = () => {
   const company: Company | null = (companyData as any)?.data || (companyData as any) || null;
 
   // 2. Fetch Clients Catalog
-  const { data: clientsData } = useQuery<{ items: Client[] }>({
+  const { data: clientsData } = useQuery<any>({
     queryKey: ['clients-catalog'],
     queryFn: async () => {
       const res = await apiClient.get('/clients', { params: { limit: 100 } });
       return res.data;
     },
   });
-  const clients: Client[] =
-    clientsData?.items && clientsData.items.length > 0 ? clientsData.items : DEMO_CLIENTS;
+  const clients: Client[] = useMemo(() => {
+    const raw = Array.isArray(clientsData)
+      ? clientsData
+      : (clientsData as any)?.data || (clientsData as any)?.items || clientsData;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return DEMO_CLIENTS;
+  }, [clientsData]);
 
   // 3. Fetch Existing Document if in Edit Mode
   const { data: existingDoc, isLoading: isDocLoading } = useQuery<DocumentRecord>({
@@ -100,7 +98,7 @@ export const WaybillBuilderPage: React.FC = () => {
   });
 
   // 4. Fetch Supplies Catalog for Quick-Add
-  const { data: suppliesData } = useQuery<{ items?: SupplyItem[]; data?: SupplyItem[] }>({
+  const { data: suppliesData } = useQuery<any>({
     queryKey: ['supplies-items'],
     queryFn: async () => {
       try {
@@ -111,12 +109,32 @@ export const WaybillBuilderPage: React.FC = () => {
       }
     },
   });
-  const catalogSupplies: SupplyItem[] =
-    suppliesData?.items && suppliesData.items.length > 0
-      ? suppliesData.items
-      : suppliesData?.data && suppliesData.data.length > 0
-      ? suppliesData.data
-      : DEMO_SUPPLIES;
+  const catalogSupplies: SupplyItem[] = useMemo(() => {
+    const raw = Array.isArray(suppliesData)
+      ? suppliesData
+      : (suppliesData as any)?.data || (suppliesData as any)?.items || suppliesData;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return DEMO_SUPPLIES;
+  }, [suppliesData]);
+
+  // 5. Fetch Templates for Waybills
+  const { data: templatesData } = useQuery<any>({
+    queryKey: ['templates-waybill'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/templates', { params: { documentType: 'WAYBILL' } });
+        return res.data;
+      } catch {
+        return [];
+      }
+    },
+  });
+  const templates: any[] = useMemo(() => {
+    const raw = Array.isArray(templatesData)
+      ? templatesData
+      : (templatesData as any)?.data || (templatesData as any)?.items || [];
+    return Array.isArray(raw) ? raw : [];
+  }, [templatesData]);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -161,6 +179,25 @@ export const WaybillBuilderPage: React.FC = () => {
     name: 'items',
   });
 
+  const handleSelectCatalogItem = (item: SupplyItem) => {
+    if (activeCatalogIndex !== null) {
+      if (activeCatalogIndex >= fields.length) {
+        append({
+          description: item.name || item.sku || 'Cargo Item',
+          quantity: 1,
+          unit: item.unit || 'Units',
+          packageCount: 1,
+          packageType: 'Standard Cargo',
+          weightKg: 0,
+        });
+      } else {
+        setValue(`items.${activeCatalogIndex}.description`, item.name || item.sku || 'Cargo Item', { shouldValidate: true, shouldDirty: true });
+        setValue(`items.${activeCatalogIndex}.unit`, item.unit || 'Units', { shouldValidate: true, shouldDirty: true });
+      }
+      setActiveCatalogIndex(null);
+    }
+  };
+
   // Populate form if editing
   useEffect(() => {
     if (existingDoc && isEdit) {
@@ -179,20 +216,20 @@ export const WaybillBuilderPage: React.FC = () => {
         items:
           wb?.items && wb.items.length > 0
             ? wb.items.map((it) => ({
-                description: it.description,
-                quantity: Number(it.quantity),
-                unit: it.unit || 'Units',
-                packageCount: it.packageCount ? Number(it.packageCount) : undefined,
-                packageType: it.packageType || '',
-                weightKg: it.weightKg ? Number(it.weightKg) : undefined,
-              }))
+              description: it.description,
+              quantity: Number(it.quantity),
+              unit: it.unit || 'Units',
+              packageCount: it.packageCount ? Number(it.packageCount) : undefined,
+              packageType: it.packageType || '',
+              weightKg: it.weightKg ? Number(it.weightKg) : undefined,
+            }))
             : [
-                {
-                  description: 'Consignment Cargo Item',
-                  quantity: 1,
-                  unit: 'Units',
-                },
-              ],
+              {
+                description: 'Consignment Cargo Item',
+                quantity: 1,
+                unit: 'Units',
+              },
+            ],
       });
     }
   }, [existingDoc, isEdit, reset, company, todayStr]);
@@ -322,7 +359,7 @@ export const WaybillBuilderPage: React.FC = () => {
       {/* 1. Finnova Studio Header Bar */}
       <StudioHeaderBar
         documentType="WAYBILL"
-        documentTitle={formValues.title}
+        documentTitle={formValues?.title || 'New Waybill'}
         documentNumber={existingDoc?.documentNumber}
         isEdit={isEdit}
         version={existingDoc?.version || 1}
@@ -338,8 +375,9 @@ export const WaybillBuilderPage: React.FC = () => {
       />
 
       {/* 2. Split-Screen Studio Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Interactive Form Studio (45% -> 6 cols) */}
+      <ErrorBoundary fallbackTitle="Waybill Studio Workspace Error">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Interactive Form Studio (45% -> 6 cols) */}
         <div className="lg:col-span-6 space-y-6">
           {/* Card 1: Consignee & Routing Bay */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
@@ -365,30 +403,30 @@ export const WaybillBuilderPage: React.FC = () => {
                 </div>
                 {/* 1-Tap Consignee Quick-Fill Pills */}
                 <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                  {clients.map((c) => (
+                  {(Array.isArray(clients) ? clients : []).map((c) => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => handleClientChange(c.id)}
                       className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${
-                        formValues.clientId === c.id
+                        formValues?.clientId === c.id
                           ? 'bg-sky-600 text-white border-sky-600 shadow-sm shadow-sky-500/20'
                           : 'bg-white hover:bg-sky-50 hover:border-sky-300 text-slate-700 border-slate-200'
                       }`}
                     >
-                      ⚡ {c.companyName?.split(' ')[0] || c.name.split(' ')[0]}
+                      ⚡ {(c.companyName || c.name || 'Client').split(' ')[0]}
                     </button>
                   ))}
                 </div>
                 <select
-                  value={formValues.clientId || ''}
+                  value={formValues?.clientId || ''}
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
                 >
                   <option value="">Select a consignee client...</option>
-                  {clients.map((c) => (
+                  {(Array.isArray(clients) ? clients : []).map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} {c.companyName ? `(${c.companyName})` : ''}
+                      {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''}
                     </option>
                   ))}
                 </select>
@@ -553,15 +591,15 @@ export const WaybillBuilderPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {catalogSupplies.slice(0, 6).map((item) => (
+                {(Array.isArray(catalogSupplies) ? catalogSupplies : []).slice(0, 6).map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => {
                       append({
-                        description: item.name,
+                        description: item.name || item.sku || 'Cargo Item',
                         quantity: 1,
-                        unit: item.unit,
+                        unit: item.unit || 'Units',
                         packageCount: 1,
                         packageType: 'Standard Cargo',
                         weightKg: 0,
@@ -570,7 +608,7 @@ export const WaybillBuilderPage: React.FC = () => {
                     className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <span className="font-mono text-[10px] text-sky-600 font-bold">{item.sku}</span>
-                    <span>{item.name.split(' ')[0]}</span>
+                    <span>{(item.name || item.sku || 'Item').split(' ')[0]}</span>
                   </button>
                 ))}
               </div>
@@ -601,11 +639,13 @@ export const WaybillBuilderPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          const current = formValues.items[index];
-                          append({
-                            ...current,
-                            description: current.description ? `${current.description} (Copy)` : '',
-                          });
+                          const current = formValues?.items?.[index];
+                          if (current) {
+                            append({
+                              ...current,
+                              description: current.description ? `${current.description} (Copy)` : 'Cargo Item (Copy)',
+                            });
+                          }
                         }}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
                         title="Duplicate cargo item"
@@ -698,20 +738,23 @@ export const WaybillBuilderPage: React.FC = () => {
 
         {/* Right Sticky Dark Obsidian A4 Stage (55% -> 6 cols) */}
         <div className="lg:col-span-6">
-          <A4StageContainer
-            previewMode={previewMode}
-            documentId={existingDoc?.id}
-            onSaveDraft={onSaveDraft}
-          >
-            <LiveA4WaybillSheet
-              formValues={formValues}
-              company={company}
-              selectedClient={selectedClient}
-              documentNumber={existingDoc?.documentNumber}
-            />
-          </A4StageContainer>
+          <ErrorBoundary fallbackTitle="Live A4 Waybill Preview Error">
+            <A4StageContainer
+              previewMode={previewMode}
+              documentId={existingDoc?.id}
+              onSaveDraft={onSaveDraft}
+            >
+              <LiveA4WaybillSheet
+                formValues={formValues}
+                company={company}
+                selectedClient={selectedClient}
+                documentNumber={existingDoc?.documentNumber}
+              />
+            </A4StageContainer>
+          </ErrorBoundary>
         </div>
       </div>
+      </ErrorBoundary>
 
       {/* 1-Click Supplies Catalog Picker Modal */}
       <CatalogPickerModal

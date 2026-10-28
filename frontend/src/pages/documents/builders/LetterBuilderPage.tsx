@@ -11,6 +11,7 @@ import { useAuthStore } from '../../../store/auth.store';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4LetterSheet } from '../../../components/builder/LiveA4LetterSheet';
+import { ErrorBoundary } from '../../../components/common/ErrorBoundary';
 import {
   Mail,
   User,
@@ -60,15 +61,39 @@ export const LetterBuilderPage: React.FC = () => {
   const company: Company | null = (companyData as any)?.data || (companyData as any) || null;
 
   // 2. Fetch Clients Catalog
-  const { data: clientsData } = useQuery<{ items: Client[] }>({
+  const { data: clientsData } = useQuery<any>({
     queryKey: ['clients-catalog'],
     queryFn: async () => {
       const res = await apiClient.get('/clients', { params: { limit: 100 } });
       return res.data;
     },
   });
-  const clients: Client[] =
-    clientsData?.items && clientsData.items.length > 0 ? clientsData.items : DEMO_CLIENTS;
+  const clients: Client[] = useMemo(() => {
+    const raw = Array.isArray(clientsData)
+      ? clientsData
+      : (clientsData as any)?.data || (clientsData as any)?.items || clientsData;
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+    return DEMO_CLIENTS;
+  }, [clientsData]);
+
+  // Fetch Templates for Letters
+  const { data: templatesData } = useQuery<any>({
+    queryKey: ['templates-letter'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/templates', { params: { documentType: 'LETTER' } });
+        return res.data;
+      } catch {
+        return [];
+      }
+    },
+  });
+  const templates: any[] = useMemo(() => {
+    const raw = Array.isArray(templatesData)
+      ? templatesData
+      : (templatesData as any)?.data || (templatesData as any)?.items || [];
+    return Array.isArray(raw) ? raw : [];
+  }, [templatesData]);
 
   // 3. Fetch Existing Document if in Edit Mode
   const { data: existingDoc, isLoading: isDocLoading } = useQuery<DocumentRecord>({
@@ -245,7 +270,7 @@ export const LetterBuilderPage: React.FC = () => {
       {/* 1. Finnova Studio Header Bar */}
       <StudioHeaderBar
         documentType="LETTER"
-        documentTitle={formValues.title}
+        documentTitle={formValues?.title || 'New Letter'}
         documentNumber={existingDoc?.documentNumber}
         isEdit={isEdit}
         version={existingDoc?.version || 1}
@@ -261,8 +286,9 @@ export const LetterBuilderPage: React.FC = () => {
       />
 
       {/* 2. Split-Screen Studio Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Interactive Form Studio (45% -> 6 cols) */}
+      <ErrorBoundary fallbackTitle="Letter Studio Workspace Error">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Interactive Form Studio (45% -> 6 cols) */}
         <div className="lg:col-span-6 space-y-6">
           {/* Card 1: Recipient Corporate Addressee */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
@@ -288,30 +314,30 @@ export const LetterBuilderPage: React.FC = () => {
                 </div>
                 {/* 1-Tap Quick-Fill Pill Buttons */}
                 <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                  {clients.map((c) => (
+                  {(Array.isArray(clients) ? clients : []).map((c) => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => handleClientChange(c.id)}
                       className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${
-                        formValues.clientId === c.id
+                        formValues?.clientId === c.id
                           ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-500/20'
                           : 'bg-white hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 border-slate-200'
                       }`}
                     >
-                      ⚡ {c.companyName?.split(' ')[0] || c.name.split(' ')[0]}
+                      ⚡ {(c.companyName || c.name || 'Client').split(' ')[0]}
                     </button>
                   ))}
                 </div>
                 <select
-                  value={formValues.clientId || ''}
+                  value={formValues?.clientId || ''}
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
                   <option value="">Select a client to auto-fill addressee...</option>
-                  {clients.map((c) => (
+                  {(Array.isArray(clients) ? clients : []).map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} {c.companyName ? `(${c.companyName})` : ''}
+                      {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''}
                     </option>
                   ))}
                 </select>
@@ -492,19 +518,22 @@ export const LetterBuilderPage: React.FC = () => {
 
         {/* Right Sticky Dark Obsidian A4 Stage (55% -> 6 cols) */}
         <div className="lg:col-span-6">
-          <A4StageContainer
-            previewMode={previewMode}
-            documentId={existingDoc?.id}
-            onSaveDraft={onSaveDraft}
-          >
-            <LiveA4LetterSheet
-              formValues={formValues}
-              company={company}
-              documentNumber={existingDoc?.documentNumber}
-            />
-          </A4StageContainer>
+          <ErrorBoundary fallbackTitle="Live A4 Letter Preview Error">
+            <A4StageContainer
+              previewMode={previewMode}
+              documentId={existingDoc?.id}
+              onSaveDraft={onSaveDraft}
+            >
+              <LiveA4LetterSheet
+                formValues={formValues}
+                company={company}
+                documentNumber={existingDoc?.documentNumber}
+              />
+            </A4StageContainer>
+          </ErrorBoundary>
         </div>
       </div>
+      </ErrorBoundary>
     </div>
   );
 };
