@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Sparkles, Send, Eye, Server, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, Send, Eye, Server, RefreshCw, Lock } from 'lucide-react';
 import { DocumentType, DocumentStatus } from '../../types';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface StudioHeaderBarProps {
   documentType: DocumentType;
@@ -37,6 +38,8 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
   isDirty = false,
 }) => {
   const navigate = useNavigate();
+  const { isAdmin } = usePermissions();
+  const isFrozen = isEdit && (status === 'APPROVED' || status === 'ISSUED') && !isAdmin;
 
   const typeConfig: Record<DocumentType, { label: string; badgeBg: string; badgeText: string }> = {
     INVOICE: {
@@ -108,6 +111,16 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
                 Unsaved edits
               </span>
             )}
+
+            {isFrozen && (
+              <span
+                title="Approved and Issued documents are frozen. Only Administrators can modify this record."
+                className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full flex items-center gap-1"
+              >
+                <Lock className="w-3 h-3 text-amber-600" />
+                Frozen Record
+              </span>
+            )}
           </div>
 
           <p className="text-xs text-slate-500 mt-0.5 truncate max-w-md md:max-w-xl">
@@ -150,7 +163,8 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
         <button
           type="button"
           onClick={onSaveDraft}
-          disabled={isSavingDraft || isSubmitting}
+          disabled={isSavingDraft || isSubmitting || isFrozen}
+          title={isFrozen ? 'Approved/Issued documents are immutable. Only Administrators can modify frozen documents.' : undefined}
           className="flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 text-xs md:text-sm font-bold shadow-sm transition-all disabled:opacity-50"
         >
           {isSavingDraft ? (
@@ -165,7 +179,8 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
         <button
           type="button"
           onClick={onSubmitForApproval}
-          disabled={isSavingDraft || isSubmitting}
+          disabled={isSavingDraft || isSubmitting || isFrozen}
+          title={isFrozen ? 'Approved/Issued documents are immutable. Only Administrators can modify frozen documents.' : undefined}
           className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50"
         >
           {isSubmitting ? (

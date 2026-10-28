@@ -3,6 +3,7 @@ import { DocumentRecord, WaybillItem, WaybillDeliveryStatus } from '../../../typ
 import { formatDate } from '../../../lib/utils';
 import { useAuthStore } from '../../../store/auth.store';
 import { apiClient } from '../../../lib/api-client';
+import { usePermissions } from '../../../hooks/usePermissions';
 import {
   Truck,
   Download,
@@ -19,6 +20,7 @@ import {
   Phone,
   PackageCheck,
   AlertOctagon,
+  Lock,
 } from 'lucide-react';
 
 interface WaybillInspectorProps {
@@ -36,7 +38,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
   onWaybillStateTransition,
   onEditDraft,
 }) => {
-  const { hasPermission } = useAuthStore();
+  const { isAdmin, canApprove, canIssue, canCancel, hasPermission } = usePermissions();
   const [isPdfLoading, setIsPdfLoading] = useState(false);
 
   const wb = document.waybill;
@@ -252,7 +254,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
               <Copy className="w-4 h-4" />
             </button>
 
-            {status !== 'CANCELLED' && (
+            {status !== 'CANCELLED' && canCancel('WAYBILL') && (
               <button
                 onClick={() => onActionClick('CANCEL')}
                 title="Cancel waybill"
@@ -266,7 +268,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
           {/* Context-Aware Primary White Pill CTA */}
           <div className="flex items-center gap-2">
             {/* Draft Stage */}
-            {status === 'DRAFT' && hasPermission('waybill:submit') && (
+            {status === 'DRAFT' && (isAdmin || hasPermission('waybill:submit') || hasPermission('waybill:create')) && (
               <button
                 onClick={() => onActionClick('SUBMIT')}
                 className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
@@ -278,16 +280,14 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
 
             {/* Pending Approval Stage */}
             {status === 'PENDING_APPROVAL' && (
-              <>
-                {hasPermission('waybill:approve') && (
+              canApprove('WAYBILL') ? (
+                <>
                   <button
                     onClick={() => onActionClick('REJECT')}
                     className="px-4 py-2.5 rounded-full bg-rose-500/80 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-sm"
                   >
                     Reject
                   </button>
-                )}
-                {hasPermission('waybill:approve') && (
                   <button
                     onClick={() => onActionClick('APPROVE')}
                     className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
@@ -295,19 +295,37 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Approve Waybill</span>
                   </button>
-                )}
-              </>
+                </>
+              ) : (
+                <div
+                  title="Requires Admin / Manager approval rights"
+                  className="px-5 py-2.5 rounded-full bg-white/10 text-white/50 text-xs font-semibold cursor-not-allowed flex items-center gap-2 border border-white/10 select-none"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Requires Admin / Manager approval rights</span>
+                </div>
+              )
             )}
 
             {/* Approved Stage -> Issue */}
-            {status === 'APPROVED' && hasPermission('waybill:dispatch') && (
-              <button
-                onClick={() => onActionClick('ISSUE')}
-                className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
-              >
-                <FileCheck className="w-4 h-4 text-[#5847F6]" />
-                <span>Issue Waybill</span>
-              </button>
+            {status === 'APPROVED' && (
+              canIssue('WAYBILL') ? (
+                <button
+                  onClick={() => onActionClick('ISSUE')}
+                  className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
+                >
+                  <FileCheck className="w-4 h-4 text-[#5847F6]" />
+                  <span>Issue Waybill</span>
+                </button>
+              ) : (
+                <div
+                  title="Requires Admin / Manager dispatch rights"
+                  className="px-5 py-2.5 rounded-full bg-white/10 text-white/50 text-xs font-semibold cursor-not-allowed flex items-center gap-2 border border-white/10 select-none"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Requires Admin / Manager dispatch rights</span>
+                </div>
+              )
             )}
 
             {/* Issued Stage -> Logistics State Machine Transitions */}

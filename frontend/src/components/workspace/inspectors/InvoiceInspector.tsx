@@ -3,6 +3,7 @@ import { DocumentRecord, InvoiceItem } from '../../../types';
 import { formatCurrency, formatDate } from '../../../lib/utils';
 import { useAuthStore } from '../../../store/auth.store';
 import { apiClient } from '../../../lib/api-client';
+import { usePermissions } from '../../../hooks/usePermissions';
 import {
   FileText,
   Download,
@@ -19,6 +20,7 @@ import {
   ChevronRight,
   Send,
   FileCheck,
+  Lock,
 } from 'lucide-react';
 
 interface InvoiceInspectorProps {
@@ -36,7 +38,7 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
   onRecordPayment,
   onEditDraft,
 }) => {
-  const { hasPermission } = useAuthStore();
+  const { isAdmin, canApprove, canIssue, canCancel, canRecordPayment, hasPermission } = usePermissions();
   const [isPdfLoading, setIsPdfLoading] = useState(false);
 
   const inv = document.invoice;
@@ -274,7 +276,7 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
               <Copy className="w-4 h-4" />
             </button>
 
-            {status !== 'CANCELLED' && (
+            {status !== 'CANCELLED' && canCancel('INVOICE') && (
               <button
                 onClick={() => onActionClick('CANCEL')}
                 title="Cancel document"
@@ -287,7 +289,7 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
 
           {/* Context-Aware Primary White Pill CTA */}
           <div>
-            {status === 'DRAFT' && hasPermission('invoice:submit') && (
+            {status === 'DRAFT' && (isAdmin || hasPermission('invoice:submit') || hasPermission('invoice:create')) && (
               <button
                 onClick={() => onActionClick('SUBMIT')}
                 className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg shadow-black/15 flex items-center gap-2 transition-all"
@@ -298,16 +300,14 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
             )}
 
             {status === 'PENDING_APPROVAL' && (
-              <div className="flex items-center gap-2">
-                {hasPermission('invoice:approve') && (
+              canApprove('INVOICE') ? (
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => onActionClick('REJECT')}
                     className="px-4 py-2.5 rounded-full bg-rose-500/80 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-sm"
                   >
                     Reject
                   </button>
-                )}
-                {hasPermission('invoice:approve') && (
                   <button
                     onClick={() => onActionClick('APPROVE')}
                     className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
@@ -315,21 +315,39 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Approve Invoice</span>
                   </button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div
+                  title="Requires Admin / Manager approval rights"
+                  className="px-5 py-2.5 rounded-full bg-white/10 text-white/50 text-xs font-semibold cursor-not-allowed flex items-center gap-2 border border-white/10 select-none"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Requires Admin / Manager approval rights</span>
+                </div>
+              )
             )}
 
-            {status === 'APPROVED' && hasPermission('invoice:issue') && (
-              <button
-                onClick={() => onActionClick('ISSUE')}
-                className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
-              >
-                <FileCheck className="w-4 h-4 text-[#5847F6]" />
-                <span>Issue & Freeze Snapshot</span>
-              </button>
+            {status === 'APPROVED' && (
+              canIssue('INVOICE') ? (
+                <button
+                  onClick={() => onActionClick('ISSUE')}
+                  className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
+                >
+                  <FileCheck className="w-4 h-4 text-[#5847F6]" />
+                  <span>Issue & Freeze Snapshot</span>
+                </button>
+              ) : (
+                <div
+                  title="Requires Admin / Manager issuance rights"
+                  className="px-5 py-2.5 rounded-full bg-white/10 text-white/50 text-xs font-semibold cursor-not-allowed flex items-center gap-2 border border-white/10 select-none"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Requires Admin / Manager issuance rights</span>
+                </div>
+              )
             )}
 
-            {status === 'ISSUED' && onRecordPayment && hasPermission('payment:record') && (
+            {status === 'ISSUED' && onRecordPayment && canRecordPayment && (
               <button
                 onClick={() => onRecordPayment(document)}
                 className="px-6 py-2.5 rounded-full bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-black shadow-lg flex items-center gap-2 transition-all"

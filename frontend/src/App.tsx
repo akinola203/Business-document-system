@@ -64,9 +64,30 @@ export const App: React.FC = () => {
             <Route path="/vendors" element={<VendorsPage />} />
             <Route path="/supplies" element={<SuppliesPage />} />
             <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/audit-logs" element={<AuditLogsPage />} />
-            <Route path="/settings/templates" element={<TemplatesPage />} />
-            <Route path="/settings/company" element={<CompanySettingsPage />} />
+            <Route
+              path="/audit-logs"
+              element={
+                <ProtectedRoute requiredPermission="audit:view">
+                  <AuditLogsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/templates"
+              element={
+                <ProtectedRoute requiredPermission="settings:manage">
+                  <TemplatesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/company"
+              element={
+                <ProtectedRoute requiredPermission="settings:manage">
+                  <CompanySettingsPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/settings/users"
               element={

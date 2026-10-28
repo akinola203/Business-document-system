@@ -3,6 +3,7 @@ import { DocumentRecord, LetterSpecialization } from '../../../types';
 import { formatDate } from '../../../lib/utils';
 import { useAuthStore } from '../../../store/auth.store';
 import { apiClient } from '../../../lib/api-client';
+import { usePermissions } from '../../../hooks/usePermissions';
 import {
   Mail,
   Download,
@@ -16,6 +17,7 @@ import {
   User,
   Building,
   FileText,
+  Lock,
 } from 'lucide-react';
 
 interface LetterInspectorProps {
@@ -31,7 +33,7 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
   onOpenHistory,
   onEditDraft,
 }) => {
-  const { hasPermission } = useAuthStore();
+  const { isAdmin, canApprove, canIssue, canCancel, hasPermission } = usePermissions();
   const [isPdfLoading, setIsPdfLoading] = useState(false);
 
   const letData: LetterSpecialization | null | undefined = document.letter;
@@ -191,7 +193,7 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
               <Copy className="w-4 h-4" />
             </button>
 
-            {status !== 'CANCELLED' && (
+            {status !== 'CANCELLED' && canCancel('LETTER') && (
               <button
                 onClick={() => onActionClick('CANCEL')}
                 title="Cancel letter"
@@ -204,7 +206,7 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
 
           {/* Context-Aware Primary White Pill CTA */}
           <div>
-            {status === 'DRAFT' && hasPermission('letter:create') && (
+            {status === 'DRAFT' && (isAdmin || hasPermission('letter:submit') || hasPermission('letter:create')) && (
               <button
                 onClick={() => onActionClick('SUBMIT')}
                 className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
@@ -215,16 +217,14 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
             )}
 
             {status === 'PENDING_APPROVAL' && (
-              <div className="flex items-center gap-2">
-                {hasPermission('letter:approve') && (
+              canApprove('LETTER') ? (
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => onActionClick('REJECT')}
                     className="px-4 py-2.5 rounded-full bg-rose-500/80 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-sm"
                   >
                     Reject
                   </button>
-                )}
-                {hasPermission('letter:approve') && (
                   <button
                     onClick={() => onActionClick('APPROVE')}
                     className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
@@ -232,18 +232,36 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Approve Letter</span>
                   </button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div
+                  title="Requires Admin / Manager approval rights"
+                  className="px-5 py-2.5 rounded-full bg-white/10 text-white/50 text-xs font-semibold cursor-not-allowed flex items-center gap-2 border border-white/10 select-none"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Requires Admin / Manager approval rights</span>
+                </div>
+              )
             )}
 
-            {status === 'APPROVED' && hasPermission('letter:issue') && (
-              <button
-                onClick={() => onActionClick('ISSUE')}
-                className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
-              >
-                <FileCheck className="w-4 h-4 text-[#5847F6]" />
-                <span>Issue & Freeze Snapshot</span>
-              </button>
+            {status === 'APPROVED' && (
+              canIssue('LETTER') ? (
+                <button
+                  onClick={() => onActionClick('ISSUE')}
+                  className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
+                >
+                  <FileCheck className="w-4 h-4 text-[#5847F6]" />
+                  <span>Issue & Freeze Snapshot</span>
+                </button>
+              ) : (
+                <div
+                  title="Requires Admin / Manager issuance rights"
+                  className="px-5 py-2.5 rounded-full bg-white/10 text-white/50 text-xs font-semibold cursor-not-allowed flex items-center gap-2 border border-white/10 select-none"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Requires Admin / Manager issuance rights</span>
+                </div>
+              )
             )}
           </div>
         </div>

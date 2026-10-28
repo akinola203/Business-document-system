@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/auth.store';
+import { usePermissions } from '../../hooks/usePermissions';
 import { apiClient } from '../../lib/api-client';
 import { DEMO_NOTIFICATIONS } from '../../lib/mock-data';
 import {
@@ -46,7 +47,15 @@ const NAV_TABS: NavTab[] = [
 export const TopPillNavbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, hasPermission } = useAuthStore();
+  const { logout } = useAuthStore();
+  const {
+    user,
+    isAdmin,
+    hasPermission,
+    canManageSettings,
+    canViewAuditLogs,
+    canManageUsers,
+  } = usePermissions();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -136,26 +145,30 @@ export const TopPillNavbar: React.FC = () => {
 
       {/* 3. Right: Circular Utility Dock */}
       <div className="flex items-center gap-2">
-        {/* Templates Designer Shortcut */}
-        <button
-          onClick={() => navigate('/settings/templates')}
-          title="Document Templates"
-          className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all shadow-sm hover:shadow"
-        >
-          <Palette className="w-4 h-4" />
-        </button>
+        {/* Templates Designer Shortcut (Admin / Manager only) */}
+        {canManageSettings && (
+          <button
+            onClick={() => navigate('/settings/templates')}
+            title="Document Templates"
+            className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all shadow-sm hover:shadow"
+          >
+            <Palette className="w-4 h-4" />
+          </button>
+        )}
 
-        {/* Audit Log Trail */}
-        <button
-          onClick={() => navigate('/audit-logs')}
-          title="Audit Trail Logs"
-          className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all shadow-sm hover:shadow"
-        >
-          <ShieldCheck className="w-4 h-4" />
-        </button>
+        {/* Audit Log Trail (Admin / Privileged only) */}
+        {canViewAuditLogs && (
+          <button
+            onClick={() => navigate('/audit-logs')}
+            title="Audit Trail Logs"
+            className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all shadow-sm hover:shadow"
+          >
+            <ShieldCheck className="w-4 h-4" />
+          </button>
+        )}
 
-        {/* Users & Roles (Guarded) */}
-        {hasPermission('users:view') && (
+        {/* Users & Roles (Admin / User Manager only) */}
+        {canManageUsers && (
           <button
             onClick={() => navigate('/settings/users')}
             title="Team & Access Control"
@@ -177,14 +190,16 @@ export const TopPillNavbar: React.FC = () => {
           )}
         </button>
 
-        {/* Company Settings */}
-        <button
-          onClick={() => navigate('/settings/company')}
-          title="Company Branding & Settings"
-          className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all shadow-sm hover:shadow"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
+        {/* Company Settings (Admin only) */}
+        {canManageSettings && (
+          <button
+            onClick={() => navigate('/settings/company')}
+            title="Company Branding & Settings"
+            className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all shadow-sm hover:shadow"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        )}
 
         {/* User Profile Dropdown Pill */}
         <div className="relative ml-1" ref={dropdownRef}>
@@ -219,26 +234,42 @@ export const TopPillNavbar: React.FC = () => {
               </div>
 
               <div className="py-1">
-                <button
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    navigate('/settings/company');
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
-                >
-                  <Settings className="w-3.5 h-3.5 text-slate-400" />
-                  Company Settings
-                </button>
-                <button
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    navigate('/audit-logs');
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                  Security & Audit Logs
-                </button>
+                {canManageSettings && (
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate('/settings/company');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-slate-400" />
+                    Company Settings
+                  </button>
+                )}
+                {canViewAuditLogs && (
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate('/audit-logs');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                    Security & Audit Logs
+                  </button>
+                )}
+                {canManageUsers && (
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate('/settings/users');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                  >
+                    <Users className="w-3.5 h-3.5 text-slate-400" />
+                    Team & Access Control
+                  </button>
+                )}
               </div>
 
               <div className="pt-1 border-t border-slate-100">
