@@ -58,9 +58,17 @@ export const LifecycleActionModal: React.FC<LifecycleActionModalProps> = ({
       payload = { cancellationReason: reason.trim() };
     }
 
-    await onConfirm(payload);
-    setComment('');
-    setReason('');
+    try {
+      await onConfirm(payload);
+      setComment('');
+      setReason('');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Action failed. Please verify conditions and permissions.';
+      setValidationError(Array.isArray(msg) ? msg.join(', ') : msg);
+    }
   };
 
   const getActionConfig = () => {
@@ -158,9 +166,16 @@ export const LifecycleActionModal: React.FC<LifecycleActionModalProps> = ({
         <p className="text-xs text-slate-600 leading-relaxed mb-5">{config.subtitle}</p>
 
         {validationError && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{validationError}</span>
+          <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-1">
+            <div className="flex items-center gap-2 font-bold">
+              <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{validationError}</span>
+            </div>
+            {validationError.toLowerCase().includes('self-approval') && (
+              <p className="text-[11px] text-rose-600 pl-6 leading-relaxed">
+                Tip: Your organization has strict segregation of duties enabled. To allow document authors or administrators to approve their own drafts, an Admin can enable <strong>"Allow Document Self-Approval"</strong> in <strong>Company Settings &gt; Corporate Governance</strong>, or switch to an authorized Manager (e.g. <code>manager@aoa77.com</code>) to approve.
+              </p>
+            )}
           </div>
         )}
 

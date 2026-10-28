@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Sparkles,
 } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 export const CompanySettingsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -52,6 +53,22 @@ export const CompanySettingsPage: React.FC = () => {
   const [defaultPaymentTermsDays, setDefaultPaymentTermsDays] = useState(
     company.settings?.defaultPaymentTermsDays?.toString() || '30'
   );
+  const [allowSelfApproval, setAllowSelfApproval] = useState<boolean>(
+    company.settings?.allowSelfApproval ?? true
+  );
+
+  // Sync state when companyData loads
+  React.useEffect(() => {
+    if (company?.settings) {
+      if (company.settings.bankName) setBankName(company.settings.bankName);
+      if (company.settings.bankAccountName) setBankAccountName(company.settings.bankAccountName);
+      if (company.settings.bankAccountNumber) setBankAccountNumber(company.settings.bankAccountNumber);
+      if (company.settings.bankSortCode) setBankSortCode(company.settings.bankSortCode);
+      if (company.settings.defaultVatRate !== undefined) setDefaultVatRate(company.settings.defaultVatRate.toString());
+      if (company.settings.defaultPaymentTermsDays !== undefined) setDefaultPaymentTermsDays(company.settings.defaultPaymentTermsDays.toString());
+      if (company.settings.allowSelfApproval !== undefined) setAllowSelfApproval(company.settings.allowSelfApproval);
+    }
+  }, [company]);
 
   // Numbering settings
   const [invoicePrefix, setInvoicePrefix] = useState('INV-');
@@ -118,6 +135,7 @@ export const CompanySettingsPage: React.FC = () => {
         defaultVatRate: parseFloat(defaultVatRate) || 7.5,
         defaultPaymentTermsDays: parseInt(defaultPaymentTermsDays, 10) || 30,
         showBankDetailsOnInvoice: true,
+        allowSelfApproval,
       };
 
       try {
@@ -403,6 +421,49 @@ export const CompanySettingsPage: React.FC = () => {
                   <option value="60">Net 60 Days</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* Card 3: Corporate Governance & Document Approval Policy */}
+          <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">Corporate Governance & Approval Policy</h3>
+                <p className="text-[11px] text-slate-500">Document segregation of duties and self-approval control</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white border border-slate-200/80 gap-3">
+              <div className="space-y-1 pr-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900">Allow Document Self-Approval</span>
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
+                      allowSelfApproval
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200',
+                    )}
+                  >
+                    {allowSelfApproval ? 'Self-Approval Permitted' : 'Strict Four-Eyes Principle'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  When enabled, document authors (such as business owners or solo administrators) are permitted to approve their own invoices, waybills, and letters. When disabled, strict segregation of duties requires a secondary manager (e.g. Operations Manager) to review and approve.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={allowSelfApproval}
+                  onChange={(e) => setAllowSelfApproval(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5847F6]"></div>
+              </label>
             </div>
           </div>
         </div>

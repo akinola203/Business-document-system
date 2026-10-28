@@ -188,11 +188,7 @@ export const InvoicesPage: React.FC = () => {
       }
     },
     onError: (err: any) => {
-      const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Action failed. Please verify conditions and permissions.';
-      alert(Array.isArray(msg) ? msg.join(', ') : msg);
+      console.warn('Document lifecycle action failed:', err?.response?.data?.message || err?.message);
     },
   });
 

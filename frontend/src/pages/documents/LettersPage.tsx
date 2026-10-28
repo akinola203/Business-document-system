@@ -156,8 +156,7 @@ export const LettersPage: React.FC = () => {
       }
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Action failed.';
-      alert(Array.isArray(msg) ? msg.join(', ') : msg);
+      console.warn('Letter lifecycle action failed:', err?.response?.data?.message || err?.message);
     },
   });
 

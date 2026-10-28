@@ -189,8 +189,7 @@ export const WaybillsPage: React.FC = () => {
       }
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Action failed.';
-      alert(Array.isArray(msg) ? msg.join(', ') : msg);
+      console.warn('Waybill lifecycle action failed:', err?.response?.data?.message || err?.message);
     },
   });
 
