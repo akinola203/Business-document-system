@@ -291,17 +291,18 @@ export const WaybillBuilderPage: React.FC = () => {
 
       if (isEdit && id) {
         const res = await apiClient.patch(`/waybills/${id}`, payload);
-        return res.data;
+        return res.data?.data || res.data;
       } else {
         const res = await apiClient.post('/waybills', payload);
-        return res.data;
+        return res.data?.data || res.data;
       }
     },
     onSuccess: (savedDoc) => {
+      const realDoc = savedDoc?.data || savedDoc;
       queryClient.invalidateQueries({ queryKey: ['waybills'] });
       queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
-      if (!isEdit && savedDoc?.id) {
-        navigate(`/documents/waybills/${savedDoc.id}/edit`, { replace: true });
+      if (!isEdit && realDoc?.id) {
+        navigate(`/documents/waybills/${realDoc.id}/edit`, { replace: true });
       }
     },
     onError: (err: any) => {
@@ -316,15 +317,19 @@ export const WaybillBuilderPage: React.FC = () => {
       let docId = id;
       if (!docId) {
         const draftRes = await saveDraftMutation.mutateAsync(data);
-        docId = draftRes.id;
+        docId = draftRes?.data?.id || draftRes?.id;
       } else {
         await saveDraftMutation.mutateAsync(data);
+      }
+
+      if (!docId) {
+        throw new Error('Unable to resolve created waybill ID for submission.');
       }
 
       const submitRes = await apiClient.post(`/documents/${docId}/submit`, {
         notes: 'Submitted from Waybill Split-Screen Studio',
       });
-      return submitRes.data;
+      return submitRes.data?.data || submitRes.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['waybills'] });

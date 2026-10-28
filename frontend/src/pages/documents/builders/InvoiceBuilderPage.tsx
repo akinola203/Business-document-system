@@ -332,17 +332,18 @@ export const InvoiceBuilderPage: React.FC = () => {
 
       if (isEdit && id) {
         const res = await apiClient.patch(`/invoices/${id}`, payload);
-        return res.data;
+        return res.data?.data || res.data;
       } else {
         const res = await apiClient.post('/invoices', payload);
-        return res.data;
+        return res.data?.data || res.data;
       }
     },
     onSuccess: (savedDoc) => {
+      const realDoc = savedDoc?.data || savedDoc;
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
-      if (!isEdit && savedDoc?.id) {
-        navigate(`/documents/invoices/${savedDoc.id}/edit`, { replace: true });
+      if (!isEdit && realDoc?.id) {
+        navigate(`/documents/invoices/${realDoc.id}/edit`, { replace: true });
       }
     },
     onError: (err: any) => {
@@ -358,16 +359,20 @@ export const InvoiceBuilderPage: React.FC = () => {
       let docId = id;
       if (!docId) {
         const draftRes = await saveDraftMutation.mutateAsync(data);
-        docId = draftRes.id;
+        docId = draftRes?.data?.id || draftRes?.id;
       } else {
         await saveDraftMutation.mutateAsync(data);
+      }
+
+      if (!docId) {
+        throw new Error('Unable to resolve created invoice ID for submission.');
       }
 
       // 2. Submit for approval
       const submitRes = await apiClient.post(`/documents/${docId}/submit`, {
         notes: 'Submitted directly from Invoice Split-Screen Studio',
       });
-      return submitRes.data;
+      return submitRes.data?.data || submitRes.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
