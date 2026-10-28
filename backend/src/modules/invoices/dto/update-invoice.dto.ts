@@ -9,6 +9,7 @@ import {
   Length,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { z } from 'zod';
 import { InvoiceItemDto } from './invoice-item.dto';
 
 export class UpdateInvoiceDto {
@@ -58,6 +59,11 @@ export class UpdateInvoiceDto {
   @IsString()
   poNumber?: string;
 
+  @ApiPropertyOptional({ example: 'Payment within 30 days via wire transfer', description: 'Remittance or invoice notes' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @ApiPropertyOptional({ example: true, description: 'Display bank settlement details on invoice' })
   @IsOptional()
   @IsBoolean()
@@ -85,3 +91,21 @@ export class UpdateInvoiceDto {
   @Type(() => Number)
   expectedVersion?: number;
 }
+
+export const updateInvoiceSchema = z.object({
+  title: z.string().optional(),
+  clientId: z.string().optional(),
+  branchId: z.string().optional(),
+  departmentId: z.string().optional(),
+  issueDate: z.string().optional(),
+  dueDate: z.string().optional(),
+  currency: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  poNumber: z.string().optional(),
+  notes: z.string().optional(),
+  bankDetailsVisible: z.boolean().optional(),
+  templateId: z.string().optional(),
+  templateVersionId: z.string().optional(),
+  items: z.array(z.any()).optional(),
+  expectedVersion: z.number().optional(),
+}).passthrough();

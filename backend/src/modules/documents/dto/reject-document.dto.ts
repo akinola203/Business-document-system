@@ -1,10 +1,20 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { z } from 'zod';
+
+export const rejectDocumentSchema = z.object({
+  reason: z.string().optional(),
+  notes: z.string().optional(),
+}).passthrough();
 
 export class RejectDocumentDto {
-  @ApiProperty({ description: 'Mandatory justification for document rejection' })
-  @IsNotEmpty({ message: 'Rejection reason is mandatory.' })
+  @ApiPropertyOptional({ description: 'Justification for document rejection' })
+  @IsOptional()
   @IsString()
-  @MinLength(5, { message: 'Rejection reason must be at least 5 characters.' })
-  reason!: string;
+  reason?: string;
+
+  @ApiPropertyOptional({ description: 'Rejection notes or justification' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

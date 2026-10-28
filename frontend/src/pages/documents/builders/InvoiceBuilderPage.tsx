@@ -316,6 +316,7 @@ export const InvoiceBuilderPage: React.FC = () => {
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
         paymentTerms: data.paymentTerms,
         poNumber: data.poNumber || undefined,
+        notes: data.notes || undefined,
         bankDetailsVisible: data.bankDetailsVisible,
         templateId: data.templateId || undefined,
         items: data.items.map((it) => ({

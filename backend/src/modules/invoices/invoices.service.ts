@@ -66,6 +66,7 @@ export class InvoicesService {
           createdById: actorId,
           templateId: dto.templateId,
           templateVersionId: dto.templateVersionId,
+          metadata: dto.notes ? { notes: dto.notes.trim() } : undefined,
         },
       });
 
@@ -74,6 +75,7 @@ export class InvoicesService {
           documentId: document.id,
           paymentTerms: dto.paymentTerms || 'Net 30 Days',
           poNumber: dto.poNumber?.trim(),
+          notes: dto.notes?.trim(),
           bankDetailsVisible: dto.bankDetailsVisible ?? true,
           items: {
             create: mathSummary.items.map((item, index) => ({
@@ -195,6 +197,7 @@ export class InvoicesService {
           versionCounter: { increment: 1 },
           templateId: dto.templateId,
           templateVersionId: dto.templateVersionId,
+          metadata: dto.notes !== undefined ? { ...(typeof document.metadata === 'object' && document.metadata ? (document.metadata as any) : {}), notes: dto.notes ? dto.notes.trim() : null } : undefined,
         },
       });
 
@@ -203,6 +206,7 @@ export class InvoicesService {
         data: {
           paymentTerms: dto.paymentTerms,
           poNumber: dto.poNumber !== undefined ? dto.poNumber?.trim() : undefined,
+          notes: dto.notes !== undefined ? dto.notes?.trim() : undefined,
           bankDetailsVisible: dto.bankDetailsVisible,
         },
       });

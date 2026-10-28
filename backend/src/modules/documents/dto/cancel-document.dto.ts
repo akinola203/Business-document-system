@@ -1,13 +1,25 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
+import { z } from 'zod';
+
+export const cancelDocumentSchema = z.object({
+  reason: z.string().optional(),
+  notes: z.string().optional(),
+}).passthrough();
 
 export class CancelDocumentDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Client requested order cancellation prior to dispatch',
-    description: 'Mandatory reason for document cancellation',
+    description: 'Reason for document cancellation',
   })
-  @IsNotEmpty({ message: 'Cancellation reason is required' })
+  @IsOptional()
   @IsString()
-  @Length(5, 500)
-  reason!: string;
+  reason?: string;
+
+  @ApiPropertyOptional({
+    description: 'Cancellation notes or reason',
+  })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

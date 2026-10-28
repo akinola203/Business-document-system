@@ -522,6 +522,7 @@ model Invoice {
   document           Document             @relation(fields: [documentId], references: [id], onDelete: Cascade)
   paymentTerms       String? // e.g. "Net 30 Days"
   poNumber           String? // Client Purchase Order Reference
+  notes              String? // Remittance advice, payment instructions, or notes
   bankDetailsVisible Boolean              @default(true)
   paymentStatus      InvoicePaymentStatus @default(UNPAID)
   createdAt          DateTime             @default(now())

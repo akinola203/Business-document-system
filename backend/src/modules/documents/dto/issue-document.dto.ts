@@ -10,11 +10,11 @@ export const issueDocumentSchema = z.object({
   driverName: z.string().min(1).max(100).optional(),
   driverPhone: z.string().min(1).max(30).optional(),
   trackingNumber: z.string().max(100).optional(),
-});
+}).passthrough();
 
 export type IssueDocumentPayload = z.infer<typeof issueDocumentSchema>;
 
-export class IssueDocumentDto implements IssueDocumentPayload {
+export class IssueDocumentDto {
   @ApiPropertyOptional({ example: 1, description: 'Expected versionCounter for optimistic concurrency control (OCC)' })
   @IsOptional()
   @IsInt()

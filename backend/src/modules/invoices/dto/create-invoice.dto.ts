@@ -11,6 +11,7 @@ import {
   Length,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { z } from 'zod';
 import { InvoiceItemDto } from './invoice-item.dto';
 
 export class CreateInvoiceDto {
@@ -60,6 +61,11 @@ export class CreateInvoiceDto {
   @IsString()
   poNumber?: string;
 
+  @ApiPropertyOptional({ example: 'Payment within 30 days via wire transfer', description: 'Remittance or invoice notes' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @ApiPropertyOptional({ example: true, default: true, description: 'Display bank settlement details on invoice' })
   @IsOptional()
   @IsBoolean()
@@ -82,3 +88,20 @@ export class CreateInvoiceDto {
   @Type(() => InvoiceItemDto)
   items!: InvoiceItemDto[];
 }
+
+export const createInvoiceSchema = z.object({
+  title: z.string().min(1),
+  clientId: z.string().min(1),
+  branchId: z.string().optional(),
+  departmentId: z.string().optional(),
+  issueDate: z.string().optional(),
+  dueDate: z.string().optional(),
+  currency: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  poNumber: z.string().optional(),
+  notes: z.string().optional(),
+  bankDetailsVisible: z.boolean().optional(),
+  templateId: z.string().optional(),
+  templateVersionId: z.string().optional(),
+  items: z.array(z.any()),
+}).passthrough();

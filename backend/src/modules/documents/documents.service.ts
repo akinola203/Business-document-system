@@ -220,6 +220,11 @@ export class DocumentsService {
       throw new BadRequestException('Completed documents cannot be cancelled directly.');
     }
 
+    const reason = (dto.reason || dto.notes || '').trim();
+    if (!reason) {
+      throw new BadRequestException('Cancellation reason or notes is required.');
+    }
+
     const updated = await this.prisma.$transaction(async (tx) => {
       if (document.documentType === DocumentType.INVOICE && document.invoice) {
         // Serialize with PaymentsService (same lock) so a payment cannot land between check and cancel.
@@ -238,7 +243,7 @@ export class DocumentsService {
         where: { id: document.id },
         data: {
           status: DocumentStatus.CANCELLED,
-          cancellationReason: dto.reason.trim(),
+          cancellationReason: reason,
         },
       });
 
@@ -250,7 +255,7 @@ export class DocumentsService {
           entityType: 'Document',
           entityId: document.id,
           oldValues: { status: document.status },
-          newValues: { status: DocumentStatus.CANCELLED, reason: dto.reason.trim() },
+          newValues: { status: DocumentStatus.CANCELLED, reason },
         },
         tx,
       );
@@ -262,7 +267,7 @@ export class DocumentsService {
       companyId,
       document.createdById,
       `Document Cancelled: ${document.documentNumber}`,
-      `Document "${document.documentNumber}" was cancelled. Reason: ${dto.reason.trim()}`,
+      `Document "${document.documentNumber}" was cancelled. Reason: ${reason}`,
       'DOCUMENT_CANCELLED',
       { documentId: document.id, documentNumber: document.documentNumber },
     );
@@ -318,6 +323,7 @@ export class DocumentsService {
             documentId: newDoc.id,
             paymentTerms: source.invoice.paymentTerms,
             poNumber: source.invoice.poNumber,
+            notes: source.invoice.notes,
             bankDetailsVisible: source.invoice.bankDetailsVisible,
             items: {
               create: source.invoice.items.map((item) => ({
@@ -431,6 +437,8 @@ export class DocumentsService {
       throw new BadRequestException('Cannot submit a waybill with zero cargo items.');
     }
 
+    const comment = (dto.comment || dto.notes)?.trim() || null;
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const stepNumber = document.approvals.length + 1;
 
@@ -445,7 +453,7 @@ export class DocumentsService {
           stepNumber,
           approverId: dto.approverId || actorId,
           status: 'PENDING',
-          comment: dto.comment?.trim(),
+          comment,
         },
       });
 
@@ -456,7 +464,7 @@ export class DocumentsService {
           action: `${document.documentType}_SUBMITTED_FOR_APPROVAL`,
           entityType: 'Document',
           entityId: document.id,
-          newValues: { stepNumber, approverId: dto.approverId || null, comment: dto.comment },
+          newValues: { stepNumber, approverId: dto.approverId || null, comment },
         },
         tx,
       );
@@ -503,6 +511,8 @@ export class DocumentsService {
       );
     }
 
+    const comment = (dto.comment || dto.notes)?.trim() || null;
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const doc = await tx.document.update({
         where: { id: document.id },
@@ -516,7 +526,7 @@ export class DocumentsService {
           approverId,
           status: 'APPROVED',
           actionDate: new Date(),
-          comment: dto.comment?.trim(),
+          comment,
         },
       });
 
@@ -527,7 +537,7 @@ export class DocumentsService {
           action: `${document.documentType}_APPROVED`,
           entityType: 'Document',
           entityId: document.id,
-          newValues: { approverId, comment: dto.comment },
+          newValues: { approverId, comment },
         },
         tx,
       );
@@ -565,6 +575,11 @@ export class DocumentsService {
       );
     }
 
+    const reason = (dto.reason || dto.notes || '').trim();
+    if (!reason) {
+      throw new BadRequestException('Rejection reason or notes is required.');
+    }
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const doc = await tx.document.update({
         where: { id: document.id },
@@ -578,7 +593,7 @@ export class DocumentsService {
           approverId: rejectorId,
           status: 'REJECTED',
           actionDate: new Date(),
-          comment: dto.reason.trim(),
+          comment: reason,
         },
       });
 
@@ -589,7 +604,7 @@ export class DocumentsService {
           action: `${document.documentType}_REJECTED`,
           entityType: 'Document',
           entityId: document.id,
-          newValues: { rejectorId, reason: dto.reason.trim() },
+          newValues: { rejectorId, reason },
         },
         tx,
       );
@@ -601,9 +616,9 @@ export class DocumentsService {
       companyId,
       document.createdById,
       `Document Rejected: ${document.documentNumber}`,
-      `Your document "${document.documentNumber}" was rejected. Reason: ${dto.reason.trim()}`,
+      `Your document "${document.documentNumber}" was rejected. Reason: ${reason}`,
       'DOCUMENT_REJECTED',
-      { documentId: document.id, documentNumber: document.documentNumber, reason: dto.reason.trim() },
+      { documentId: document.id, documentNumber: document.documentNumber, reason },
     );
 
     this.logger.log(`Document "${document.documentNumber}" rejected by user "${rejectorId}".`);
@@ -658,6 +673,7 @@ export class DocumentsService {
           balanceDue: document.balanceDue,
           paymentTerms: document.invoice.paymentTerms,
           poNumber: document.invoice.poNumber,
+          notes: document.invoice.notes,
           client: document.client,
           items: document.invoice.items,
           company: document.company,
