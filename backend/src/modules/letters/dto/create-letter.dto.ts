@@ -92,4 +92,9 @@ export class CreateLetterDto {
   @IsOptional()
   @IsString()
   templateVersionId?: string;
+
+  @ApiPropertyOptional({ example: 'Dispatched via courier', description: 'Internal correspondence notes' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

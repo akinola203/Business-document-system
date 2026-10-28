@@ -82,6 +82,11 @@ export class CreateWaybillDto {
   @IsString()
   trackingNumber?: string;
 
+  @ApiPropertyOptional({ example: 'Special handling instructions', description: 'Logistics or waybill notes' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @ApiProperty({ type: [WaybillItemDto], description: 'List of cargo consignment items' })
   @IsArray()
   @ArrayMinSize(1, { message: 'A waybill must contain at least one item' })

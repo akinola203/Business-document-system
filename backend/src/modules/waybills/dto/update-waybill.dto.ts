@@ -72,6 +72,11 @@ export class UpdateWaybillDto {
   @Type(() => WaybillItemDto)
   items?: WaybillItemDto[];
 
+  @ApiPropertyOptional({ example: 'Special handling instructions', description: 'Logistics or waybill notes' })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @ApiPropertyOptional({ example: 1, description: 'Expected current version counter for optimistic concurrency control (OCC)' })
   @IsOptional()
   @Type(() => Number)
