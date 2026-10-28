@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
 import { DEMO_WAYBILLS } from '../../lib/mock-data';
+import { formatCurrency, extractArray } from '../../lib/utils';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { PillFilterBar, FilterState } from '../../components/common/PillFilterBar';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
@@ -65,12 +66,9 @@ export const WaybillsPage: React.FC = () => {
     },
   });
 
-  const allWaybills: DocumentRecord[] =
-    waybillsData?.items && waybillsData.items.length > 0
-      ? waybillsData.items
-      : waybillsData?.data && waybillsData.data.length > 0
-      ? waybillsData.data
-      : DEMO_WAYBILLS;
+  const allWaybills: DocumentRecord[] = useMemo(() => {
+    return extractArray<DocumentRecord>(waybillsData, DEMO_WAYBILLS);
+  }, [waybillsData]);
 
   // Tab filtering based on deliveryStatus or document status
   const filteredWaybills = useMemo(() => {
@@ -93,6 +91,25 @@ export const WaybillsPage: React.FC = () => {
       setSelectedDocument(null);
     }
   }, [filteredWaybills, selectedDocument]);
+
+  // Fetch full document details (guaranteeing fresh consignment items and transit status)
+  const { data: docDetailData } = useQuery({
+    queryKey: ['document-detail', selectedDocument?.id],
+    queryFn: async () => {
+      if (!selectedDocument?.id) return null;
+      const res = await apiClient.get(`/documents/${selectedDocument.id}`);
+      return res.data?.data || res.data;
+    },
+    enabled: Boolean(selectedDocument?.id),
+    staleTime: 5000,
+  });
+
+  const activeDocument: DocumentRecord | null = useMemo(() => {
+    if (docDetailData && docDetailData.id === selectedDocument?.id) {
+      return docDetailData;
+    }
+    return selectedDocument;
+  }, [docDetailData, selectedDocument]);
 
   // Derived KPIs
   const inTransitCount = useMemo(() => {
@@ -325,15 +342,15 @@ export const WaybillsPage: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         documents={filteredWaybills}
-        selectedDocument={selectedDocument}
+        selectedDocument={activeDocument}
         onSelectDocument={setSelectedDocument}
         isLoading={isLoading}
         documentType="WAYBILL"
         emptyFeedMessage="No waybills found matching current filter tabs."
         inspector={
-          selectedDocument && (
+          activeDocument && (
             <WaybillInspector
-              document={selectedDocument}
+              document={activeDocument}
               onActionClick={(action) => setActiveActionModal(action)}
               onOpenHistory={() => setIsHistoryDrawerOpen(true)}
               onWaybillStateTransition={(action) => setActiveStateModal(action)}
@@ -344,13 +361,13 @@ export const WaybillsPage: React.FC = () => {
       />
 
       {/* Document Lifecycle Modal (Submit / Approve / Reject / Issue / Duplicate / Cancel) */}
-      {activeActionModal && selectedDocument && (
+      {activeActionModal && activeDocument && (
         <LifecycleActionModal
           isOpen={!!activeActionModal}
           onClose={() => setActiveActionModal(null)}
           actionType={activeActionModal}
-          documentNumber={selectedDocument.documentNumber}
-          documentTitle={selectedDocument.title}
+          documentNumber={activeDocument.documentNumber}
+          documentTitle={activeDocument.title}
           isLoading={lifecycleMutation.isPending}
           onConfirm={async (payload) => {
             await lifecycleMutation.mutateAsync({
@@ -362,12 +379,12 @@ export const WaybillsPage: React.FC = () => {
       )}
 
       {/* Waybill Logistics State Machine Modal (Ready / Dispatch / Complete / Fail) */}
-      {activeStateModal && selectedDocument && (
+      {activeStateModal && activeDocument && (
         <WaybillStateModal
           isOpen={!!activeStateModal}
           onClose={() => setActiveStateModal(null)}
           action={activeStateModal}
-          waybillNumber={selectedDocument.documentNumber}
+          waybillNumber={activeDocument.documentNumber}
           isLoading={stateTransitionMutation.isPending}
           onConfirm={async (payload) => {
             await stateTransitionMutation.mutateAsync({
@@ -379,12 +396,12 @@ export const WaybillsPage: React.FC = () => {
       )}
 
       {/* Slide-over Version & Audit Drawer */}
-      {selectedDocument && (
+      {activeDocument && (
         <VersionAndAuditDrawer
           isOpen={isHistoryDrawerOpen}
           onClose={() => setIsHistoryDrawerOpen(false)}
-          documentId={selectedDocument.id}
-          documentNumber={selectedDocument.documentNumber}
+          documentId={activeDocument.id}
+          documentNumber={activeDocument.documentNumber}
         />
       )}
     </div>

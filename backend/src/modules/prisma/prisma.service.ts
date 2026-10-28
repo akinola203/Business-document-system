@@ -15,6 +15,38 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       ],
       errorFormat: 'minimal',
     });
+
+    // Auto-reconnect middleware for Neon cloud serverless PostgreSQL idle drops
+    this.$use(async (params, next) => {
+      let attempts = 0;
+      while (attempts < 2) {
+        try {
+          return await next(params);
+        } catch (error: any) {
+          attempts++;
+          const isConnectionDrop =
+            error?.message?.includes('closed the connection') ||
+            error?.message?.includes('Connection terminated') ||
+            error?.message?.includes('Connection closed') ||
+            error?.code === 'P1001' ||
+            error?.code === 'P2024';
+
+          if (isConnectionDrop && attempts < 2) {
+            this.logger.warn(
+              `Prisma connection dropped during ${params.model}.${params.action}. Reconnecting & retrying...`,
+            );
+            try {
+              await this.$connect();
+            } catch {
+              // ignore reconnect error to let retry attempt proceed or throw original
+            }
+            continue;
+          }
+          throw error;
+        }
+      }
+      return next(params);
+    });
   }
 
   /**

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { Client, DocumentRecord } from '../../types';
 import { DEMO_CLIENTS, DEMO_INVOICES } from '../../lib/mock-data';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, extractArray } from '../../lib/utils';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
 import { ClientDetailInspector } from '../../components/workspace/inspectors/ClientDetailInspector';
@@ -36,15 +36,12 @@ export const ClientsPage: React.FC = () => {
     },
   });
 
-  const allClients: Client[] =
-    clientsData?.items && clientsData.items.length > 0
-      ? clientsData.items
-      : clientsData?.data && clientsData.data.length > 0
-      ? clientsData.data
-      : DEMO_CLIENTS;
+  const allClients: Client[] = useMemo(() => {
+    return extractArray<Client>(clientsData, DEMO_CLIENTS);
+  }, [clientsData]);
 
   // 2. Fetch Invoices for Client Ledger Balances
-  const { data: invoicesData } = useQuery<{ items?: DocumentRecord[]; data?: DocumentRecord[] }>({
+  const { data: invoicesData } = useQuery<any>({
     queryKey: ['invoices'],
     queryFn: async () => {
       const res = await apiClient.get('/documents', { params: { documentType: 'INVOICE', limit: 100 } });
@@ -52,12 +49,9 @@ export const ClientsPage: React.FC = () => {
     },
   });
 
-  const allInvoices: DocumentRecord[] =
-    invoicesData?.items && invoicesData.items.length > 0
-      ? invoicesData.items
-      : invoicesData?.data && invoicesData.data.length > 0
-      ? invoicesData.data
-      : DEMO_INVOICES;
+  const allInvoices: DocumentRecord[] = useMemo(() => {
+    return extractArray<DocumentRecord>(invoicesData, DEMO_INVOICES);
+  }, [invoicesData]);
 
   // 3. Filter Clients
   const filteredClients = useMemo(() => {

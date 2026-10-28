@@ -103,9 +103,17 @@ export class DocumentsService {
           branch: { select: { id: true, name: true, code: true } },
           department: { select: { id: true, name: true, code: true } },
           createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
-          invoice: { select: { id: true, paymentStatus: true, paymentTerms: true } },
-          waybill: { select: { id: true, deliveryStatus: true, trackingNumber: true } },
-          letter: { select: { id: true, subject: true, signatoryName: true } },
+          invoice: {
+            include: {
+              items: { orderBy: { lineNumber: 'asc' } },
+            },
+          },
+          waybill: {
+            include: {
+              items: { orderBy: { lineNumber: 'asc' } },
+            },
+          },
+          letter: true,
         },
         skip,
         take: limit,

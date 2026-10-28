@@ -11,7 +11,8 @@ import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4WaybillSheet } from '../../../components/builder/LiveA4WaybillSheet';
 import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
 import { ErrorBoundary } from '../../../components/common/ErrorBoundary';
-import { DEMO_CLIENTS, DEMO_SUPPLIES } from '../../../lib/mock-data';
+import { DEMO_SUPPLIES } from '../../../lib/mock-data';
+import { extractArray } from '../../../lib/utils';
 import {
   Truck,
   Plus,
@@ -79,11 +80,7 @@ export const WaybillBuilderPage: React.FC = () => {
     },
   });
   const clients: Client[] = useMemo(() => {
-    const raw = Array.isArray(clientsData)
-      ? clientsData
-      : (clientsData as any)?.data || (clientsData as any)?.items || clientsData;
-    if (Array.isArray(raw) && raw.length > 0) return raw;
-    return DEMO_CLIENTS;
+    return extractArray<Client>(clientsData);
   }, [clientsData]);
 
   // 3. Fetch Existing Document if in Edit Mode
@@ -110,11 +107,7 @@ export const WaybillBuilderPage: React.FC = () => {
     },
   });
   const catalogSupplies: SupplyItem[] = useMemo(() => {
-    const raw = Array.isArray(suppliesData)
-      ? suppliesData
-      : (suppliesData as any)?.data || (suppliesData as any)?.items || suppliesData;
-    if (Array.isArray(raw) && raw.length > 0) return raw;
-    return DEMO_SUPPLIES;
+    return extractArray<SupplyItem>(suppliesData, DEMO_SUPPLIES);
   }, [suppliesData]);
 
   // 5. Fetch Templates for Waybills
@@ -130,10 +123,7 @@ export const WaybillBuilderPage: React.FC = () => {
     },
   });
   const templates: any[] = useMemo(() => {
-    const raw = Array.isArray(templatesData)
-      ? templatesData
-      : (templatesData as any)?.data || (templatesData as any)?.items || [];
-    return Array.isArray(raw) ? raw : [];
+    return extractArray<any>(templatesData);
   }, [templatesData]);
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -263,6 +253,17 @@ export const WaybillBuilderPage: React.FC = () => {
       }
     }
   };
+
+  // Auto-select first real client on new waybill if unset or set to stale mock ID
+  useEffect(() => {
+    if (!isEdit && clients.length > 0) {
+      const currentId = formValues?.clientId;
+      const isCurrentValid = clients.some((c) => c?.id === currentId);
+      if (!currentId || !isCurrentValid) {
+        handleClientChange(clients[0].id);
+      }
+    }
+  }, [clients, isEdit, formValues?.clientId]);
 
   // Save Draft Mutation (POST /waybills or PATCH /waybills/:id)
   const saveDraftMutation = useMutation({

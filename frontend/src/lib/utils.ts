@@ -47,3 +47,20 @@ export function formatRelativeTime(date: string | Date | undefined | null): stri
   if (diffDays > 0) return `In ${diffDays} days`;
   return `${Math.abs(diffDays)} days ago`;
 }
+
+/**
+ * Universal safe unwrapper for backend paginated or enveloped list responses
+ * Handles:
+ * - Direct array: [...]
+ * - NestJS envelope: { success: true, data: [...] }
+ * - Paginated list: { items: [...], meta: {...} }
+ * - Enveloped paginated list: { success: true, data: { items: [...], meta: {...} } }
+ */
+export function extractArray<T>(data: any, fallback: T[] = []): T[] {
+  if (!data) return fallback;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.items)) return data.items;
+  if (Array.isArray(data.data)) return data.data;
+  if (data.data && Array.isArray(data.data.items)) return data.data.items;
+  return fallback;
+}

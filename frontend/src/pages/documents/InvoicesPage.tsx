@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
 import { DEMO_INVOICES } from '../../lib/mock-data';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, extractArray } from '../../lib/utils';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { PillFilterBar, FilterState } from '../../components/common/PillFilterBar';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
@@ -67,12 +67,9 @@ export const InvoicesPage: React.FC = () => {
     },
   });
 
-  const allInvoices: DocumentRecord[] =
-    invoicesData?.items && invoicesData.items.length > 0
-      ? invoicesData.items
-      : invoicesData?.data && invoicesData.data.length > 0
-      ? invoicesData.data
-      : DEMO_INVOICES;
+  const allInvoices: DocumentRecord[] = useMemo(() => {
+    return extractArray<DocumentRecord>(invoicesData, DEMO_INVOICES);
+  }, [invoicesData]);
 
   // Tab filtering on client for instant responsiveness
   const filteredInvoices = useMemo(() => {
@@ -95,6 +92,25 @@ export const InvoicesPage: React.FC = () => {
       setSelectedDocument(null);
     }
   }, [filteredInvoices, selectedDocument]);
+
+  // Fetch full document details (guaranteeing fresh line items, approvals, and payment ledger)
+  const { data: docDetailData } = useQuery({
+    queryKey: ['document-detail', selectedDocument?.id],
+    queryFn: async () => {
+      if (!selectedDocument?.id) return null;
+      const res = await apiClient.get(`/documents/${selectedDocument.id}`);
+      return res.data?.data || res.data;
+    },
+    enabled: Boolean(selectedDocument?.id),
+    staleTime: 5000,
+  });
+
+  const activeDocument: DocumentRecord | null = useMemo(() => {
+    if (docDetailData && docDetailData.id === selectedDocument?.id) {
+      return docDetailData;
+    }
+    return selectedDocument;
+  }, [docDetailData, selectedDocument]);
 
   // Derived KPI metrics
   const overdueTotal = useMemo(() => {
@@ -313,15 +329,15 @@ export const InvoicesPage: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         documents={filteredInvoices}
-        selectedDocument={selectedDocument}
+        selectedDocument={activeDocument}
         onSelectDocument={setSelectedDocument}
         isLoading={isLoading}
         documentType="INVOICE"
         emptyFeedMessage="No invoices found matching current filter tabs."
         inspector={
-          selectedDocument && (
+          activeDocument && (
             <InvoiceInspector
-              document={selectedDocument}
+              document={activeDocument}
               onActionClick={(action) => setActiveActionModal(action)}
               onOpenHistory={() => setIsHistoryDrawerOpen(true)}
               onRecordPayment={() => setIsRecordPaymentOpen(true)}
@@ -332,23 +348,23 @@ export const InvoicesPage: React.FC = () => {
       />
 
       {/* Record Payment Modal */}
-      {selectedDocument && (
+      {activeDocument && (
         <RecordPaymentModal
           isOpen={isRecordPaymentOpen}
           onClose={() => setIsRecordPaymentOpen(false)}
-          defaultInvoiceId={selectedDocument.id}
+          defaultInvoiceId={activeDocument.id}
           invoices={allInvoices}
         />
       )}
 
       {/* Lifecycle Action Modal */}
-      {activeActionModal && selectedDocument && (
+      {activeActionModal && activeDocument && (
         <LifecycleActionModal
           isOpen={!!activeActionModal}
           onClose={() => setActiveActionModal(null)}
           actionType={activeActionModal}
-          documentNumber={selectedDocument.documentNumber}
-          documentTitle={selectedDocument.title}
+          documentNumber={activeDocument.documentNumber}
+          documentTitle={activeDocument.title}
           isLoading={lifecycleMutation.isPending}
           onConfirm={async (payload) => {
             await lifecycleMutation.mutateAsync({
@@ -360,12 +376,12 @@ export const InvoicesPage: React.FC = () => {
       )}
 
       {/* Slide-over Version & Audit Drawer */}
-      {selectedDocument && (
+      {activeDocument && (
         <VersionAndAuditDrawer
           isOpen={isHistoryDrawerOpen}
           onClose={() => setIsHistoryDrawerOpen(false)}
-          documentId={selectedDocument.id}
-          documentNumber={selectedDocument.documentNumber}
+          documentId={activeDocument.id}
+          documentNumber={activeDocument.documentNumber}
         />
       )}
     </div>

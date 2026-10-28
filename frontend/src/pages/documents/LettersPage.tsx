@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentRecord } from '../../types';
 import { DEMO_LETTERS } from '../../lib/mock-data';
+import { formatCurrency, extractArray } from '../../lib/utils';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { PillFilterBar, FilterState } from '../../components/common/PillFilterBar';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
@@ -58,12 +59,9 @@ export const LettersPage: React.FC = () => {
     },
   });
 
-  const allLetters: DocumentRecord[] =
-    lettersData?.items && lettersData.items.length > 0
-      ? lettersData.items
-      : lettersData?.data && lettersData.data.length > 0
-      ? lettersData.data
-      : DEMO_LETTERS;
+  const allLetters: DocumentRecord[] = useMemo(() => {
+    return extractArray<DocumentRecord>(lettersData, DEMO_LETTERS);
+  }, [lettersData]);
 
   const filteredLetters = useMemo(() => {
     return allLetters.filter((letDoc) => {
@@ -81,6 +79,25 @@ export const LettersPage: React.FC = () => {
       setSelectedDocument(null);
     }
   }, [filteredLetters, selectedDocument]);
+
+  // Fetch full document details (guaranteeing fresh letter text, signatory, approvals)
+  const { data: docDetailData } = useQuery({
+    queryKey: ['document-detail', selectedDocument?.id],
+    queryFn: async () => {
+      if (!selectedDocument?.id) return null;
+      const res = await apiClient.get(`/documents/${selectedDocument.id}`);
+      return res.data?.data || res.data;
+    },
+    enabled: Boolean(selectedDocument?.id),
+    staleTime: 5000,
+  });
+
+  const activeDocument: DocumentRecord | null = useMemo(() => {
+    if (docDetailData && docDetailData.id === selectedDocument?.id) {
+      return docDetailData;
+    }
+    return selectedDocument;
+  }, [docDetailData, selectedDocument]);
 
   // Derived KPIs
   const issuedCount = useMemo(() => {
@@ -266,15 +283,15 @@ export const LettersPage: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         documents={filteredLetters}
-        selectedDocument={selectedDocument}
+        selectedDocument={activeDocument}
         onSelectDocument={setSelectedDocument}
         isLoading={isLoading}
         documentType="LETTER"
         emptyFeedMessage="No business letters found matching current filter tabs."
         inspector={
-          selectedDocument && (
+          activeDocument && (
             <LetterInspector
-              document={selectedDocument}
+              document={activeDocument}
               onActionClick={(action) => setActiveActionModal(action)}
               onOpenHistory={() => setIsHistoryDrawerOpen(true)}
               onEditDraft={(id) => navigate(`/documents/letters/${id}/edit`)}
@@ -284,13 +301,13 @@ export const LettersPage: React.FC = () => {
       />
 
       {/* Lifecycle Action Modal */}
-      {activeActionModal && selectedDocument && (
+      {activeActionModal && activeDocument && (
         <LifecycleActionModal
           isOpen={!!activeActionModal}
           onClose={() => setActiveActionModal(null)}
           actionType={activeActionModal}
-          documentNumber={selectedDocument.documentNumber}
-          documentTitle={selectedDocument.title}
+          documentNumber={activeDocument.documentNumber}
+          documentTitle={activeDocument.title}
           isLoading={lifecycleMutation.isPending}
           onConfirm={async (payload) => {
             await lifecycleMutation.mutateAsync({
@@ -302,12 +319,12 @@ export const LettersPage: React.FC = () => {
       )}
 
       {/* Slide-over Version & Audit Drawer */}
-      {selectedDocument && (
+      {activeDocument && (
         <VersionAndAuditDrawer
           isOpen={isHistoryDrawerOpen}
           onClose={() => setIsHistoryDrawerOpen(false)}
-          documentId={selectedDocument.id}
-          documentNumber={selectedDocument.documentNumber}
+          documentId={activeDocument.id}
+          documentNumber={activeDocument.documentNumber}
         />
       )}
     </div>

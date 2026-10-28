@@ -12,6 +12,7 @@ import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4LetterSheet } from '../../../components/builder/LiveA4LetterSheet';
 import { ErrorBoundary } from '../../../components/common/ErrorBoundary';
+import { extractArray } from '../../../lib/utils';
 import {
   Mail,
   User,
@@ -69,11 +70,7 @@ export const LetterBuilderPage: React.FC = () => {
     },
   });
   const clients: Client[] = useMemo(() => {
-    const raw = Array.isArray(clientsData)
-      ? clientsData
-      : (clientsData as any)?.data || (clientsData as any)?.items || clientsData;
-    if (Array.isArray(raw) && raw.length > 0) return raw;
-    return DEMO_CLIENTS;
+    return extractArray<Client>(clientsData);
   }, [clientsData]);
 
   // Fetch Templates for Letters
@@ -89,10 +86,7 @@ export const LetterBuilderPage: React.FC = () => {
     },
   });
   const templates: any[] = useMemo(() => {
-    const raw = Array.isArray(templatesData)
-      ? templatesData
-      : (templatesData as any)?.data || (templatesData as any)?.items || [];
-    return Array.isArray(raw) ? raw : [];
+    return extractArray<any>(templatesData);
   }, [templatesData]);
 
   // 3. Fetch Existing Document if in Edit Mode
@@ -172,6 +166,17 @@ export const LetterBuilderPage: React.FC = () => {
       if (addr) setValue('recipientAddress', addr, { shouldDirty: true });
     }
   };
+
+  // Auto-select first real client on new letter if unset or set to stale mock ID
+  useEffect(() => {
+    if (!isEdit && clients.length > 0) {
+      const currentId = formValues?.clientId;
+      const isCurrentValid = clients.some((c) => c?.id === currentId);
+      if (!currentId || !isCurrentValid) {
+        handleClientChange(clients[0].id);
+      }
+    }
+  }, [clients, isEdit, formValues?.clientId]);
 
   // Save Draft Mutation (POST /letters or PATCH /letters/:id)
   const saveDraftMutation = useMutation({

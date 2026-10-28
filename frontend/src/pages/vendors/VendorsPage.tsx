@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { Vendor, SupplyItem, SupplyOrder, VendorCategory } from '../../types';
 import { DEMO_VENDORS, DEMO_SUPPLIES, DEMO_SUPPLY_ORDERS } from '../../lib/mock-data';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, extractArray } from '../../lib/utils';
 import { BentoKpiCard } from '../../components/common/BentoKpiCard';
 import { ObsidianMasterDetailShell } from '../../components/workspace/ObsidianMasterDetailShell';
 import { VendorDetailInspector } from '../../components/workspace/inspectors/VendorDetailInspector';
@@ -31,7 +31,7 @@ export const VendorsPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // 1. Fetch Vendors from Backend with Mock Fallback
-  const { data: vendorsData } = useQuery<{ items?: Vendor[]; data?: Vendor[] }>({
+  const { data: vendorsData } = useQuery<any>({
     queryKey: ['vendors'],
     queryFn: async () => {
       try {
@@ -43,15 +43,12 @@ export const VendorsPage: React.FC = () => {
     },
   });
 
-  const allVendors: Vendor[] =
-    vendorsData?.items && vendorsData.items.length > 0
-      ? vendorsData.items
-      : vendorsData?.data && vendorsData.data.length > 0
-      ? vendorsData.data
-      : DEMO_VENDORS;
+  const allVendors: Vendor[] = useMemo(() => {
+    return extractArray<Vendor>(vendorsData, DEMO_VENDORS);
+  }, [vendorsData]);
 
   // 2. Fetch Catalog Items & Orders for 360° inspector
-  const { data: suppliesData } = useQuery<{ items?: SupplyItem[]; data?: SupplyItem[] }>({
+  const { data: suppliesData } = useQuery<any>({
     queryKey: ['supplies-items'],
     queryFn: async () => {
       try {
@@ -63,14 +60,11 @@ export const VendorsPage: React.FC = () => {
     },
   });
 
-  const allSupplies: SupplyItem[] =
-    suppliesData?.items && suppliesData.items.length > 0
-      ? suppliesData.items
-      : suppliesData?.data && suppliesData.data.length > 0
-      ? suppliesData.data
-      : DEMO_SUPPLIES;
+  const allSupplies: SupplyItem[] = useMemo(() => {
+    return extractArray<SupplyItem>(suppliesData, DEMO_SUPPLIES);
+  }, [suppliesData]);
 
-  const { data: ordersData } = useQuery<{ items?: SupplyOrder[]; data?: SupplyOrder[] }>({
+  const { data: ordersData } = useQuery<any>({
     queryKey: ['supplies-orders'],
     queryFn: async () => {
       try {
@@ -82,12 +76,9 @@ export const VendorsPage: React.FC = () => {
     },
   });
 
-  const allOrders: SupplyOrder[] =
-    ordersData?.items && ordersData.items.length > 0
-      ? ordersData.items
-      : ordersData?.data && ordersData.data.length > 0
-      ? ordersData.data
-      : DEMO_SUPPLY_ORDERS;
+  const allOrders: SupplyOrder[] = useMemo(() => {
+    return extractArray<SupplyOrder>(ordersData, DEMO_SUPPLY_ORDERS);
+  }, [ordersData]);
 
   // 3. Filter Vendors
   const filteredVendors = useMemo(() => {

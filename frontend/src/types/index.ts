@@ -277,7 +277,8 @@ export interface DocumentRecord {
   status: DocumentStatus;
   issueDate?: string | null;
   currency: string;
-  subtotalAmount: number | string;
+  subtotal?: number | string;
+  subtotalAmount?: number | string;
   taxAmount: number | string;
   discountAmount: number | string;
   totalAmount: number | string;

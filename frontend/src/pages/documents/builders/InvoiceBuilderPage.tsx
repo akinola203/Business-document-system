@@ -24,7 +24,7 @@ import {
   HelpCircle,
   CheckCircle2,
 } from 'lucide-react';
-import { formatCurrency } from '../../../lib/utils';
+import { formatCurrency, extractArray } from '../../../lib/utils';
 
 // Zod Validation Schema for Invoices
 const invoiceItemSchema = z.object({
@@ -110,9 +110,7 @@ export const InvoiceBuilderPage: React.FC = () => {
     },
   });
   const clients: Client[] = useMemo(() => {
-    const raw = (clientsData as any)?.data || (clientsData as any)?.items || clientsData;
-    if (Array.isArray(raw) && raw.length > 0) return raw;
-    return DEMO_CLIENTS;
+    return extractArray<Client>(clientsData);
   }, [clientsData]);
 
   // 3. Fetch Templates for Invoices
@@ -128,10 +126,7 @@ export const InvoiceBuilderPage: React.FC = () => {
     },
   });
   const templates: any[] = useMemo(() => {
-    const raw = Array.isArray(templatesData)
-      ? templatesData
-      : (templatesData as any)?.data || (templatesData as any)?.items || [];
-    return Array.isArray(raw) ? raw : [];
+    return extractArray<any>(templatesData);
   }, [templatesData]);
 
   // 4. Fetch Existing Document if in Edit Mode
@@ -158,9 +153,7 @@ export const InvoiceBuilderPage: React.FC = () => {
     },
   });
   const catalogSupplies: SupplyItem[] = useMemo(() => {
-    const raw = (suppliesData as any)?.data || (suppliesData as any)?.items || suppliesData;
-    if (Array.isArray(raw) && raw.length > 0) return raw;
-    return DEMO_SUPPLIES;
+    return extractArray<SupplyItem>(suppliesData, DEMO_SUPPLIES);
   }, [suppliesData]);
 
   // Calculate default dates
@@ -267,6 +260,17 @@ export const InvoiceBuilderPage: React.FC = () => {
       setValue('selectedAddressId', '');
     }
   };
+
+  // Auto-select first real client on new invoice if unset or set to stale mock ID
+  useEffect(() => {
+    if (!isEdit && clients.length > 0) {
+      const currentId = formValues?.clientId;
+      const isCurrentValid = clients.some((c) => c?.id === currentId);
+      if (!currentId || !isCurrentValid) {
+        handleClientChange(clients[0].id);
+      }
+    }
+  }, [clients, isEdit, formValues?.clientId]);
 
   const selectedAddress = useMemo(() => {
     if (!selectedClient?.addresses || !Array.isArray(selectedClient.addresses)) return null;

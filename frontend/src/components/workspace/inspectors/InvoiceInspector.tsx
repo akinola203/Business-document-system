@@ -208,7 +208,7 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
           <div className="flex justify-between text-white/80">
             <span>Subtotal:</span>
             <span className="font-bold tabular-nums">
-              {formatCurrency(document.subtotalAmount, document.currency)}
+              {formatCurrency(document.subtotal ?? document.subtotalAmount, document.currency)}
             </span>
           </div>
           {Number(document.discountAmount) > 0 && (
