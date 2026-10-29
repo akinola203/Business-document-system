@@ -32,7 +32,7 @@ export class AuthController {
     const apiPrefix = process.env.API_PREFIX || 'api/v1';
     const cleanPrefix = apiPrefix.startsWith('/') ? apiPrefix : `/${apiPrefix}`;
     const cookiePath = process.env.REFRESH_COOKIE_PATH || `${cleanPrefix}/auth`;
-    const sameSiteConfig = (process.env.REFRESH_COOKIE_SAME_SITE || (isProd ? 'strict' : 'lax')) as 'strict' | 'lax' | 'none';
+    const sameSiteConfig = (process.env.REFRESH_COOKIE_SAME_SITE || (isProd ? 'none' : 'lax')) as 'strict' | 'lax' | 'none';
 
     return {
       httpOnly: true,

@@ -16,7 +16,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT', 3000);
+  const port = parseInt(String(configService.get<string | number>('PORT', 3000)), 10) || 3000;
   const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
   const appUrl = configService.get<string>('APP_URL', 'http://localhost:5173');
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
@@ -33,14 +33,42 @@ async function bootstrap() {
 
   // CORS Configuration
   const corsOriginEnv = configService.get<string>('CORS_ORIGIN');
-  const allowedOrigins = corsOriginEnv
-    ? corsOriginEnv.split(',').map((o) => o.trim())
-    : isProduction
-      ? [appUrl]
-      : [appUrl, 'http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
+  const configuredOrigins = corsOriginEnv
+    ? corsOriginEnv.split(',').map((o) => o.trim()).filter(Boolean)
+    : [];
+
+  const allowedOrigins = [
+    appUrl,
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    ...configuredOrigins,
+  ];
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Check configured origins or wildcards
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Automatically support Vercel preview and production deployments (*.vercel.app)
+      if (origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+
+      // Allow localhost in non-production environments
+      if (!isProduction && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      // In production, log origin and permit for live client demos
+      logger.log(`Permitted CORS request from origin: ${origin}`);
+      return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Idempotency-Key', 'Idempotency-Key'],
@@ -95,7 +123,7 @@ async function bootstrap() {
   // Enable graceful shutdown
   app.enableShutdownHooks();
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   logger.log(`========================================================`);
   logger.log(`🚀 Business Document Management API is running!`);
   logger.log(`📡 Base API URL: http://localhost:${port}/${apiPrefix}`);

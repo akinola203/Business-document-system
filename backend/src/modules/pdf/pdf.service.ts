@@ -78,18 +78,19 @@ export class PdfService implements OnModuleDestroy {
     try {
       this.logger.log('Initializing shared Puppeteer headless browser instance...');
       const args = [
+        '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--font-render-hinting=medium',
       ];
-      if (process.env.NODE_ENV === 'development') {
-        args.unshift('--no-sandbox');
-      }
+
+      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
 
       this.browserInstance = await puppeteer.launch({
         headless: true,
         args,
+        executablePath,
       });
 
       this.browserInstance.on('disconnected', () => {

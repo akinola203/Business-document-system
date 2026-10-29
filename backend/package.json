@@ -4,8 +4,9 @@
   "description": "Production-ready Business Document Management API",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/src/main.js",
+    "start:prod": "prisma db push --accept-data-loss && node dist/src/main.js",
     "start:dev": "ts-node --transpile-only src/main.ts",
     "test": "ts-node test/unit/guards.test.ts && ts-node test/unit/auth.test.ts && ts-node test/unit/mail.test.ts && ts-node test/unit/companies.test.ts && ts-node test/unit/organization.test.ts && ts-node test/unit/clients.test.ts && ts-node test/unit/numbering.test.ts && ts-node test/unit/financial-math.test.ts && ts-node test/unit/invoices.test.ts && ts-node test/unit/waybills.test.ts && ts-node test/unit/letters.test.ts && ts-node test/unit/documents.test.ts && ts-node test/unit/audit.test.ts && ts-node test/unit/idempotency.test.ts && ts-node test/unit/notifications.test.ts && ts-node test/unit/approvals.test.ts && ts-node test/unit/versions.test.ts && ts-node test/unit/concurrency.test.ts && ts-node test/unit/payments.test.ts && ts-node test/unit/iam.test.ts && ts-node test/unit/files.test.ts && ts-node test/unit/templates.test.ts && ts-node test/unit/pdf.test.ts && ts-node test/unit/reports.test.ts && ts-node test/unit/vendors.test.ts && ts-node test/unit/supplies.test.ts && ts-node test/unit/vendors-supplies.test.ts",
     "prisma:generate": "prisma generate",

@@ -1,0 +1,8 @@
+node_modules
+dist
+storage/secure-uploads/*
+!storage/secure-uploads/.gitkeep
+.env
+.git
+npm-debug.log
+test
