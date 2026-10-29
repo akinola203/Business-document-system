@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
 import { Client, Company, DocumentRecord, SupplyItem } from '../../../types';
+import { INVOICE_DEMO_PRESETS } from '../../../lib/demo-presets';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4InvoiceSheet } from '../../../components/builder/LiveA4InvoiceSheet';
@@ -280,6 +281,53 @@ export const InvoiceBuilderPage: React.FC = () => {
     }
   }, [clients, isEdit, formValues?.clientId]);
 
+  const [searchParams] = useSearchParams();
+  const hasPresetLoadedRef = useRef(false);
+
+  const handleLoadDemoPreset = (presetKey: string = 'diesel') => {
+    const preset = INVOICE_DEMO_PRESETS[presetKey] || INVOICE_DEMO_PRESETS.diesel;
+    const matchingClient = clients.find((c) =>
+      c.name?.toLowerCase().includes('dangote') || (c.companyName || '').toLowerCase().includes('dangote')
+    ) || clients[0];
+
+    const targetClientId = matchingClient ? matchingClient.id : formValues.clientId || '';
+    let addressId = '';
+    if (matchingClient && Array.isArray(matchingClient.addresses) && matchingClient.addresses.length > 0) {
+      const def = matchingClient.addresses.find((a) => a.isDefault) || matchingClient.addresses[0];
+      addressId = def?.id || '';
+    }
+
+    reset({
+      title: preset.title,
+      clientId: targetClientId,
+      currency: preset.currency,
+      issueDate: todayStr,
+      dueDate: defaultDueDate,
+      paymentTerms: 'Net 14 Days',
+      poNumber: 'PO-DNG-2026-8819',
+      notes: preset.notes,
+      bankDetailsVisible: preset.bankDetailsVisible,
+      selectedAddressId: addressId,
+      customBillingAddress: preset.customBillingAddress || '',
+      items: preset.items.map((it) => ({
+        description: it.description,
+        quantity: it.quantity,
+        unit: it.unit,
+        unitPrice: it.unitPrice,
+        discountPercent: it.discountPercent,
+        taxRate: it.taxRate,
+      })),
+    });
+  };
+
+  useEffect(() => {
+    const presetParam = searchParams.get('preset');
+    if (presetParam && !isEdit && !hasPresetLoadedRef.current && INVOICE_DEMO_PRESETS[presetParam]) {
+      hasPresetLoadedRef.current = true;
+      handleLoadDemoPreset(presetParam);
+    }
+  }, [searchParams, clients, isEdit]);
+
   const selectedAddress = useMemo(() => {
     if (!selectedClient?.addresses || !Array.isArray(selectedClient.addresses)) return null;
     return (
@@ -423,6 +471,7 @@ export const InvoiceBuilderPage: React.FC = () => {
         isSavingDraft={saveDraftMutation.isPending}
         isSubmitting={saveAndSubmitMutation.isPending}
         isDirty={isDirty}
+        onQuickFillDemo={() => handleLoadDemoPreset('diesel')}
       />
 
       {/* 2. Split-Screen Studio Layout: Left 45% Form / Right 55% A4 Stage */}
@@ -452,8 +501,22 @@ export const InvoiceBuilderPage: React.FC = () => {
                       {clients.length} Clients Available
                     </span>
                   </div>
-                  {/* 1-Tap Client Quick-Fill Pills */}
+                  {/* 1-Tap Client Quick-Fill Pills & Enterprise Presets */}
                   <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                    <button
+                      type="button"
+                      onClick={() => handleLoadDemoPreset('diesel')}
+                      className="px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    >
+                      ⚡ AGO Diesel Demo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLoadDemoPreset('cement')}
+                      className="px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    >
+                      ⚡ Cement Demo
+                    </button>
                     {clients.map((c) => (
                       <button
                         key={c.id}

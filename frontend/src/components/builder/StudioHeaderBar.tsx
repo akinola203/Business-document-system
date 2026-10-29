@@ -19,6 +19,7 @@ interface StudioHeaderBarProps {
   isSavingDraft: boolean;
   isSubmitting: boolean;
   isDirty?: boolean;
+  onQuickFillDemo?: () => void;
 }
 
 export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
@@ -36,6 +37,7 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
   isSavingDraft,
   isSubmitting,
   isDirty = false,
+  onQuickFillDemo,
 }) => {
   const navigate = useNavigate();
   const { isAdmin } = usePermissions();
@@ -158,6 +160,19 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
             <span>Server Preview</span>
           </button>
         </div>
+
+        {/* Quick Fill Demo Preset CTA */}
+        {onQuickFillDemo && (
+          <button
+            type="button"
+            onClick={onQuickFillDemo}
+            title="Populate Realistic Enterprise Demo Preset"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-indigo-500/10 hover:from-amber-500/20 hover:to-indigo-500/20 border border-amber-300/50 text-amber-900 text-xs font-bold transition-all shadow-sm hover:shadow"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+            <span>⚡ Demo Preset</span>
+          </button>
+        )}
 
         {/* Save Draft Secondary Pill */}
         <button

@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
 import { Client, Company, DocumentRecord, SupplyItem } from '../../../types';
+import { WAYBILL_DEMO_PRESETS } from '../../../lib/demo-presets';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4WaybillSheet } from '../../../components/builder/LiveA4WaybillSheet';
@@ -266,6 +267,44 @@ export const WaybillBuilderPage: React.FC = () => {
     }
   }, [clients, isEdit, formValues?.clientId]);
 
+  const [searchParams] = useSearchParams();
+  const hasPresetLoadedRef = useRef(false);
+
+  const handleLoadDemoPreset = (presetKey: string = 'cement') => {
+    const preset = WAYBILL_DEMO_PRESETS[presetKey] || WAYBILL_DEMO_PRESETS.cement;
+    const matchingClient = clients.find((c) =>
+      c.name?.toLowerCase().includes('dangote') || (c.companyName || '').toLowerCase().includes('dangote')
+    ) || clients[0];
+
+    reset({
+      title: preset.title,
+      clientId: matchingClient ? matchingClient.id : formValues.clientId || '',
+      shipmentDate: todayStr,
+      originAddress: preset.dispatchLocation,
+      destinationAddress: preset.deliveryAddress,
+      vehicleNumber: preset.vehicleRegistration,
+      driverName: preset.driverName,
+      driverPhone: preset.driverPhone,
+      trackingNumber: 'AOA-WB-2026-9921',
+      selectedAddressId: '',
+      items: preset.items.map((it) => ({
+        description: `${it.description} [${it.condition}]`,
+        quantity: it.quantity,
+        unit: it.unit,
+        packageCount: it.quantity,
+        packageType: it.unit,
+      })),
+    });
+  };
+
+  useEffect(() => {
+    const presetParam = searchParams.get('preset');
+    if (presetParam && !isEdit && !hasPresetLoadedRef.current && WAYBILL_DEMO_PRESETS[presetParam]) {
+      hasPresetLoadedRef.current = true;
+      handleLoadDemoPreset(presetParam);
+    }
+  }, [searchParams, clients, isEdit]);
+
   // Save Draft Mutation (POST /waybills or PATCH /waybills/:id)
   const saveDraftMutation = useMutation({
     mutationFn: async (data: WaybillFormValues) => {
@@ -384,6 +423,7 @@ export const WaybillBuilderPage: React.FC = () => {
         isSavingDraft={saveDraftMutation.isPending}
         isSubmitting={saveAndSubmitMutation.isPending}
         isDirty={isDirty}
+        onQuickFillDemo={() => handleLoadDemoPreset('cement')}
       />
 
       {/* 2. Split-Screen Studio Layout */}
@@ -413,8 +453,15 @@ export const WaybillBuilderPage: React.FC = () => {
                     {clients.length} Clients Available
                   </span>
                 </div>
-                {/* 1-Tap Consignee Quick-Fill Pills */}
+                {/* 1-Tap Consignee Quick-Fill Pills & Demo Presets */}
                 <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                  <button
+                    type="button"
+                    onClick={() => handleLoadDemoPreset('cement')}
+                    className="px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                  >
+                    ⚡ Cement Haulage Demo
+                  </button>
                   {(Array.isArray(clients) ? clients : []).map((c) => (
                     <button
                       key={c.id}

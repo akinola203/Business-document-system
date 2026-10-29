@@ -22,8 +22,10 @@ import {
   Building2,
   Sparkles,
   Package,
+  Zap,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { ClientDemoModal } from '../demo/ClientDemoModal';
 
 interface NavTab {
   name: string;
@@ -57,6 +59,7 @@ export const TopPillNavbar: React.FC = () => {
     canManageUsers,
   } = usePermissions();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Live Unread Notifications Count Query
@@ -145,6 +148,16 @@ export const TopPillNavbar: React.FC = () => {
 
       {/* 3. Right: Circular Utility Dock */}
       <div className="flex items-center gap-2">
+        {/* 1-Click Client Showcase Demo Mode */}
+        <button
+          onClick={() => setIsDemoModalOpen(true)}
+          title="1-Click Client Showcase Demo Mode"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-indigo-500/10 hover:from-amber-500/20 hover:to-indigo-500/20 border border-amber-300/40 text-amber-900 text-xs font-bold transition-all shadow-sm hover:shadow"
+        >
+          <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+          <span className="hidden sm:inline">Demo Mode</span>
+        </button>
+
         {/* Templates Designer Shortcut (Admin / Manager only) */}
         {canManageSettings && (
           <button
@@ -285,6 +298,8 @@ export const TopPillNavbar: React.FC = () => {
           )}
         </div>
       </div>
+      {/* 1-Click Client Showcase Demo Modal */}
+      <ClientDemoModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
     </header>
   );
 };

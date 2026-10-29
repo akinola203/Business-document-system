@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
 import { Client, Company, DocumentRecord } from '../../../types';
+import { LETTER_DEMO_PRESETS } from '../../../lib/demo-presets';
 import { useAuthStore } from '../../../store/auth.store';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
@@ -173,7 +174,6 @@ export const LetterBuilderPage: React.FC = () => {
     }
   };
 
-  // Auto-select first real client on new letter if unset or set to stale mock ID
   useEffect(() => {
     if (!isEdit && clients.length > 0) {
       const currentId = formValues?.clientId;
@@ -183,6 +183,39 @@ export const LetterBuilderPage: React.FC = () => {
       }
     }
   }, [clients, isEdit, formValues?.clientId]);
+
+  const [searchParams] = useSearchParams();
+  const hasPresetLoadedRef = useRef(false);
+
+  const handleLoadDemoPreset = (presetKey: string = 'tender') => {
+    const preset = LETTER_DEMO_PRESETS[presetKey] || LETTER_DEMO_PRESETS.tender;
+    const matchingClient = clients.find((c) =>
+      c.name?.toLowerCase().includes('dangote') || (c.companyName || '').toLowerCase().includes('dangote')
+    ) || clients[0];
+
+    reset({
+      title: preset.title,
+      clientId: matchingClient ? matchingClient.id : formValues.clientId || '',
+      letterDate: new Date().toISOString().split('T')[0],
+      recipientName: preset.recipientName,
+      recipientTitle: preset.recipientTitle,
+      recipientOrganization: preset.recipientCompany,
+      recipientAddress: preset.recipientAddress,
+      subject: preset.subject,
+      bodyText: preset.bodyParagraphs.join('\n\n'),
+      signatoryName: preset.signatoryName,
+      signatoryTitle: preset.signatoryTitle,
+      signatoryDepartment: preset.signatoryDepartment,
+    });
+  };
+
+  useEffect(() => {
+    const presetParam = searchParams.get('preset');
+    if (presetParam && !isEdit && !hasPresetLoadedRef.current && LETTER_DEMO_PRESETS[presetParam]) {
+      hasPresetLoadedRef.current = true;
+      handleLoadDemoPreset(presetParam);
+    }
+  }, [searchParams, clients, isEdit]);
 
   // Save Draft Mutation (POST /letters or PATCH /letters/:id)
   const saveDraftMutation = useMutation({
@@ -304,6 +337,7 @@ export const LetterBuilderPage: React.FC = () => {
         isSavingDraft={saveDraftMutation.isPending}
         isSubmitting={saveAndSubmitMutation.isPending}
         isDirty={isDirty}
+        onQuickFillDemo={() => handleLoadDemoPreset('tender')}
       />
 
       {/* 2. Split-Screen Studio Layout */}
@@ -333,8 +367,15 @@ export const LetterBuilderPage: React.FC = () => {
                     {clients.length} Clients Available
                   </span>
                 </div>
-                {/* 1-Tap Quick-Fill Pill Buttons */}
+                {/* 1-Tap Quick-Fill Pill Buttons & Demo Presets */}
                 <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                  <button
+                    type="button"
+                    onClick={() => handleLoadDemoPreset('tender')}
+                    className="px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                  >
+                    ⚡ Tender Letter Demo
+                  </button>
                   {(Array.isArray(clients) ? clients : []).map((c) => (
                     <button
                       key={c.id}
