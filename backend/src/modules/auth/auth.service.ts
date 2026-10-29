@@ -325,9 +325,16 @@ export class AuthService {
   /**
    * Generates a 20-minute secure crypto reset token, persists it on the user record,
    * and simulates/dispatches a password reset email link.
+   * Supports either ForgotPasswordDto or raw email string.
    */
-  async forgotPassword(dto: ForgotPasswordDto) {
-    const email = dto.email.toLowerCase().trim();
+  async forgotPassword(input: ForgotPasswordDto | { email: string } | string) {
+    const rawEmail = typeof input === 'string' ? input : input?.email;
+    const email = (rawEmail || '').toLowerCase().trim();
+
+    if (!email) {
+      throw new BadRequestException('A valid email address is required.');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -376,11 +383,29 @@ export class AuthService {
   /**
    * Verifies the crypto reset token is valid and unexpired, hashes the new password with Argon2id,
    * clears the token, and resets any failed lockout state.
+   * Supports either ResetPasswordDto or (token: string, newPassword: string).
    */
-  async resetPassword(dto: ResetPasswordDto) {
-    const rawToken = dto.token?.trim();
+  async resetPassword(
+    input: ResetPasswordDto | { token: string; newPassword: string } | string,
+    newPasswordArg?: string,
+  ) {
+    let rawToken: string;
+    let newPasswordVal: string;
+
+    if (typeof input === 'string') {
+      rawToken = input?.trim();
+      newPasswordVal = newPasswordArg || '';
+    } else {
+      rawToken = input?.token?.trim();
+      newPasswordVal = input?.newPassword || '';
+    }
+
     if (!rawToken) {
       throw new BadRequestException('Invalid or missing password reset token.');
+    }
+
+    if (!newPasswordVal || newPasswordVal.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long.');
     }
 
     const user = await this.prisma.user.findFirst({
@@ -405,7 +430,7 @@ export class AuthService {
       throw new BadRequestException('Password reset token has expired. Please request a new link.');
     }
 
-    const passwordHash = await argon2.hash(dto.newPassword, {
+    const passwordHash = await argon2.hash(newPasswordVal, {
       type: argon2.argon2id,
     });
 
