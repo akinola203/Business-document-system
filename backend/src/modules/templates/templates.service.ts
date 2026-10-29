@@ -231,7 +231,11 @@ export class TemplatesService {
             settings: true,
           },
         },
-        client: true,
+        client: {
+          include: {
+            addresses: true,
+          },
+        },
         invoice: {
           include: {
             items: {
@@ -293,12 +297,35 @@ export class TemplatesService {
     const inv = doc.invoice;
     const client = doc.client;
 
+    const resolveClientAddress = (cl: any, addrId?: string) => {
+      if (!cl) return null;
+      if (cl.addresses && Array.isArray(cl.addresses) && cl.addresses.length > 0) {
+        const match =
+          (addrId ? cl.addresses.find((a: any) => a.id === addrId) : null) ||
+          cl.addresses.find((a: any) => a.isDefault) ||
+          cl.addresses[0];
+        if (match) {
+          return [
+            match.addressLine1 || match.line1,
+            match.addressLine2 || match.line2,
+            match.city,
+            match.state,
+            match.country,
+          ]
+            .filter(Boolean)
+            .join(', ');
+        }
+      }
+      return cl.address || null;
+    };
+
     if (snapshot) {
       const snapDoc = snapshot.document || doc;
       const snapComp = snapshot.company || comp;
       const snapSettings = snapComp.settings || settings;
       const snapInv = snapshot.invoice || inv;
       const snapClient = snapshot.client || client;
+      const snapAddressId = (snapDoc.metadata as any)?.selectedAddressId || (doc.metadata as any)?.selectedAddressId;
 
       const ctx: InvoiceRenderContext = {
         company: {
@@ -327,7 +354,7 @@ export class TemplatesService {
           companyName: snapClient?.companyName,
           email: snapClient?.email,
           phone: snapClient?.phone,
-          address: snapClient?.address,
+          address: resolveClientAddress(snapClient, snapAddressId),
         },
         invoice: {
           poNumber: snapInv?.poNumber,
@@ -352,6 +379,7 @@ export class TemplatesService {
     }
 
     // Live database render context
+    const selectedAddressId = (doc.metadata as any)?.selectedAddressId;
     const ctx: InvoiceRenderContext = {
       company: {
         name: comp.name,
@@ -379,7 +407,7 @@ export class TemplatesService {
         companyName: client?.companyName,
         email: client?.email,
         phone: client?.phone,
-        address: client?.address,
+        address: resolveClientAddress(client, selectedAddressId),
       },
       invoice: {
         poNumber: inv?.poNumber,

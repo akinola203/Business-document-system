@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
 import { apiClient } from '../../lib/api-client';
 import { Sparkles, ArrowRight, Lock, Mail, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { ForgotPasswordModal } from '../../components/auth/ForgotPasswordModal';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,15 +14,15 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   const from = location.state?.from?.pathname || '/overview';
+  const successMessage = location.state?.successMessage;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage(null);
-    setFeedbackMessage(null);
 
     try {
       const response = await apiClient.post('/auth/login', {
@@ -48,107 +49,10 @@ export const LoginPage: React.FC = () => {
       login({ accessToken, refreshToken }, normalizedUser);
       navigate(from, { replace: true });
     } catch (err: any) {
-      // If backend is offline or network error, seamlessly allow demo preview
-      if (!err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        const isManager = email.toLowerCase().includes('manager');
-        login(
-          { accessToken: 'demo-access-token', refreshToken: 'demo-refresh-token' },
-          {
-            id: isManager ? 'usr-manager-1' : 'usr-admin-1',
-            email: email.trim() || 'admin@aoa77.com',
-            fullName: isManager ? 'Olumide Ogunlesi (Finance Manager)' : 'Alade Adebayo (Managing Director)',
-            role: isManager ? 'Manager' : 'Admin',
-            roleName: isManager ? 'Manager' : 'Admin',
-            permissions: ['*'],
-            companyId: 'c0000000-0000-0000-0000-000000000001',
-            companyName: 'AOA 77 COMPANY LTD',
-          }
-        );
-        navigate(from, { replace: true });
-        return;
-      }
-
       const msg =
         err.response?.data?.message ||
         err.response?.data?.error ||
         'Authentication failed. Please verify your email and password.';
-      setErrorMessage(Array.isArray(msg) ? msg.join(', ') : msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Demo credential autofill helper matching seed.ts
-  const handleDemoFill = (role: 'Admin' | 'Manager') => {
-    if (role === 'Admin') {
-      setEmail('admin@aoa77.com');
-      setPassword('Aoa77@Password2026!');
-      setFeedbackMessage('Admin (MD) credentials populated into form.');
-    } else {
-      setEmail('manager@aoa77.com');
-      setPassword('Aoa77@Password2026!');
-      setFeedbackMessage('Manager (Finance) credentials populated into form.');
-    }
-    setErrorMessage(null);
-  };
-
-  const handleInstantDemoLogin = async (role: 'Admin' | 'Manager') => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    setFeedbackMessage(null);
-
-    const isManager = role === 'Manager';
-    const emailToUse = isManager ? 'manager@aoa77.com' : 'admin@aoa77.com';
-    const passwordToUse = 'Aoa77@Password2026!';
-
-    try {
-      const response = await apiClient.post('/auth/login', {
-        email: emailToUse,
-        password: passwordToUse,
-      });
-
-      const payload = response.data?.data || response.data;
-      const accessToken = payload.accessToken;
-      const refreshToken = payload.refreshToken;
-      const rawUser = payload.user;
-
-      const normalizedUser = {
-        id: rawUser.id,
-        email: rawUser.email,
-        fullName: rawUser.fullName || `${rawUser.firstName || ''} ${rawUser.lastName || ''}`.trim() || (isManager ? 'Olumide Ogunlesi (Finance Manager)' : 'Alade Adebayo (Managing Director)'),
-        role: rawUser.role,
-        roleName: rawUser.role,
-        permissions: rawUser.permissions || ['*'],
-        companyId: rawUser.company?.id || rawUser.companyId || 'c0000000-0000-0000-0000-000000000001',
-        companyName: rawUser.company?.name || rawUser.companyName || 'AOA 77 COMPANY LTD',
-      };
-
-      login({ accessToken, refreshToken }, normalizedUser);
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      // Only fall back to mock token if backend server is completely unreachable (!err.response)
-      if (!err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        login(
-          { accessToken: 'demo-access-token', refreshToken: 'demo-refresh-token' },
-          {
-            id: isManager ? 'usr-manager-1' : 'usr-admin-1',
-            email: emailToUse,
-            fullName: isManager ? 'Olumide Ogunlesi (Finance Manager)' : 'Alade Adebayo (Managing Director)',
-            role,
-            roleName: role,
-            permissions: ['*'],
-            companyId: 'c0000000-0000-0000-0000-000000000001',
-            companyName: 'AOA 77 COMPANY LTD',
-          }
-        );
-        navigate(from, { replace: true });
-        return;
-      }
-
-      const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Live backend authentication failed.';
       setErrorMessage(Array.isArray(msg) ? msg.join(', ') : msg);
     } finally {
       setIsLoading(false);
@@ -169,11 +73,13 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Feedback Alert */}
-        {feedbackMessage && !errorMessage && (
-          <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-semibold">{feedbackMessage}</span>
+        {/* Success Alert (e.g. following password reset) */}
+        {successMessage && (
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-3">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-semibold">Success:</strong> {successMessage}
+            </div>
           </div>
         )}
 
@@ -199,10 +105,7 @@ export const LoginPage: React.FC = () => {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setFeedbackMessage(null);
-                }}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
                 className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:bg-white transition-all"
               />
@@ -210,19 +113,25 @@ export const LoginPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsForgotModalOpen(true)}
+                className="text-xs font-semibold text-[#5847F6] hover:text-[#4939E3] hover:underline transition-colors cursor-pointer"
+              >
+                Forgot Password?
+              </button>
+            </div>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
                 required
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setFeedbackMessage(null);
-                }}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
                 className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:bg-white transition-all"
               />
@@ -245,72 +154,12 @@ export const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Quick Demo Access Pills */}
-        <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Quick-Fill Demo Credentials
-              </span>
-              <span className="text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                Fills inputs
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                id="quick-fill-admin-btn"
-                type="button"
-                onClick={() => handleDemoFill('Admin')}
-                className="px-3 py-2.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 text-[11px] font-bold text-[#5847F6] transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Quick-Fill: Admin</span>
-              </button>
-              <button
-                id="quick-fill-manager-btn"
-                type="button"
-                onClick={() => handleDemoFill('Manager')}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200/80 text-[11px] font-bold text-slate-700 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
-              >
-                <span>Quick-Fill: Manager</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                1-Click Instant Demo Login
-              </span>
-              <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Direct access
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                id="instant-login-admin-btn"
-                type="button"
-                disabled={isLoading}
-                onClick={() => handleInstantDemoLogin('Admin')}
-                className="w-full py-2.5 px-3 rounded-2xl bg-[#16181F] hover:bg-slate-900 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-700 cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                <span>{isLoading ? 'Connecting...' : 'Enter as Admin'}</span>
-              </button>
-              <button
-                id="instant-login-manager-btn"
-                type="button"
-                disabled={isLoading}
-                onClick={() => handleInstantDemoLogin('Manager')}
-                className="w-full py-2.5 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm border border-slate-600 cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <span>{isLoading ? 'Connecting...' : 'Enter as Manager'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Forgot Password Modal */}
+        <ForgotPasswordModal
+          isOpen={isForgotModalOpen}
+          onClose={() => setIsForgotModalOpen(false)}
+          initialEmail={email}
+        />
       </div>
     </div>
   );

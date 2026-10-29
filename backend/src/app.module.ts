@@ -38,7 +38,18 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '.env.example'],
+      envFilePath: ['.env'],
+      validate: (config: Record<string, any>) => {
+        if (config.NODE_ENV === 'production') {
+          const secret = config.JWT_ACCESS_SECRET;
+          if (!secret || typeof secret !== 'string' || secret.length < 32) {
+            throw new Error(
+              'FATAL: JWT_ACCESS_SECRET must be defined and at least 32 characters long in production.',
+            );
+          }
+        }
+        return config;
+      },
     }),
     ThrottlerModule.forRoot([
       {

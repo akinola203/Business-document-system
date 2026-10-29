@@ -18,6 +18,32 @@ export class PdfService implements OnModuleDestroy {
   private readonly logger = new Logger(PdfService.name);
   private browserInstance: Browser | null = null;
   private isLaunching = false;
+  private activePageCount = 0;
+  private readonly maxConcurrentPages = 3;
+  private readonly waitingQueue: Array<() => void> = [];
+  private readonly generatingPdfs = new Map<
+    string,
+    Promise<{ fileId: string; filename: string; buffer?: Buffer; storageKey?: string }>
+  >();
+
+  private async acquirePageSlot(): Promise<void> {
+    if (this.activePageCount < this.maxConcurrentPages) {
+      this.activePageCount++;
+      return;
+    }
+    await new Promise<void>((resolve) => {
+      this.waitingQueue.push(resolve);
+    });
+    this.activePageCount++;
+  }
+
+  private releasePageSlot(): void {
+    this.activePageCount--;
+    const next = this.waitingQueue.shift();
+    if (next) {
+      next();
+    }
+  }
 
   constructor(
     private readonly prisma: PrismaService,
@@ -51,15 +77,19 @@ export class PdfService implements OnModuleDestroy {
     this.isLaunching = true;
     try {
       this.logger.log('Initializing shared Puppeteer headless browser instance...');
+      const args = [
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--font-render-hinting=medium',
+      ];
+      if (process.env.NODE_ENV === 'development') {
+        args.unshift('--no-sandbox');
+      }
+
       this.browserInstance = await puppeteer.launch({
         headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--font-render-hinting=medium',
-        ],
+        args,
       });
 
       this.browserInstance.on('disconnected', () => {
@@ -97,34 +127,50 @@ export class PdfService implements OnModuleDestroy {
    * Compiles sanitized HTML into a standard A4 PDF buffer using headless Chromium.
    */
   async generatePdfFromHtml(html: string): Promise<Buffer> {
-    const browser = await this.getBrowser();
-    const page = await browser.newPage();
-
+    await this.acquirePageSlot();
     try {
-      await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
-      await page.setContent(html, {
-        waitUntil: ['load', 'domcontentloaded'],
-        timeout: 30000,
-      });
+      const browser = await this.getBrowser();
+      const page = await browser.newPage();
 
-      const pdfUint8Array = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        preferCSSPageSize: true,
-        margin: {
-          top: '0mm',
-          bottom: '0mm',
-          left: '0mm',
-          right: '0mm',
-        },
-      });
+      try {
+        await page.setJavaScriptEnabled(false);
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+          const url = req.url();
+          if (url.startsWith('data:') || url === 'about:blank') {
+            req.continue();
+          } else {
+            req.abort();
+          }
+        });
 
-      return Buffer.from(pdfUint8Array);
-    } catch (err: any) {
-      this.logger.error(`Puppeteer PDF compilation failed: ${err.message}`, err.stack);
-      throw new BadRequestException(`Failed to compile document PDF: ${err.message}`);
+        await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
+        await page.setContent(html, {
+          waitUntil: ['load', 'domcontentloaded'],
+          timeout: 30000,
+        });
+
+        const pdfUint8Array = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          preferCSSPageSize: true,
+          margin: {
+            top: '0mm',
+            bottom: '0mm',
+            left: '0mm',
+            right: '0mm',
+          },
+        });
+
+        return Buffer.from(pdfUint8Array);
+      } catch (err: any) {
+        this.logger.error(`Puppeteer PDF compilation failed: ${err.message}`, err.stack);
+        throw new BadRequestException(`Failed to compile document PDF: ${err.message}`);
+      } finally {
+        await page.close().catch(() => {});
+      }
     } finally {
-      await page.close().catch(() => {});
+      this.releasePageSlot();
     }
   }
 
@@ -210,62 +256,79 @@ export class PdfService implements OnModuleDestroy {
       }
     }
 
-    // Generate PDF from the frozen version snapshot HTML
-    this.logger.log(
-      `Generating new immutable PDF for document "${doc.documentNumber}" v${targetVersion.versionNumber}...`,
-    );
-    const html = await this.templatesService.renderDocumentHtml(
-      companyId,
-      documentId,
-      targetVersion.versionNumber,
-    );
-    const pdfBuffer = await this.generatePdfFromHtml(html);
-
-    const safeDocNum = doc.documentNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const filename = `${safeDocNum}_v${targetVersion.versionNumber}.pdf`;
-
-    // Persist binary payload into storage volume and register File
-    const fileRecord = await this.filesService.saveBufferAsFile({
-      companyId,
-      documentId: doc.id,
-      filename,
-      buffer: pdfBuffer,
-      mimeType: 'application/pdf',
-      fileCategory: FileCategory.GENERATED_PDF,
-      actorId,
-    });
-
-    // Associate generated PDF file with the DocumentVersion
-    await this.prisma.documentVersion.update({
-      where: { id: targetVersion.id },
-      data: { pdfFileId: fileRecord.id },
-    });
-
-    if (actorId) {
-      await this.auditService.logAction({
-        companyId,
-        actorId,
-        action: 'DOCUMENT_PDF_GENERATED',
-        entityType: 'Document',
-        entityId: doc.id,
-        newValues: {
-          documentNumber: doc.documentNumber,
-          versionNumber: targetVersion.versionNumber,
-          fileId: fileRecord.id,
-          filename,
-        },
-      });
+    // Guard against concurrent PDF generation for the same document version using in-memory mutex promise
+    const generationKey = `${companyId}:${documentId}:${targetVersion.versionNumber}`;
+    const inFlightGeneration = this.generatingPdfs.get(generationKey);
+    if (inFlightGeneration) {
+      this.logger.log(`Awaiting in-flight PDF generation for key ${generationKey}...`);
+      return inFlightGeneration;
     }
 
-    this.logger.log(
-      `Generated and linked PDF "${filename}" (${fileRecord.id}) to Document "${doc.documentNumber}" v${targetVersion.versionNumber}.`,
-    );
+    const generationTask = (async () => {
+      // Generate PDF from the frozen version snapshot HTML
+      this.logger.log(
+        `Generating new immutable PDF for document "${doc.documentNumber}" v${targetVersion.versionNumber}...`,
+      );
+      const html = await this.templatesService.renderDocumentHtml(
+        companyId,
+        documentId,
+        targetVersion.versionNumber,
+      );
+      const pdfBuffer = await this.generatePdfFromHtml(html);
 
-    return {
-      fileId: fileRecord.id,
-      filename: fileRecord.originalFilename,
-      buffer: pdfBuffer,
-      storageKey: fileRecord.storageKey,
-    };
+      const safeDocNum = doc.documentNumber.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `${safeDocNum}_v${targetVersion.versionNumber}.pdf`;
+
+      // Persist binary payload into storage volume and register File
+      const fileRecord = await this.filesService.saveBufferAsFile({
+        companyId,
+        documentId: doc.id,
+        filename,
+        buffer: pdfBuffer,
+        mimeType: 'application/pdf',
+        fileCategory: FileCategory.GENERATED_PDF,
+        actorId,
+      });
+
+      // Associate generated PDF file with the DocumentVersion
+      await this.prisma.documentVersion.update({
+        where: { id: targetVersion.id },
+        data: { pdfFileId: fileRecord.id },
+      });
+
+      if (actorId) {
+        await this.auditService.logAction({
+          companyId,
+          actorId,
+          action: 'DOCUMENT_PDF_GENERATED',
+          entityType: 'Document',
+          entityId: doc.id,
+          newValues: {
+            documentNumber: doc.documentNumber,
+            versionNumber: targetVersion.versionNumber,
+            fileId: fileRecord.id,
+            filename,
+          },
+        });
+      }
+
+      this.logger.log(
+        `Generated and linked PDF "${filename}" (${fileRecord.id}) to Document "${doc.documentNumber}" v${targetVersion.versionNumber}.`,
+      );
+
+      return {
+        fileId: fileRecord.id,
+        filename: fileRecord.originalFilename,
+        buffer: pdfBuffer,
+        storageKey: fileRecord.storageKey,
+      };
+    })();
+
+    this.generatingPdfs.set(generationKey, generationTask);
+    try {
+      return await generationTask;
+    } finally {
+      this.generatingPdfs.delete(generationKey);
+    }
   }
 }

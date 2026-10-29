@@ -5,6 +5,7 @@ import { useAuthStore } from '../../../store/auth.store';
 import { apiClient } from '../../../lib/api-client';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { PaymentReceiptModal } from '../../payments/PaymentReceiptModal';
+import { downloadDocumentPdf, printDocumentPdf } from '../../../lib/pdf-download';
 import {
   FileText,
   Download,
@@ -41,7 +42,8 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
   onEditDraft,
 }) => {
   const { isAdmin, canApprove, canIssue, canCancel, canRecordPayment, hasPermission } = usePermissions();
-  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const [isPdfPrinting, setIsPdfPrinting] = useState(false);
   const [selectedReceiptPayment, setSelectedReceiptPayment] = useState<PaymentRecord | null>(null);
 
   const inv = document.invoice;
@@ -50,21 +52,33 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
   const status = document.status;
   const paymentStatus = document.paymentStatus || 'UNPAID';
 
-  // Securely download / preview PDF using authenticated apiClient
+  // Direct file download to user device disk
   const handlePdfDownload = async () => {
-    setIsPdfLoading(true);
+    setIsPdfDownloading(true);
     try {
-      const response = await apiClient.get(`/documents/${document.id}/pdf`, {
-        responseType: 'blob',
+      await downloadDocumentPdf({
+        documentId: document.id,
+        documentNumber: document.documentNumber,
+        documentType: 'Invoice',
       });
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
     } catch (err: any) {
       console.error('Failed to download PDF:', err);
-      alert('Unable to generate or download document PDF. Please verify permissions.');
+      alert('Unable to download invoice PDF. Please verify permissions.');
     } finally {
-      setIsPdfLoading(false);
+      setIsPdfDownloading(false);
+    }
+  };
+
+  // Immediate print preview in browser tab
+  const handlePdfPrint = async () => {
+    setIsPdfPrinting(true);
+    try {
+      await printDocumentPdf(document.id);
+    } catch (err: any) {
+      console.error('Failed to print PDF:', err);
+      alert('Unable to load invoice PDF for printing. Please verify permissions.');
+    } finally {
+      setIsPdfPrinting(false);
     }
   };
 
@@ -300,14 +314,27 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={handlePdfDownload}
-              disabled={isPdfLoading}
-              title="Download Official PDF"
+              disabled={isPdfDownloading}
+              title="📥 Download PDF to Device"
               className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center justify-center text-white transition-all shadow-sm disabled:opacity-50"
             >
-              {isPdfLoading ? (
+              {isPdfDownloading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Download className="w-4 h-4" />
+              )}
+            </button>
+
+            <button
+              onClick={handlePdfPrint}
+              disabled={isPdfPrinting}
+              title="🖨️ Print / Open PDF Preview"
+              className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center justify-center text-white transition-all shadow-sm disabled:opacity-50"
+            >
+              {isPdfPrinting ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Printer className="w-4 h-4" />
               )}
             </button>
 

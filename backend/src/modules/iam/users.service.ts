@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
@@ -24,6 +25,56 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
   ) {}
+
+  private async assertCallerCanAssignRole(companyId: string, actorId: string, targetRoleId: string) {
+    const actorMembership = await this.prisma.companyUser.findUnique({
+      where: {
+        companyId_userId: {
+          companyId,
+          userId: actorId,
+        },
+      },
+      include: {
+        role: {
+          include: {
+            rolePermissions: true,
+          },
+        },
+      },
+    });
+
+    if (!actorMembership) {
+      throw new ForbiddenException('Actor does not belong to this company.');
+    }
+
+    const roleName = actorMembership.role.name.toLowerCase();
+    if (roleName === 'admin' || roleName === 'administrator' || roleName === 'owner') {
+      return;
+    }
+
+    const targetRolePermissions = await this.prisma.rolePermission.findMany({
+      where: { roleId: targetRoleId },
+    });
+
+    let actorRolePermissions = actorMembership.role.rolePermissions;
+    if (!actorRolePermissions) {
+      actorRolePermissions = await this.prisma.rolePermission.findMany({
+        where: { roleId: actorMembership.roleId },
+      });
+    }
+
+    const actorPermissionIds = new Set(
+      (actorRolePermissions || []).map((rp: any) => rp.permissionId),
+    );
+
+    for (const rp of targetRolePermissions) {
+      if (!actorPermissionIds.has(rp.permissionId)) {
+        throw new ForbiddenException(
+          'Privilege Escalation Guard: You cannot assign a role containing permissions you do not hold.',
+        );
+      }
+    }
+  }
 
   /**
    * Retrieves paginated, searchable list of users belonging to the company.
@@ -130,67 +181,15 @@ export class UsersService {
       throw new NotFoundException(`Role with ID "${dto.roleId}" not found.`);
     }
 
+    await this.assertCallerCanAssignRole(companyId, actorId, dto.roleId);
+
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
     if (existingUser) {
-      const existingCompanyUser = await this.prisma.companyUser.findUnique({
-        where: {
-          companyId_userId: {
-            companyId,
-            userId: existingUser.id,
-          },
-        },
-      });
-
-      if (existingCompanyUser) {
-        throw new ConflictException(`User "${normalizedEmail}" is already a member of this company.`);
-      }
-
-      // Link existing user to this company
-      const companyUser = await this.prisma.$transaction(async (tx) => {
-        const cu = await tx.companyUser.create({
-          data: {
-            companyId,
-            userId: existingUser.id,
-            roleId: dto.roleId,
-            departmentId: dto.departmentId,
-            branchId: dto.branchId,
-            status: CompanyUserStatus.ACTIVE,
-          },
-          include: {
-            user: {
-              select: { id: true, email: true, firstName: true, lastName: true, phone: true, isActive: true },
-            },
-            role: true,
-          },
-        });
-
-        await this.auditService.logAction(
-          {
-            companyId,
-            actorId,
-            action: 'USER_ASSIGNED',
-            entityType: 'CompanyUser',
-            entityId: cu.id,
-            newValues: {
-              userId: existingUser.id,
-              email: normalizedEmail,
-              role: role.name,
-              departmentId: dto.departmentId,
-              branchId: dto.branchId,
-            },
-          },
-          tx,
-        );
-
-        return cu;
-      });
-
-      this.logger.log(`Existing user "${normalizedEmail}" linked to company "${companyId}" by "${actorId}".`);
-      return { companyUser, temporaryPassword: undefined };
+      throw new ConflictException(`A user with email "${normalizedEmail}" already exists.`);
     }
 
     // User is completely new: create User + CompanyUser
@@ -282,6 +281,8 @@ export class UsersService {
     if (!newRole) {
       throw new NotFoundException(`Role with ID "${dto.roleId}" not found.`);
     }
+
+    await this.assertCallerCanAssignRole(companyId, actorId, dto.roleId);
 
     // Safety guardrail: Do not allow demoting the last active Admin
     if (companyUser.role.name.toLowerCase() === 'admin' && newRole.name.toLowerCase() !== 'admin') {
@@ -436,6 +437,16 @@ export class UsersService {
 
     if (!companyUser) {
       throw new NotFoundException(`User with ID "${targetUserId}" not found in this company.`);
+    }
+
+    const membershipCount = await this.prisma.companyUser.count({
+      where: { userId: targetUserId },
+    });
+
+    if (membershipCount > 1) {
+      throw new ForbiddenException(
+        'Password reset is forbidden because this user belongs to multiple organizations.',
+      );
     }
 
     const plainPassword = dto.newPassword?.trim() || `${crypto.randomBytes(6).toString('hex')}A1!`;

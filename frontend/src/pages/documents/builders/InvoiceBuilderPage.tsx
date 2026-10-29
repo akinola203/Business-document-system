@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +11,6 @@ import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4InvoiceSheet } from '../../../components/builder/LiveA4InvoiceSheet';
 import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
 import { ErrorBoundary } from '../../../components/common/ErrorBoundary';
-import { DEMO_CLIENTS, DEMO_SUPPLIES } from '../../../lib/mock-data';
 import {
   Plus,
   Trash2,
@@ -25,6 +24,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { formatCurrency, extractArray } from '../../../lib/utils';
+import { calcLine, calcTotals } from '../../../lib/money';
 
 // Zod Validation Schema for Invoices
 const invoiceItemSchema = z.object({
@@ -69,7 +69,7 @@ export const InvoiceBuilderPage: React.FC = () => {
     const safeName = item?.name || (item as any)?.description || 'Supply Item';
     const safeUnit = item?.unit || 'Units';
     const safePrice = Number(item?.sellingPrice ?? (item as any)?.unitCost ?? 0) || 0;
-    const safeTax = Number(item?.taxRate ?? 7.5) || 7.5;
+    const safeTax = Number.isFinite(item?.taxRate) ? Number(item?.taxRate) : 7.5;
 
     if (activeCatalogIndex !== null) {
       if (activeCatalogIndex >= fields.length) {
@@ -135,25 +135,22 @@ export const InvoiceBuilderPage: React.FC = () => {
     queryFn: async () => {
       if (!id) throw new Error('No document ID');
       const res = await apiClient.get(`/documents/${id}`);
-      return res.data;
+      return res.data?.data ?? res.data;
     },
     enabled: isEdit,
+    refetchOnWindowFocus: false,
   });
 
   // 5. Fetch Supplies Catalog for Quick-Add
   const { data: suppliesData } = useQuery<any>({
     queryKey: ['supplies-items'],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get('/supplies/items', { params: { limit: 100 } });
-        return res.data;
-      } catch {
-        return { items: DEMO_SUPPLIES };
-      }
+      const res = await apiClient.get('/supplies/items', { params: { limit: 100 } });
+      return res.data;
     },
   });
   const catalogSupplies: SupplyItem[] = useMemo(() => {
-    return extractArray<SupplyItem>(suppliesData, DEMO_SUPPLIES);
+    return extractArray<SupplyItem>(suppliesData);
   }, [suppliesData]);
 
   // Calculate default dates
@@ -201,21 +198,32 @@ export const InvoiceBuilderPage: React.FC = () => {
     name: 'items',
   });
 
+  const lastLoadedVersionRef = useRef<number | null>(null);
+
   // Populate form with existing document if editing
   useEffect(() => {
     if (existingDoc && isEdit) {
+      if (lastLoadedVersionRef.current === existingDoc.versionCounter && isDirty) {
+        return;
+      }
+      lastLoadedVersionRef.current = existingDoc.versionCounter ?? null;
       const inv = existingDoc.invoice;
       reset({
         title: existingDoc.title,
         clientId: existingDoc.clientId || '',
         currency: existingDoc.currency || 'NGN',
         issueDate: existingDoc.issueDate ? existingDoc.issueDate.split('T')[0] : todayStr,
-        dueDate: inv?.dueDate ? inv.dueDate.split('T')[0] : defaultDueDate,
+        dueDate: existingDoc.dueDate
+          ? existingDoc.dueDate.split('T')[0]
+          : inv?.dueDate
+            ? inv.dueDate.split('T')[0]
+            : defaultDueDate,
         paymentTerms: inv?.paymentTerms || 'Net 30 Days',
         poNumber: inv?.poNumber || '',
         notes: inv?.notes || '',
-        bankDetailsVisible: existingDoc.bankDetailsVisible ?? true,
+        bankDetailsVisible: existingDoc.invoice?.bankDetailsVisible ?? true,
         templateId: existingDoc.templateId || undefined,
+        selectedAddressId: (existingDoc.metadata as any)?.selectedAddressId || (existingDoc as any)?.selectedAddressId || '',
         customBillingAddress: '',
         items:
           inv?.items && inv.items.length > 0
@@ -239,7 +247,7 @@ export const InvoiceBuilderPage: React.FC = () => {
             ],
       });
     }
-  }, [existingDoc, isEdit, reset, todayStr, defaultDueDate]);
+  }, [existingDoc, isEdit, reset, todayStr, defaultDueDate, isDirty]);
 
   // Watch entire form for 60fps live A4 preview
   const formValues = watch();
@@ -281,32 +289,17 @@ export const InvoiceBuilderPage: React.FC = () => {
     );
   }, [selectedClient, formValues?.selectedAddressId]);
 
-  // Live Math calculations
+  // Live Math calculations using decimal.js
   const summaryCalculations = useMemo(() => {
     const items = formValues?.items || [];
-    let subtotal = 0;
-    let discount = 0;
-    let tax = 0;
-
-    for (const item of items) {
-      if (!item) continue;
-      const q = Math.max(0, Number(item.quantity) || 0);
-      const p = Math.max(0, Number(item.unitPrice) || 0);
-      const dPercent = Math.max(0, Math.min(100, Number(item.discountPercent) || 0));
-      const tRate = Math.max(0, Number(item.taxRate) || 0);
-
-      const base = Math.round((q * p + Number.EPSILON) * 100) / 100;
-      const dVal = Math.round((base * (dPercent / 100) + Number.EPSILON) * 100) / 100;
-      const taxable = Math.max(0, Math.round((base - dVal + Number.EPSILON) * 100) / 100);
-      const tVal = Math.round((taxable * (tRate / 100) + Number.EPSILON) * 100) / 100;
-
-      subtotal += base;
-      discount += dVal;
-      tax += tVal;
-    }
-
-    const total = Math.max(0, subtotal - discount + tax);
-    return { subtotal, discount, tax, total };
+    const totals = calcTotals(items);
+    return {
+      subtotal: totals.grossSubtotal,
+      netSubtotal: totals.subtotal,
+      discount: totals.totalDiscount,
+      tax: totals.totalTax,
+      total: totals.grandTotal,
+    };
   }, [formValues.items]);
 
   // Save Draft Mutation (POST /invoices or PATCH /invoices/:id)
@@ -315,6 +308,7 @@ export const InvoiceBuilderPage: React.FC = () => {
       const payload = {
         title: data.title,
         clientId: data.clientId,
+        selectedAddressId: data.selectedAddressId || undefined,
         currency: data.currency,
         issueDate: data.issueDate ? new Date(data.issueDate).toISOString() : undefined,
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
@@ -331,7 +325,7 @@ export const InvoiceBuilderPage: React.FC = () => {
           discountPercent: Number(it.discountPercent || 0),
           taxRate: Number(it.taxRate ?? 7.5),
         })),
-        ...(isEdit && existingDoc ? { expectedVersion: existingDoc.version } : {}),
+        ...(isEdit && existingDoc ? { expectedVersion: existingDoc.versionCounter } : {}),
       };
 
       if (isEdit && id) {
@@ -346,6 +340,11 @@ export const InvoiceBuilderPage: React.FC = () => {
       const realDoc = savedDoc?.data || savedDoc;
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ['document', id] });
+      } else if (realDoc?.id) {
+        queryClient.invalidateQueries({ queryKey: ['document', realDoc.id] });
+      }
       if (!isEdit && realDoc?.id) {
         navigate(`/documents/invoices/${realDoc.id}/edit`, { replace: true });
       }
@@ -414,7 +413,7 @@ export const InvoiceBuilderPage: React.FC = () => {
         documentTitle={formValues?.title || 'New Invoice'}
         documentNumber={existingDoc?.documentNumber}
         isEdit={isEdit}
-        version={existingDoc?.version || 1}
+        version={existingDoc?.versionCounter || existingDoc?.version || 1}
         status={existingDoc?.status || 'DRAFT'}
         backPath="/documents/invoices"
         previewMode={previewMode}
@@ -461,8 +460,8 @@ export const InvoiceBuilderPage: React.FC = () => {
                         type="button"
                         onClick={() => handleClientChange(c.id)}
                         className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${formValues?.clientId === c.id
-                            ? 'bg-[#5847F6] text-white border-[#5847F6] shadow-sm shadow-indigo-500/20'
-                            : 'bg-white hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border-slate-200'
+                          ? 'bg-[#5847F6] text-white border-[#5847F6] shadow-sm shadow-indigo-500/20'
+                          : 'bg-white hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border-slate-200'
                           }`}
                       >
                         ⚡ {(c.companyName || c.name || 'Client').split(' ')[0]}
@@ -704,7 +703,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                           unit: item.unit || 'Units',
                           unitPrice: Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0) || 0,
                           discountPercent: 0,
-                          taxRate: Number(item.taxRate ?? 7.5) || 7.5,
+                          taxRate: Number.isFinite(item?.taxRate) ? Number(item?.taxRate) : 7.5,
                         });
                       }}
                       className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
@@ -723,14 +722,13 @@ export const InvoiceBuilderPage: React.FC = () => {
               <div className="space-y-4">
                 {fields.map((field, index) => {
                   const itemValues = formValues?.items?.[index] as Partial<InvoiceItemValues> | undefined;
-                  const q = Number(itemValues?.quantity) || 0;
-                  const p = Number(itemValues?.unitPrice) || 0;
-                  const d = Number(itemValues?.discountPercent) || 0;
-                  const t = Number(itemValues?.taxRate) || 0;
-                  const base = q * p;
-                  const discAmt = base * (d / 100);
-                  const taxable = Math.max(0, base - discAmt);
-                  const rowTotal = taxable + taxable * (t / 100);
+                  const rowCalc = calcLine(
+                    itemValues?.quantity || 0,
+                    itemValues?.unitPrice || 0,
+                    itemValues?.discountPercent || 0,
+                    Number.isFinite(itemValues?.taxRate) ? Number(itemValues?.taxRate) : 7.5,
+                  );
+                  const rowTotal = rowCalc.total;
 
                   return (
                     <div

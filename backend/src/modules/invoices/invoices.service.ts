@@ -12,6 +12,7 @@ import { FinancialMathUtil } from '../documents/utils/financial-math.util';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { DocumentStatus, DocumentType, Prisma } from '@prisma/client';
+import { validateTenantScope } from '../../common/utils/tenant-validation.util';
 
 @Injectable()
 export class InvoicesService {
@@ -26,16 +27,27 @@ export class InvoicesService {
    * Creates a new invoice in DRAFT status with transaction-safe sequential number and authoritative financial math.
    */
   async createDraft(companyId: string, dto: CreateInvoiceDto, actorId: string) {
-    // 1. Verify client exists for company
-    const client = await this.prisma.client.findFirst({
-      where: { id: dto.clientId, companyId },
+    // 1. Verify foreign keys belong to caller company
+    const { client } = await validateTenantScope(this.prisma, companyId, {
+      clientId: dto.clientId,
+      branchId: dto.branchId,
+      departmentId: dto.departmentId,
+      templateId: dto.templateId,
     });
-    if (!client) {
-      throw new NotFoundException(`Client with ID "${dto.clientId}" not found in this company.`);
-    }
 
     // 2. Authoritative Decimal Financial Calculations
     const mathSummary = FinancialMathUtil.calculateDocumentTotals(dto.items);
+
+    if (dto.selectedAddressId) {
+      const address = await this.prisma.clientAddress.findFirst({
+        where: { id: dto.selectedAddressId, clientId: dto.clientId },
+      });
+      if (!address) {
+        throw new BadRequestException(
+          `Selected address ID "${dto.selectedAddressId}" does not belong to client "${dto.clientId}".`,
+        );
+      }
+    }
 
     // 3. Transaction-safe persistence and number allocation
     const result = await this.prisma.$transaction(async (tx) => {
@@ -66,7 +78,10 @@ export class InvoicesService {
           createdById: actorId,
           templateId: dto.templateId,
           templateVersionId: dto.templateVersionId,
-          metadata: dto.notes ? { notes: dto.notes.trim() } : undefined,
+          metadata: {
+            ...(dto.notes ? { notes: dto.notes.trim() } : {}),
+            ...(dto.selectedAddressId ? { selectedAddressId: dto.selectedAddressId } : {}),
+          },
         },
       });
 
@@ -103,8 +118,8 @@ export class InvoicesService {
           newValues: {
             documentNumber: document.documentNumber,
             totalAmount: document.totalAmount.toString(),
-            clientId: client.id,
-            clientName: client.name,
+            clientId: client?.id || dto.clientId,
+            clientName: client?.name || 'N/A',
           },
         },
       });
@@ -129,10 +144,33 @@ export class InvoicesService {
       throw new NotFoundException(`Invoice with ID "${id}" not found.`);
     }
 
-    if (document.status !== DocumentStatus.DRAFT) {
+    if (
+      document.status !== DocumentStatus.DRAFT &&
+      document.status !== DocumentStatus.REJECTED
+    ) {
       throw new BadRequestException(
-        `Only DRAFT invoices can be edited. Current status is ${document.status}. Issued records are immutable.`,
+        `Only DRAFT or REJECTED invoices can be edited. Current status is ${document.status}. Issued records are immutable.`,
       );
+    }
+
+    // Validate foreign keys belong to caller company if updated
+    await validateTenantScope(this.prisma, companyId, {
+      clientId: dto.clientId,
+      branchId: dto.branchId,
+      departmentId: dto.departmentId,
+      templateId: dto.templateId,
+    });
+
+    const targetClientId = dto.clientId || document.clientId;
+    if (dto.selectedAddressId && targetClientId) {
+      const address = await this.prisma.clientAddress.findFirst({
+        where: { id: dto.selectedAddressId, clientId: targetClientId },
+      });
+      if (!address) {
+        throw new BadRequestException(
+          `Selected address ID "${dto.selectedAddressId}" does not belong to client "${targetClientId}".`,
+        );
+      }
     }
 
     // Optimistic Concurrency Control Check
@@ -143,6 +181,26 @@ export class InvoicesService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      // 1. Claim row atomically with OCC and status check
+      const claimResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: { in: [DocumentStatus.DRAFT, DocumentStatus.REJECTED] },
+          ...(dto.expectedVersion !== undefined ? { versionCounter: dto.expectedVersion } : {}),
+        },
+        data: {
+          versionCounter: { increment: 1 },
+          status: DocumentStatus.DRAFT,
+        },
+      });
+
+      if (claimResult.count !== 1) {
+        throw new ConflictException(
+          'Invoice was concurrently modified or is not in an editable status (DRAFT or REJECTED).',
+        );
+      }
+
       let subtotal = document.subtotal;
       let taxAmount = document.taxAmount;
       let discountAmount = document.discountAmount;
@@ -194,10 +252,13 @@ export class InvoicesService {
           discountAmount,
           totalAmount,
           balanceDue,
-          versionCounter: { increment: 1 },
           templateId: dto.templateId,
           templateVersionId: dto.templateVersionId,
-          metadata: dto.notes !== undefined ? { ...(typeof document.metadata === 'object' && document.metadata ? (document.metadata as any) : {}), notes: dto.notes ? dto.notes.trim() : null } : undefined,
+          metadata: {
+            ...(typeof document.metadata === 'object' && document.metadata ? (document.metadata as any) : {}),
+            ...(dto.notes !== undefined ? { notes: dto.notes ? dto.notes.trim() : null } : {}),
+            ...(dto.selectedAddressId !== undefined ? { selectedAddressId: dto.selectedAddressId } : {}),
+          },
         },
       });
 
@@ -231,197 +292,9 @@ export class InvoicesService {
     return this.findOne(companyId, updated.id);
   }
 
-  /**
-   * Submits a draft invoice for approval.
-   */
-  async submitForApproval(companyId: string, id: string, actorId: string) {
-    const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.INVOICE },
-      include: { invoice: { include: { items: true } } },
-    });
 
-    if (!document || !document.invoice) {
-      throw new NotFoundException(`Invoice with ID "${id}" not found.`);
-    }
 
-    if (document.status !== DocumentStatus.DRAFT && document.status !== DocumentStatus.REJECTED) {
-      throw new BadRequestException(
-        `Only DRAFT or REJECTED invoices can be submitted for approval. Current status is ${document.status}.`,
-      );
-    }
 
-    if (document.invoice.items.length === 0) {
-      throw new BadRequestException('Cannot submit an invoice with zero line items.');
-    }
-
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const doc = await tx.document.update({
-        where: { id: document.id },
-        data: { status: DocumentStatus.PENDING_APPROVAL },
-      });
-
-      await tx.documentApproval.create({
-        data: {
-          documentId: document.id,
-          approverId: actorId, // Initial submitter reference
-          status: 'PENDING',
-          stepNumber: 1,
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          actorId,
-          action: 'INVOICE_SUBMITTED_FOR_APPROVAL',
-          entityType: 'Document',
-          entityId: document.id,
-        },
-      });
-
-      return doc;
-    });
-
-    this.logger.log(`Invoice "${document.documentNumber}" submitted for approval by user "${actorId}".`);
-    return updated;
-  }
-
-  /**
-   * Approves an invoice. Enforces corporate prohibition on self-approval for financial records.
-   */
-  async approve(companyId: string, id: string, approverId: string, comment?: string) {
-    const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.INVOICE },
-      include: { company: { include: { settings: true } } },
-    });
-
-    if (!document) {
-      throw new NotFoundException(`Invoice with ID "${id}" not found.`);
-    }
-
-    if (document.status !== DocumentStatus.PENDING_APPROVAL) {
-      throw new BadRequestException(
-        `Only invoices in PENDING_APPROVAL can be approved. Current status is ${document.status}.`,
-      );
-    }
-
-    // Corporate Security Rule: Prohibit self-approval unless explicitly permitted in CompanySetting
-    const allowSelfApproval = document.company.settings?.allowSelfApproval ?? false;
-    if (!allowSelfApproval && document.createdById === approverId) {
-      throw new ForbiddenException(
-        'Self-approval of financial documents is prohibited by corporate policy. An authorized manager must review and approve this invoice.',
-      );
-    }
-
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const doc = await tx.document.update({
-        where: { id: document.id },
-        data: { status: DocumentStatus.APPROVED },
-      });
-
-      // Update pending approval record
-      await tx.documentApproval.updateMany({
-        where: { documentId: document.id, status: 'PENDING' },
-        data: {
-          approverId,
-          status: 'APPROVED',
-          actionDate: new Date(),
-          comment: comment?.trim(),
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          actorId: approverId,
-          action: 'INVOICE_APPROVED',
-          entityType: 'Document',
-          entityId: document.id,
-          newValues: { approverId, comment },
-        },
-      });
-
-      return doc;
-    });
-
-    this.logger.log(`Invoice "${document.documentNumber}" approved by user "${approverId}".`);
-    return updated;
-  }
-
-  /**
-   * Issues an approved invoice, freezing the official legal version and locking further edits.
-   */
-  async issue(companyId: string, id: string, actorId: string) {
-    const document = await this.findOne(companyId, id);
-
-    // Financial documents must pass approval before issuance (Phase 0 decision #3). DRAFT is NOT accepted.
-    if (document.status !== DocumentStatus.APPROVED) {
-      throw new BadRequestException(
-        `Only APPROVED invoices can be issued. Current status is ${document.status}.`,
-      );
-    }
-
-    const issued = await this.prisma.$transaction(async (tx) => {
-      // 1. Create immutable snapshot for DocumentVersion
-      const snapshotData = {
-        documentId: document.id,
-        documentNumber: document.documentNumber,
-        title: document.title,
-        issueDate: document.issueDate,
-        dueDate: document.dueDate,
-        currency: document.currency,
-        subtotal: document.subtotal.toString(),
-        taxAmount: document.taxAmount.toString(),
-        discountAmount: document.discountAmount.toString(),
-        totalAmount: document.totalAmount.toString(),
-        client: document.client,
-        invoice: document.invoice,
-        items: document.invoice?.items,
-        frozenAt: new Date().toISOString(),
-      };
-
-      const latestVersion = await tx.documentVersion.findFirst({
-        where: { documentId: document.id },
-        orderBy: { versionNumber: 'desc' },
-        select: { versionNumber: true },
-      });
-      const versionNumber = (latestVersion?.versionNumber ?? 0) + 1;
-
-      const version = await tx.documentVersion.create({
-        data: {
-          documentId: document.id,
-          versionNumber,
-          snapshotData: JSON.parse(JSON.stringify(snapshotData)) as Prisma.InputJsonValue,
-          createdById: actorId,
-          changeReason: 'Initial Official Issuance',
-        },
-      });
-
-      const updated = await tx.document.update({
-        where: { id: document.id },
-        data: {
-          status: DocumentStatus.ISSUED,
-          currentVersionId: version.id,
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          actorId,
-          action: 'INVOICE_ISSUED',
-          entityType: 'Document',
-          entityId: document.id,
-          newValues: { versionNumber, versionId: version.id },
-        },
-      });
-
-      return updated;
-    });
-
-    this.logger.log(`Invoice "${document.documentNumber}" officially issued by user "${actorId}".`);
-    return this.findOne(companyId, issued.id);
-  }
 
   /**
    * Helper to retrieve full invoice record with related entities.

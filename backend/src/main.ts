@@ -19,6 +19,11 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
   const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
   const appUrl = configService.get<string>('APP_URL', 'http://localhost:5173');
+  const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+  const isProduction = nodeEnv === 'production';
+
+  // Trust reverse proxy for client IP resolution and rate limiters
+  (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
 
   // Security Middleware: Helmet
   app.use(helmet());
@@ -27,8 +32,15 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // CORS Configuration
+  const corsOriginEnv = configService.get<string>('CORS_ORIGIN');
+  const allowedOrigins = corsOriginEnv
+    ? corsOriginEnv.split(',').map((o) => o.trim())
+    : isProduction
+      ? [appUrl]
+      : [appUrl, 'http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
+
   app.enableCors({
-    origin: [appUrl, 'http://localhost:5173', 'http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Idempotency-Key', 'Idempotency-Key'],
@@ -49,34 +61,36 @@ async function bootstrap() {
     }),
   );
 
-  // OpenAPI / Swagger Documentation
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Business Document Management API')
-    .setDescription(
-      'Enterprise REST API for Business Document Management (Invoices, Waybills, Letters, Approvals, and Payments Ledger). ' +
-      'Initial Organization Profile: AOA 77 COMPANY LTD.',
-    )
-    .setVersion('1.0.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter your JWT access token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .build();
+  // OpenAPI / Swagger Documentation (Restricted to non-production environments)
+  if (!isProduction || configService.get<boolean>('ENABLE_SWAGGER_IN_PROD', false)) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Business Document Management API')
+      .setDescription(
+        'Enterprise REST API for Business Document Management (Invoices, Waybills, Letters, Approvals, and Payments Ledger). ' +
+        'Initial Organization Profile: AOA 77 COMPANY LTD.',
+      )
+      .setVersion('1.0.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter your JWT access token',
+          in: 'header',
+        },
+        'JWT-auth',
+      )
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-    customSiteTitle: 'AOA 77 Document API Docs',
-  });
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+      customSiteTitle: 'AOA 77 Document API Docs',
+    });
+  }
 
   // Enable graceful shutdown
   app.enableShutdownHooks();

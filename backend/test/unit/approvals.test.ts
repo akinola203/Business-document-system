@@ -57,6 +57,20 @@ test('Approvals Workflow & Anti-Self-Approval Tests', async (t) => {
         if (doc) Object.assign(doc, data);
         return doc;
       },
+      updateMany: async ({ where, data }: any) => {
+        let count = 0;
+        for (const doc of documentsStore) {
+          const matchId = !where.id || doc.id === where.id;
+          const matchCompany = !where.companyId || doc.companyId === where.companyId;
+          const matchStatus = !where.status || (where.status.in ? where.status.in.includes(doc.status) : doc.status === where.status);
+          const matchVersion = where.versionCounter === undefined || doc.versionCounter === where.versionCounter;
+          if (matchId && matchCompany && matchStatus && matchVersion) {
+            Object.assign(doc, data);
+            count++;
+          }
+        }
+        return { count };
+      },
       count: async () => documentsStore.length,
     },
     company: {
@@ -94,6 +108,14 @@ test('Approvals Workflow & Anti-Self-Approval Tests', async (t) => {
         return data;
       },
     },
+    companyUser: {
+      findUnique: async ({ where }: any) => {
+        if (where.companyId_userId?.companyId === 'comp-1' && where.companyId_userId?.userId !== 'inactive-user') {
+          return { id: 'cu-1', companyId: 'comp-1', userId: where.companyId_userId.userId, status: 'ACTIVE' };
+        }
+        return null;
+      },
+    },
     $transaction: async (fn: any) => fn(mockPrisma),
   };
 
@@ -124,6 +146,24 @@ test('Approvals Workflow & Anti-Self-Approval Tests', async (t) => {
     assert.equal(approvalsStore[0].status, 'PENDING');
     assert.equal(approvalsStore[0].stepNumber, 1);
     assert.equal(approvalsStore[0].comment, 'Ready for manager review');
+  });
+
+  await t.test('submitForApproval rejects non-active or cross-tenant approver', async () => {
+    // Reset status back to DRAFT for this test
+    sampleDoc.status = DocumentStatus.DRAFT;
+    await assert.rejects(
+      async () => {
+        await service.submitForApproval(
+          'comp-1',
+          'doc-inv-001',
+          { approverId: 'inactive-user' },
+          'usr-creator-1',
+        );
+      },
+      BadRequestException,
+    );
+    // Put status back to PENDING_APPROVAL for subsequent approval tests
+    sampleDoc.status = DocumentStatus.PENDING_APPROVAL;
   });
 
   await t.test('approve throws ForbiddenException if document creator attempts self-approval', async () => {

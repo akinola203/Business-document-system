@@ -178,6 +178,44 @@ test('Document Version History & Snapshot Comparison Tests', async (t) => {
     assert.equal(diff.itemChanges.differenceCount, 1);
   });
 
+  await t.test('compareVersions handles normalized comparison between legacy flat snapshot and nested snapshot', async () => {
+    // Push a legacy flat snapshot (version 3)
+    versionsStore.push({
+      id: 'ver-3',
+      documentId: 'doc-v-100',
+      versionNumber: 3,
+      snapshotData: {
+        documentNumber: 'INV-2026-000001',
+        title: 'Issued Legacy Flat Invoice',
+        status: DocumentStatus.ISSUED,
+        subtotal: '400000.00',
+        totalAmount: '430000.00',
+        items: [
+          { lineNumber: 1, description: 'Item 1', quantity: '100', unitPrice: '2000' },
+          { lineNumber: 2, description: 'Item 2', quantity: '100', unitPrice: '2000' },
+        ],
+      },
+      createdAt: new Date(),
+      changeReason: 'Issued version flat snapshot',
+    });
+
+    const diff = await service.compareVersions('comp-1', 'doc-v-100', 2, 3);
+    assert.equal(diff.fromVersion, 2);
+    assert.equal(diff.toVersion, 3);
+    assert.equal(diff.financialDiff.fromTotalAmount, '322500.00');
+    assert.equal(diff.financialDiff.toTotalAmount, '430000.00');
+    assert.equal(diff.financialDiff.totalDifference, '107500.00');
+    assert.equal(diff.financialDiff.subtotalDifference, '100000.00');
+    assert.equal(diff.itemChanges.fromItemCount, 2);
+    assert.equal(diff.itemChanges.toItemCount, 2);
+    assert.equal(diff.itemChanges.differenceCount, 0);
+
+    const titleChange = diff.fieldChanges.find((c) => c.field === 'title');
+    assert.ok(titleChange);
+    assert.equal(titleChange.from, 'Supply of Portland Cement v2 - Extra Bags');
+    assert.equal(titleChange.to, 'Issued Legacy Flat Invoice');
+  });
+
   await t.test('setArchived archives document and logs audit trail', async () => {
     const archived = await service.setArchived('comp-1', 'doc-v-100', true, 'usr-1');
     assert.equal(archived.isArchived, true);

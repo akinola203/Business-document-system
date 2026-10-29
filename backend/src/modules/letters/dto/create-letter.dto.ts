@@ -1,8 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsOptional, IsDateString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateLetterDto {
   @ApiProperty({ example: 'Corporate Introduction & Service Proposal', description: 'Internal document title' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsNotEmpty()
   @IsString()
   title!: string;

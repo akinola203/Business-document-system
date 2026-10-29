@@ -79,9 +79,11 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
                 </p>
               </div>
             </div>
-            <p className="text-[11px] text-slate-600 max-w-xs mt-1.5 leading-snug">
-              {company?.address || '1 Alade Ibukun Close, Ayo Irewolede CDA, Ewupe, Ota, Ogun State, Nigeria'}
-            </p>
+            {company?.address && (
+              <p className="text-[11px] text-slate-600 max-w-xs mt-1.5 leading-snug">
+                {company.address}
+              </p>
+            )}
             <div className="flex items-center gap-3 text-[10px] text-slate-500 mt-1">
               {company?.phone && <span>Tel: {company.phone}</span>}
               {company?.rcNumber && <span>RC: {company.rcNumber}</span>}

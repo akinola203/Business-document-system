@@ -37,4 +37,74 @@ test('FinancialMathUtil Authoritative Math Tests', async (t) => {
     // Balance due: 639,625 - 200,000 = 439,625
     assert.equal(summary.balanceDue.toString(), '439625');
   });
+
+  await t.test('handles null taxRate and null discountPercent gracefully without throwing', () => {
+    const result = FinancialMathUtil.calculateLineItem({
+      quantity: 10,
+      unitPrice: 100,
+      discountPercent: null as any,
+      taxRate: null as any,
+    });
+
+    assert.equal(result.discountAmount.toString(), '0');
+    assert.equal(result.taxRate.toString(), '7.5');
+    assert.equal(result.lineTotal.toString(), '1075');
+  });
+
+  await t.test('10,000 random inputs parity between frontend money.ts and backend financial-math.util.ts', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const ts = require('typescript');
+    const moneyFile = fs.readFileSync(path.resolve(__dirname, '../../../frontend/src/lib/money.ts'), 'utf-8');
+    const transpileResult = ts.transpileModule(moneyFile, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    });
+    const moneyModule = { exports: {} as any };
+    const fn = new Function('require', 'module', 'exports', transpileResult.outputText);
+    fn(require, moneyModule, moneyModule.exports);
+    const { calcLine, calcTotals } = moneyModule.exports;
+
+    let seed = 42;
+    function random() {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    }
+
+    const testLines: Array<{ quantity: number; unitPrice: number; discountPercent: number; taxRate: number }> = [];
+
+    for (let i = 0; i < 10000; i++) {
+      const qty = Math.floor(random() * 500) + 1;
+      const unitPrice = Math.round(random() * 100000 * 100) / 100;
+      const discountPct = Math.round(random() * 30 * 10) / 10;
+      const taxRate = random() > 0.3 ? 7.5 : random() > 0.5 ? 0 : 5;
+
+      const be = FinancialMathUtil.calculateLineItem({
+        quantity: qty,
+        unitPrice,
+        discountPercent: discountPct,
+        taxRate,
+      });
+
+      const fe = calcLine(qty, unitPrice, discountPct, taxRate);
+
+      assert.strictEqual(fe.gross, be.grossAmount.toNumber(), `Mismatch in gross at iteration ${i}`);
+      assert.strictEqual(fe.discount, be.discountAmount.toNumber(), `Mismatch in discount at iteration ${i}`);
+      assert.strictEqual(fe.taxable, be.taxableAmount.toNumber(), `Mismatch in taxable at iteration ${i}`);
+      assert.strictEqual(fe.tax, be.taxAmount.toNumber(), `Mismatch in tax at iteration ${i}`);
+      assert.strictEqual(fe.total, be.lineTotal.toNumber(), `Mismatch in total at iteration ${i}`);
+
+      if (i < 50) {
+        testLines.push({ quantity: qty, unitPrice, discountPercent: discountPct, taxRate });
+      }
+    }
+
+    // Also test calcTotals multi-line parity
+    const beTotals = FinancialMathUtil.calculateDocumentTotals(testLines);
+    const feTotals = calcTotals(testLines);
+    assert.strictEqual(feTotals.subtotal, beTotals.subtotal.toNumber());
+    assert.strictEqual(feTotals.totalDiscount, beTotals.discountAmount.toNumber());
+    assert.strictEqual(feTotals.totalTax, beTotals.taxAmount.toNumber());
+    assert.strictEqual(feTotals.grandTotal, beTotals.totalAmount.toNumber());
+  });
 });
+

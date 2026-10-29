@@ -38,8 +38,10 @@ export class LocalStorageService implements StorageAdapter, OnModuleInit {
       throw new Error(`Invalid storage path traversal for key: ${storageKey}`);
     }
 
-    const resolved = path.resolve(this.rootUploadDir, storageKey);
-    if (!resolved.startsWith(this.rootUploadDir)) {
+    const normalizedRoot = path.resolve(this.rootUploadDir);
+    const resolved = path.resolve(normalizedRoot, storageKey);
+    const rootWithSep = normalizedRoot.endsWith(path.sep) ? normalizedRoot : `${normalizedRoot}${path.sep}`;
+    if (!resolved.startsWith(rootWithSep) && resolved !== normalizedRoot) {
       throw new Error(`Invalid storage path traversal for key: ${storageKey}`);
     }
     return resolved;

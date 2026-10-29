@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber, Min, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, Min, Max, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class WaybillItemDto {
@@ -12,6 +12,7 @@ export class WaybillItemDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 4 })
   @Min(0.0001, { message: 'Quantity must be greater than zero' })
+  @Max(1000000000, { message: 'Quantity cannot exceed 1,000,000,000' })
   quantity!: number;
 
   @ApiProperty({ example: 'Bags', description: 'Unit of measurement' })
@@ -24,6 +25,7 @@ export class WaybillItemDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  @Max(1000000000, { message: 'Weight cannot exceed 1,000,000,000 kg' })
   weightKg?: number;
 
   @ApiPropertyOptional({ example: 100, description: 'Number of individual packages or units' })
@@ -31,6 +33,7 @@ export class WaybillItemDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
+  @Max(1000000000, { message: 'Package count cannot exceed 1,000,000,000' })
   packageCount?: number;
 
   @ApiPropertyOptional({ example: 'Shrink-wrapped Pallet', description: 'Package packaging type' })

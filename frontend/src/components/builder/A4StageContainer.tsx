@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ZoomIn, ZoomOut, Maximize2, Printer, Sparkles, Server, FileText, RefreshCw, AlertCircle } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Printer, Sparkles, Server, FileText, RefreshCw, AlertCircle, Download } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
+import { downloadDocumentPdf } from '../../lib/pdf-download';
 
 interface A4StageContainerProps {
   previewMode: 'LIVE' | 'SERVER';
@@ -20,6 +21,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isServerLoading, setIsServerLoading] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   // Fetch server preview when switching to SERVER mode if document has an ID
@@ -37,7 +39,10 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
           responseType: 'blob',
         });
         const url = URL.createObjectURL(res.data);
-        setPdfBlobUrl(url);
+        setPdfBlobUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return url;
+        });
       }
     } catch (err: any) {
       setServerError(
@@ -54,8 +59,40 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
     }
   }, [previewMode, documentId, serverPreviewType]);
 
+  React.useEffect(() => {
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [pdfBlobUrl]);
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!documentId) {
+      if (onSaveDraft) {
+        onSaveDraft();
+      } else {
+        alert('Please save the draft document first to download the PDF.');
+      }
+      return;
+    }
+
+    setIsDownloadingPdf(true);
+    try {
+      await downloadDocumentPdf({
+        documentId,
+        isPreview: previewMode === 'LIVE',
+      });
+    } catch (err: any) {
+      console.error('Failed to download PDF:', err);
+      alert('Unable to generate or download document PDF. Please check server logs.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   return (
@@ -146,8 +183,23 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
 
           <button
             type="button"
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition-all shadow-sm disabled:opacity-50 cursor-pointer"
+            title="📥 Download PDF to Device"
+          >
+            {isDownloadingPdf ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Download className="w-3.5 h-3.5" />
+            )}
+            <span className="hidden sm:inline">Download PDF</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition-all shadow-sm cursor-pointer"
             title="Print or Save as PDF"
           >
             <Printer className="w-3.5 h-3.5" />

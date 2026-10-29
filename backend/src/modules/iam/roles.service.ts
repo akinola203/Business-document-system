@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -64,12 +65,63 @@ export class RolesService {
     });
   }
 
+  private async assertCallerCanGrantPermissions(companyId: string, actorId: string, targetPermissionIds: string[]) {
+    const actorMembership = await this.prisma.companyUser.findUnique({
+      where: {
+        companyId_userId: {
+          companyId,
+          userId: actorId,
+        },
+      },
+      include: {
+        role: {
+          include: {
+            rolePermissions: true,
+          },
+        },
+      },
+    });
+
+    if (!actorMembership) {
+      throw new ForbiddenException('Actor does not belong to this company.');
+    }
+
+    const roleName = actorMembership.role.name.toLowerCase();
+    if (roleName === 'admin' || roleName === 'administrator' || roleName === 'owner') {
+      return;
+    }
+
+    let rolePermissions = actorMembership.role.rolePermissions;
+    if (!rolePermissions) {
+      rolePermissions = await this.prisma.rolePermission.findMany({
+        where: { roleId: actorMembership.roleId },
+      });
+    }
+
+    const actorPermissionIds = new Set(
+      (rolePermissions || []).map((rp: any) => rp.permissionId),
+    );
+
+    for (const permId of targetPermissionIds) {
+      if (!actorPermissionIds.has(permId)) {
+        throw new ForbiddenException(
+          'Privilege Escalation Guard: You cannot grant permissions you do not hold.',
+        );
+      }
+    }
+  }
+
   /**
    * Creates a custom role scoped strictly to the calling company.
    */
   async createRole(companyId: string, dto: CreateRoleDto, actorId: string) {
     createRoleSchema.parse(dto);
     const trimmedName = dto.name.trim();
+
+    const reservedNames = ['admin', 'administrator', 'owner'];
+    if (reservedNames.includes(trimmedName.toLowerCase())) {
+      throw new BadRequestException(`Role name "${trimmedName}" is reserved and cannot be created.`);
+    }
 
     const existingRole = await this.prisma.role.findFirst({
       where: {
@@ -81,6 +133,8 @@ export class RolesService {
     if (existingRole) {
       throw new ConflictException(`Role with name "${trimmedName}" already exists in your company.`);
     }
+
+    await this.assertCallerCanGrantPermissions(companyId, actorId, dto.permissionIds);
 
     // Verify all requested permission IDs exist
     const permissions = await this.prisma.permission.findMany({
@@ -149,7 +203,7 @@ export class RolesService {
     const role = await this.prisma.role.findFirst({
       where: {
         id: roleId,
-        OR: [{ companyId }, { companyId: null }],
+        companyId,
       },
       include: {
         rolePermissions: {
@@ -161,6 +215,8 @@ export class RolesService {
     if (!role) {
       throw new NotFoundException(`Role with ID "${roleId}" not found.`);
     }
+
+    await this.assertCallerCanGrantPermissions(companyId, actorId, dto.permissionIds);
 
     // Load full permission details
     const targetPermissions = await this.prisma.permission.findMany({

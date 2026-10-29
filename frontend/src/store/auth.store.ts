@@ -34,7 +34,7 @@ interface AuthState {
   isLoading: boolean;
   isAdmin: boolean;
   isManager: boolean;
-  login: (tokens: { accessToken: string; refreshToken: string }, user: AuthUser) => void;
+  login: (tokens: { accessToken: string; refreshToken?: string }, user: AuthUser) => void;
   logout: () => void;
   updateUser: (user: Partial<AuthUser>) => void;
   hasPermission: (permission: string) => boolean;
@@ -46,7 +46,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
   // Initialize state from localStorage
   const savedUser = localStorage.getItem('aoa_user');
   const savedAccess = localStorage.getItem('aoa_access_token');
-  const savedRefresh = localStorage.getItem('aoa_refresh_token');
+  // Purge any stale refresh token stored in localStorage
+  localStorage.removeItem('aoa_refresh_token');
 
   let initialUser: AuthUser | null = null;
   if (savedUser) {
@@ -60,7 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
   return {
     user: initialUser,
     accessToken: savedAccess,
-    refreshToken: savedRefresh,
+    refreshToken: null,
     isAuthenticated: !!savedAccess && !!initialUser,
     isLoading: false,
     isAdmin: checkIsAdmin(initialUser),
@@ -68,13 +69,13 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     login: (tokens, user) => {
       localStorage.setItem('aoa_access_token', tokens.accessToken);
-      localStorage.setItem('aoa_refresh_token', tokens.refreshToken);
+      localStorage.removeItem('aoa_refresh_token');
       localStorage.setItem('aoa_user', JSON.stringify(user));
 
       set({
         user,
         accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
+        refreshToken: tokens.refreshToken || null,
         isAuthenticated: true,
         isAdmin: checkIsAdmin(user),
         isManager: checkIsManager(user),
@@ -116,12 +117,12 @@ export const useAuthStore = create<AuthState>((set, get) => {
       if (checkIsAdmin(user)) return true;
 
       const perms = user.permissions || [];
-      if (perms.includes('*:*')) return true;
+      if (perms.includes('*:*') || perms.includes('*')) return true;
       if (perms.includes(permission)) return true;
 
-      // Handle domain wildcards e.g. "invoice:*"
+      // Handle domain wildcards e.g. "invoice:*" or "invoice:manage"
       const [domain] = permission.split(':');
-      if (domain && perms.includes(`${domain}:*`)) return true;
+      if (domain && (perms.includes(`${domain}:*`) || perms.includes(`${domain}:manage`))) return true;
 
       return false;
     },

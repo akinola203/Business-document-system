@@ -11,6 +11,8 @@ import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
@@ -56,7 +58,7 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_ACCESS_SECRET', 'dev-jwt-access-secret-32-chars-minimum-key-aoa77-doc-app'),
+      secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
       expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
     });
 
@@ -93,6 +95,7 @@ export class AuthService {
       where: { email: loginDto.email.toLowerCase().trim() },
       include: {
         companyUsers: {
+          orderBy: { createdAt: 'asc' },
           include: {
             role: {
               include: {
@@ -110,6 +113,11 @@ export class AuthService {
     });
 
     if (!user) {
+      // Timing attack mitigation: run dummy verify so response time does not reveal email existence
+      await argon2.verify(
+        '$argon2id$v=19$m=65536,t=3,p=4$dHVtbXlzYWx0MTIzNDU2Nw$dHVtbXloYXNoMTIzNDU2Nzg5MDEyMzQ1Njc4OTA=',
+        loginDto.password,
+      ).catch(() => false);
       throw new UnauthorizedException('Invalid email or password.');
     }
 
@@ -125,21 +133,25 @@ export class AuthService {
     const isPasswordValid = await argon2.verify(user.passwordHash, loginDto.password);
 
     if (!isPasswordValid) {
-      const failedAttempts = user.failedLoginAttempts + 1;
-      let lockoutUntil: Date | null = null;
-
-      if (failedAttempts >= 5) {
-        lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes lockout
-        this.logger.warn(`User ${user.email} locked out until ${lockoutUntil.toISOString()} after ${failedAttempts} failed attempts.`);
-      }
-
-      await this.prisma.user.update({
+      const updatedUser = await this.prisma.user.update({
         where: { id: user.id },
         data: {
-          failedLoginAttempts: failedAttempts,
-          lockoutUntil,
+          failedLoginAttempts: { increment: 1 },
         },
+        select: { id: true, email: true, failedLoginAttempts: true },
       });
+
+      if (updatedUser.failedLoginAttempts >= 5) {
+        const lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes lockout
+        this.logger.warn(`User ${user.email} locked out until ${lockoutUntil.toISOString()} after 5 failed attempts.`);
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            lockoutUntil,
+            failedLoginAttempts: 0,
+          },
+        });
+      }
 
       throw new UnauthorizedException('Invalid email or password.');
     }
@@ -210,6 +222,7 @@ export class AuthService {
         user: {
           include: {
             companyUsers: {
+              orderBy: { createdAt: 'asc' },
               include: {
                 role: {
                   include: {
@@ -231,29 +244,42 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired refresh token.');
     }
 
-    // Reuse detection: If token was already revoked, someone is attempting replay!
-    // Revoke the ENTIRE token family immediately.
-    if (existingToken.isRevoked) {
-      this.logger.error(
-        `SECURITY ALERT: Refresh token reuse detected for user ${existingToken.userId} on family ${existingToken.familyId}. Revoking family.`,
-      );
-      await this.prisma.refreshToken.updateMany({
-        where: { familyId: existingToken.familyId },
-        data: { isRevoked: true },
-      });
-      throw new UnauthorizedException('Security violation: token reuse detected. All active sessions invalidated.');
+    // Atomic claim of the refresh token
+    const claim = await this.prisma.refreshToken.updateMany({
+      where: { id: existingToken.id, isRevoked: false },
+      data: { isRevoked: true },
+    });
+
+    if (claim.count === 0) {
+      // Token was already revoked. Only treat as reuse (revoke the family) if revoked > ~10s ago
+      const tokenRecord = existingToken as any;
+      const revokedTimestamp = tokenRecord.updatedAt || tokenRecord.revokedAt || tokenRecord.createdAt;
+      const isOldRevocation =
+        revokedTimestamp &&
+        Date.now() - new Date(revokedTimestamp).getTime() > 10000;
+
+      if (isOldRevocation) {
+        this.logger.error(
+          `SECURITY ALERT: Refresh token reuse detected for user ${existingToken.userId} on family ${existingToken.familyId}. Revoking family.`,
+        );
+        await this.prisma.refreshToken.updateMany({
+          where: { familyId: existingToken.familyId },
+          data: { isRevoked: true },
+        });
+        throw new UnauthorizedException(
+          'Security violation: token reuse detected. All active sessions invalidated.',
+        );
+      } else {
+        throw new UnauthorizedException(
+          'Refresh token was recently rotated. Please retry with the latest token.',
+        );
+      }
     }
 
     // Check expiration
     if (existingToken.expiresAt < new Date()) {
       throw new UnauthorizedException('Refresh token has expired. Please login again.');
     }
-
-    // Revoke current refresh token (rotation)
-    await this.prisma.refreshToken.update({
-      where: { id: existingToken.id },
-      data: { isRevoked: true },
-    });
 
     const user = existingToken.user;
     if (!user || !user.isActive) {
@@ -294,5 +320,116 @@ export class AuthService {
       });
     }
     return { loggedOut: true };
+  }
+
+  /**
+   * Generates a 20-minute secure crypto reset token, persists it on the user record,
+   * and simulates/dispatches a password reset email link.
+   */
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const email = dto.email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    // Anti-enumeration: Return generic success response even if account does not exist
+    if (!user || !user.isActive) {
+      this.logger.log(`Password reset requested for non-existent or inactive email: ${email}`);
+      return {
+        message: 'If an account exists with this email address, a password reset link has been sent.',
+      };
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // 20 minutes expiration
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: resetToken,
+        passwordResetExpiresAt: expiresAt,
+      },
+    });
+
+    const appUrl =
+      this.configService.get<string>('APP_URL') ||
+      process.env.FRONTEND_URL ||
+      'http://localhost:5173';
+    const cleanAppUrl = appUrl.replace(/\/+$/, '');
+    const resetLink = `${cleanAppUrl}/auth/reset-password?token=${resetToken}`;
+
+    this.logger.log(
+      `\n======================================================\n` +
+      `[PASSWORD RESET EMAIL DISPATCH SIMULATION]\n` +
+      `To: ${user.email} (${user.firstName} ${user.lastName})\n` +
+      `Reset URL: ${resetLink}\n` +
+      `Expires At: ${expiresAt.toISOString()} (20 minutes)\n` +
+      `======================================================\n`,
+    );
+
+    return {
+      message: 'If an account exists with this email address, a password reset link has been sent.',
+      ...(process.env.NODE_ENV !== 'production' ? { debugResetLink: resetLink, token: resetToken } : {}),
+    };
+  }
+
+  /**
+   * Verifies the crypto reset token is valid and unexpired, hashes the new password with Argon2id,
+   * clears the token, and resets any failed lockout state.
+   */
+  async resetPassword(dto: ResetPasswordDto) {
+    const rawToken = dto.token?.trim();
+    if (!rawToken) {
+      throw new BadRequestException('Invalid or missing password reset token.');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: rawToken,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired password reset token.');
+    }
+
+    if (!user.passwordResetExpiresAt || user.passwordResetExpiresAt < new Date()) {
+      // Invalidate expired token
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordResetToken: null,
+          passwordResetExpiresAt: null,
+        },
+      });
+      throw new BadRequestException('Password reset token has expired. Please request a new link.');
+    }
+
+    const passwordHash = await argon2.hash(dto.newPassword, {
+      type: argon2.argon2id,
+    });
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpiresAt: null,
+        failedLoginAttempts: 0,
+        lockoutUntil: null,
+      },
+    });
+
+    // Invalidate existing refresh tokens for security
+    await this.prisma.refreshToken.updateMany({
+      where: { userId: user.id },
+      data: { isRevoked: true },
+    });
+
+    this.logger.log(`Password reset successfully completed for user: ${user.email} (${user.id})`);
+
+    return {
+      message: 'Password has been successfully reset. You may now log in with your new password.',
+    };
   }
 }

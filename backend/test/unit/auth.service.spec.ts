@@ -31,6 +31,10 @@ describe('AuthService', () => {
 
     configService = {
       get: jest.fn((key: string, defaultVal: any) => defaultVal),
+      getOrThrow: jest.fn((key: string) => {
+        if (key === 'JWT_ACCESS_SECRET') return 'test-jwt-access-secret-32-chars-minimum-key';
+        return 'mock-val';
+      }),
     };
 
     service = new AuthService(

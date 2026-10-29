@@ -120,7 +120,7 @@ test('Files & Secure Storage Unit Tests', async (t) => {
   });
 
   await t.test('5. Sanitizes path traversal attempts in originalFilename', async () => {
-    const fileContent = Buffer.from('Legitimate PDF binary stream');
+    const fileContent = Buffer.from('%PDF-1.4 Legitimate PDF binary stream');
     const mockFile: any = {
       buffer: fileContent,
       originalname: '../../../../etc/shadow.pdf',
@@ -217,6 +217,21 @@ test('Files & Secure Storage Unit Tests', async (t) => {
         await localStorageService.putFile('../outside.txt', Buffer.from('hack'), 'text/plain');
       },
       /Invalid storage path traversal/,
+    );
+  });
+
+  await t.test('10. Rejects file when binary signature does not match declared MIME type', async () => {
+    const fakePdfFile: any = {
+      buffer: Buffer.from('plain text pretending to be pdf'),
+      originalname: 'fake.pdf',
+      mimetype: 'application/pdf',
+    };
+
+    await assert.rejects(
+      async () => {
+        await filesService.uploadFile('comp-1', fakePdfFile, {}, 'user-1');
+      },
+      /File binary signature \(magic bytes\) does not match reported MIME type/,
     );
   });
 

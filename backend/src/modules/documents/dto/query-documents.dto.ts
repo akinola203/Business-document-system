@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum, IsNumber, IsBoolean, Min, Max, IsDateString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { DocumentType, DocumentStatus } from '@prisma/client';
 
 export class QueryDocumentsDto {
@@ -61,6 +61,11 @@ export class QueryDocumentsDto {
 
   @ApiPropertyOptional({ default: false, description: 'Include or filter archived documents' })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsBoolean()
   isArchived?: boolean = false;
 

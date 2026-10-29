@@ -9,13 +9,30 @@ import {
   IsBoolean,
   IsDateString,
   Length,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { z } from 'zod';
+import { Type, Transform } from 'class-transformer';
 import { InvoiceItemDto } from './invoice-item.dto';
+
+@ValidatorConstraint({ name: 'isDueDateAfterOrEqualIssueDate', async: false })
+export class IsDueDateAfterOrEqualIssueDateConstraint implements ValidatorConstraintInterface {
+  validate(dueDate: any, args: ValidationArguments) {
+    const obj = args.object as any;
+    if (!dueDate || !obj.issueDate) return true;
+    return new Date(dueDate).getTime() >= new Date(obj.issueDate).getTime();
+  }
+
+  defaultMessage() {
+    return 'dueDate cannot be earlier than issueDate';
+  }
+}
 
 export class CreateInvoiceDto {
   @ApiProperty({ example: 'Commercial Supply of Portland Cement - Order #4501', description: 'Document header title' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsNotEmpty()
   @IsString()
   title!: string;
@@ -43,6 +60,7 @@ export class CreateInvoiceDto {
   @ApiPropertyOptional({ example: '2026-11-23', description: 'Invoice payment due date' })
   @IsOptional()
   @IsDateString()
+  @Validate(IsDueDateAfterOrEqualIssueDateConstraint)
   dueDate?: string;
 
   @ApiPropertyOptional({ example: 'NGN', default: 'NGN', description: 'Currency code' })
@@ -81,6 +99,11 @@ export class CreateInvoiceDto {
   @IsString()
   templateVersionId?: string;
 
+  @ApiPropertyOptional({ description: 'Selected Client Address ID for billing override' })
+  @IsOptional()
+  @IsString()
+  selectedAddressId?: string;
+
   @ApiProperty({ type: [InvoiceItemDto], description: 'List of invoice line items' })
   @IsArray()
   @ArrayMinSize(1, { message: 'An invoice must contain at least one line item' })
@@ -88,20 +111,3 @@ export class CreateInvoiceDto {
   @Type(() => InvoiceItemDto)
   items!: InvoiceItemDto[];
 }
-
-export const createInvoiceSchema = z.object({
-  title: z.string().min(1),
-  clientId: z.string().min(1),
-  branchId: z.string().optional(),
-  departmentId: z.string().optional(),
-  issueDate: z.string().optional(),
-  dueDate: z.string().optional(),
-  currency: z.string().optional(),
-  paymentTerms: z.string().optional(),
-  poNumber: z.string().optional(),
-  notes: z.string().optional(),
-  bankDetailsVisible: z.boolean().optional(),
-  templateId: z.string().optional(),
-  templateVersionId: z.string().optional(),
-  items: z.array(z.any()),
-}).passthrough();

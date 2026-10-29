@@ -36,6 +36,15 @@ test('WaybillsService Unit Tests', async (t) => {
     client: {
       findFirst: async () => mockClient,
     },
+    branch: {
+      findFirst: async () => ({ id: 'branch-1' }),
+    },
+    department: {
+      findFirst: async () => ({ id: 'dept-1' }),
+    },
+    template: {
+      findFirst: async () => ({ id: 'tmpl-1' }),
+    },
     document: {
       findFirst: async ({ where }: any) => {
         const doc = documentsDb.find((d) => d.id === where.id && d.companyId === where.companyId);

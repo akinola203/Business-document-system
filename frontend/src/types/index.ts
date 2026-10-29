@@ -144,6 +144,8 @@ export interface ClientAddress {
   type: AddressType;
   line1: string;
   line2?: string | null;
+  addressLine1?: string;
+  addressLine2?: string | null;
   city: string;
   state: string;
   country: string;
@@ -195,6 +197,7 @@ export interface InvoiceSpecialization {
   poNumber?: string | null;
   paymentTerms?: string | null;
   dueDate?: string | null;
+  bankDetailsVisible?: boolean | null;
   notes?: string | null;
   items: InvoiceItem[];
   payments?: PaymentRecord[];
@@ -277,6 +280,7 @@ export interface DocumentRecord {
   title: string;
   status: DocumentStatus;
   issueDate?: string | null;
+  dueDate?: string | null;
   currency: string;
   subtotal?: number | string;
   subtotalAmount?: number | string;
@@ -286,7 +290,8 @@ export interface DocumentRecord {
   balanceDue: number | string;
   paymentStatus?: PaymentStatus;
   isOverdue?: boolean;
-  version: number; // For Optimistic Concurrency Control (OCC)
+  versionCounter?: number;
+  version?: number; // Legacy alias for Optimistic Concurrency Control (OCC)
   isArchived: boolean;
   clientId?: string | null;
   client?: Client | null;
@@ -295,6 +300,8 @@ export interface DocumentRecord {
   createdById: string;
   templateId?: string | null;
   bankDetailsVisible?: boolean | null;
+  selectedAddressId?: string | null;
+  metadata?: Record<string, any> | null;
   createdAt: string;
   updatedAt: string;
 

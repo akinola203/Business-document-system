@@ -10,6 +10,8 @@ import { NumberingService } from '../numbering/numbering.service';
 import { CreateLetterDto } from './dto/create-letter.dto';
 import { UpdateLetterDto } from './dto/update-letter.dto';
 import { DocumentStatus, DocumentType, Prisma } from '@prisma/client';
+import { sanitizeRichHtml } from '../templates/renderers/letter-html.renderer';
+import { validateTenantScope } from '../../common/utils/tenant-validation.util';
 
 @Injectable()
 export class LettersService {
@@ -24,6 +26,13 @@ export class LettersService {
    * Creates a new business letter / letterhead in DRAFT status with sequential reference code.
    */
   async createDraft(companyId: string, dto: CreateLetterDto, actorId: string) {
+    await validateTenantScope(this.prisma, companyId, {
+      clientId: dto.clientId,
+      branchId: dto.branchId,
+      departmentId: dto.departmentId,
+      templateId: dto.templateId,
+    });
+
     const created = await this.prisma.$transaction(async (tx) => {
       const documentNumber = await this.numberingService.getNextDocumentNumber(
         tx,
@@ -57,7 +66,7 @@ export class LettersService {
           recipientOrganization: dto.recipientOrganization?.trim(),
           recipientAddress: dto.recipientAddress?.trim(),
           subject: dto.subject.trim(),
-          bodyHtml: dto.bodyHtml.trim(),
+          bodyHtml: sanitizeRichHtml(dto.bodyHtml.trim()),
           bodyText: dto.bodyText.trim(),
           signatoryName: dto.signatoryName.trim(),
           signatoryTitle: dto.signatoryTitle?.trim(),
@@ -100,11 +109,19 @@ export class LettersService {
       throw new NotFoundException(`Letter with ID "${id}" not found.`);
     }
 
-    if (document.status !== DocumentStatus.DRAFT) {
+    if (
+      document.status !== DocumentStatus.DRAFT &&
+      document.status !== DocumentStatus.REJECTED
+    ) {
       throw new BadRequestException(
-        `Only DRAFT letters can be edited. Current status is ${document.status}.`,
+        `Only DRAFT or REJECTED letters can be edited. Current status is ${document.status}.`,
       );
     }
+
+    // Validate foreign keys belong to caller company if updated
+    await validateTenantScope(this.prisma, companyId, {
+      templateId: dto.templateId,
+    });
 
     // Optimistic Concurrency Control Check
     if (dto.expectedVersion !== undefined && document.versionCounter !== dto.expectedVersion) {
@@ -114,12 +131,30 @@ export class LettersService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      const claimResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: { in: [DocumentStatus.DRAFT, DocumentStatus.REJECTED] },
+          ...(dto.expectedVersion !== undefined ? { versionCounter: dto.expectedVersion } : {}),
+        },
+        data: {
+          versionCounter: { increment: 1 },
+          status: DocumentStatus.DRAFT,
+        },
+      });
+
+      if (claimResult.count !== 1) {
+        throw new ConflictException(
+          'Letter was concurrently modified or is not in an editable status (DRAFT or REJECTED).',
+        );
+      }
+
       await tx.document.update({
         where: { id: document.id },
         data: {
           title: dto.title !== undefined ? dto.title.trim() : undefined,
           issueDate: dto.letterDate ? new Date(dto.letterDate) : undefined,
-          versionCounter: { increment: 1 },
           templateId: dto.templateId,
           templateVersionId: dto.templateVersionId,
         },
@@ -134,7 +169,7 @@ export class LettersService {
           recipientOrganization: dto.recipientOrganization !== undefined ? dto.recipientOrganization?.trim() : undefined,
           recipientAddress: dto.recipientAddress !== undefined ? dto.recipientAddress?.trim() : undefined,
           subject: dto.subject !== undefined ? dto.subject.trim() : undefined,
-          bodyHtml: dto.bodyHtml !== undefined ? dto.bodyHtml.trim() : undefined,
+          bodyHtml: dto.bodyHtml !== undefined ? sanitizeRichHtml(dto.bodyHtml.trim()) : undefined,
           bodyText: dto.bodyText !== undefined ? dto.bodyText.trim() : undefined,
           signatoryName: dto.signatoryName !== undefined ? dto.signatoryName.trim() : undefined,
           signatoryTitle: dto.signatoryTitle !== undefined ? dto.signatoryTitle?.trim() : undefined,

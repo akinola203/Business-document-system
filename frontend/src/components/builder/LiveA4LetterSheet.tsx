@@ -53,9 +53,11 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
             <span>&bull;</span>
             <span>FIRS TIN: {company?.tin || '24891044-0001'}</span>
           </div>
-          <p className="text-[11px] text-slate-600 max-w-lg mx-auto mt-1 leading-snug">
-            {company?.address || '1 Alade Ibukun Close, Ayo Irewolede CDA, Ewupe, Ota, Ogun State, Nigeria'}
-          </p>
+          {company?.address && (
+            <p className="text-[11px] text-slate-600 max-w-lg mx-auto mt-1 leading-snug">
+              {company.address}
+            </p>
+          )}
           <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500 mt-1">
             <span>Email: {company?.email || 'contact@aoa77.com'}</span>
             <span>Tel: {company?.phone || '+234 803 000 0001'}</span>

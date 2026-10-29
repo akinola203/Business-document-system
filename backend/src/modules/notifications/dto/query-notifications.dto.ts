@@ -20,7 +20,11 @@ export class QueryNotificationsDto {
 
   @ApiPropertyOptional({ description: 'Filter by unread status (true/false)' })
   @IsOptional()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsBoolean()
   unreadOnly?: boolean;
 }

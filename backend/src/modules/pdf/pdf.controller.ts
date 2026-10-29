@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Param,
   Query,
   Res,
@@ -29,19 +30,47 @@ export class PdfController {
   async getDocumentPdf(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
+    @Query('download') download: string | undefined,
     @Res() res: Response,
+  ) {
+    return this.serveDocumentPdf(user, id, undefined, download, res);
+  }
+
+  @Post(':id/pdf')
+  @ApiOperation({ summary: 'Generate and return authoritative PDF for the document via POST' })
+  @ApiResponse({ status: 200, description: 'Binary PDF stream.' })
+  @ApiResponse({ status: 404, description: 'Document not found.' })
+  async postDocumentPdf(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Query('download') download: string | undefined,
+    @Res() res: Response,
+  ) {
+    return this.serveDocumentPdf(user, id, undefined, download, res);
+  }
+
+  private async serveDocumentPdf(
+    user: AuthenticatedUser,
+    id: string,
+    versionNumber: number | undefined,
+    download: string | undefined,
+    res: Response,
   ) {
     const result = await this.pdfService.getOrGenerateDocumentPdf(
       user.companyId,
       id,
-      undefined,
+      versionNumber,
       user.id,
     );
+
+    const filename = result.filename || `document_${id}.pdf`;
+    const isAttachment = download !== 'false';
+    const disposition = isAttachment ? 'attachment' : 'inline';
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `inline; filename="${encodeURIComponent(result.filename)}"`,
+      `${disposition}; filename="${filename}"`,
     );
 
     if (result.buffer) {

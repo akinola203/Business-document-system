@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +11,6 @@ import { A4StageContainer } from '../../../components/builder/A4StageContainer';
 import { LiveA4WaybillSheet } from '../../../components/builder/LiveA4WaybillSheet';
 import { CatalogPickerModal } from '../../../components/supplies/CatalogPickerModal';
 import { ErrorBoundary } from '../../../components/common/ErrorBoundary';
-import { DEMO_SUPPLIES } from '../../../lib/mock-data';
 import { extractArray } from '../../../lib/utils';
 import {
   Truck,
@@ -89,25 +88,22 @@ export const WaybillBuilderPage: React.FC = () => {
     queryFn: async () => {
       if (!id) throw new Error('No document ID');
       const res = await apiClient.get(`/documents/${id}`);
-      return res.data;
+      return res.data?.data ?? res.data;
     },
     enabled: isEdit,
+    refetchOnWindowFocus: false,
   });
 
   // 4. Fetch Supplies Catalog for Quick-Add
   const { data: suppliesData } = useQuery<any>({
     queryKey: ['supplies-items'],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get('/supplies/items', { params: { limit: 100 } });
-        return res.data;
-      } catch {
-        return { items: DEMO_SUPPLIES };
-      }
+      const res = await apiClient.get('/supplies/items', { params: { limit: 100 } });
+      return res.data;
     },
   });
   const catalogSupplies: SupplyItem[] = useMemo(() => {
-    return extractArray<SupplyItem>(suppliesData, DEMO_SUPPLIES);
+    return extractArray<SupplyItem>(suppliesData);
   }, [suppliesData]);
 
   // 5. Fetch Templates for Waybills
@@ -143,8 +139,7 @@ export const WaybillBuilderPage: React.FC = () => {
       title: 'Consignment Dispatch & Cargo Delivery Note',
       clientId: '',
       shipmentDate: todayStr,
-      originAddress:
-        company?.address || '1 Alade Ibukun Close, Ayo Irewolede CDA, Ewupe, Ota, Ogun State',
+      originAddress: company?.address || '',
       destinationAddress: '',
       vehicleNumber: '',
       driverName: '',
@@ -188,9 +183,15 @@ export const WaybillBuilderPage: React.FC = () => {
     }
   };
 
+  const lastLoadedVersionRef = useRef<number | null>(null);
+
   // Populate form if editing
   useEffect(() => {
     if (existingDoc && isEdit) {
+      if (lastLoadedVersionRef.current === existingDoc.versionCounter && isDirty) {
+        return;
+      }
+      lastLoadedVersionRef.current = existingDoc.versionCounter ?? null;
       const wb = existingDoc.waybill;
       reset({
         title: existingDoc.title,
@@ -222,7 +223,7 @@ export const WaybillBuilderPage: React.FC = () => {
             ],
       });
     }
-  }, [existingDoc, isEdit, reset, company, todayStr]);
+  }, [existingDoc, isEdit, reset, company, todayStr, isDirty]);
 
   // Set default origin address once company loads in create mode
   useEffect(() => {
@@ -287,7 +288,7 @@ export const WaybillBuilderPage: React.FC = () => {
           packageType: it.packageType || undefined,
           weightKg: it.weightKg ? Number(it.weightKg) : undefined,
         })),
-        ...(isEdit && existingDoc ? { expectedVersion: existingDoc.version } : {}),
+        ...(isEdit && existingDoc ? { expectedVersion: existingDoc.versionCounter } : {}),
       };
 
       if (isEdit && id) {
@@ -302,6 +303,11 @@ export const WaybillBuilderPage: React.FC = () => {
       const realDoc = savedDoc?.data || savedDoc;
       queryClient.invalidateQueries({ queryKey: ['waybills'] });
       queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ['document', id] });
+      } else if (realDoc?.id) {
+        queryClient.invalidateQueries({ queryKey: ['document', realDoc.id] });
+      }
       if (!isEdit && realDoc?.id) {
         navigate(`/documents/waybills/${realDoc.id}/edit`, { replace: true });
       }
@@ -368,7 +374,7 @@ export const WaybillBuilderPage: React.FC = () => {
         documentTitle={formValues?.title || 'New Waybill'}
         documentNumber={existingDoc?.documentNumber}
         isEdit={isEdit}
-        version={existingDoc?.version || 1}
+        version={existingDoc?.versionCounter || existingDoc?.version || 1}
         status={existingDoc?.status || 'DRAFT'}
         backPath="/documents/waybills"
         previewMode={previewMode}

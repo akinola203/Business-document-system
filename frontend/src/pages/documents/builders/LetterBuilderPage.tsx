@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
 import { Client, Company, DocumentRecord } from '../../../types';
-import { DEMO_CLIENTS } from '../../../lib/mock-data';
 import { useAuthStore } from '../../../store/auth.store';
 import { StudioHeaderBar } from '../../../components/builder/StudioHeaderBar';
 import { A4StageContainer } from '../../../components/builder/A4StageContainer';
@@ -95,9 +94,10 @@ export const LetterBuilderPage: React.FC = () => {
     queryFn: async () => {
       if (!id) throw new Error('No document ID');
       const res = await apiClient.get(`/documents/${id}`);
-      return res.data;
+      return res.data?.data ?? res.data;
     },
     enabled: isEdit,
+    refetchOnWindowFocus: false,
   });
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -129,9 +129,15 @@ export const LetterBuilderPage: React.FC = () => {
     },
   });
 
+  const lastLoadedVersionRef = useRef<number | null>(null);
+
   // Populate form if editing
   useEffect(() => {
     if (existingDoc && isEdit) {
+      if (lastLoadedVersionRef.current === existingDoc.versionCounter && isDirty) {
+        return;
+      }
+      lastLoadedVersionRef.current = existingDoc.versionCounter ?? null;
       const letData = existingDoc.letter;
       reset({
         title: existingDoc.title,
@@ -149,7 +155,7 @@ export const LetterBuilderPage: React.FC = () => {
         templateId: existingDoc.templateId || undefined,
       });
     }
-  }, [existingDoc, isEdit, reset, todayStr, user]);
+  }, [existingDoc, isEdit, reset, todayStr, user, isDirty]);
 
   const formValues = watch();
 
@@ -202,7 +208,7 @@ export const LetterBuilderPage: React.FC = () => {
         signatoryTitle: data.signatoryTitle || undefined,
         signatoryDepartment: data.signatoryDepartment || undefined,
         templateId: data.templateId || undefined,
-        ...(isEdit && existingDoc ? { expectedVersion: existingDoc.version } : {}),
+        ...(isEdit && existingDoc ? { expectedVersion: existingDoc.versionCounter } : {}),
       };
 
       if (isEdit && id) {
@@ -217,6 +223,11 @@ export const LetterBuilderPage: React.FC = () => {
       const realDoc = savedDoc?.data || savedDoc;
       queryClient.invalidateQueries({ queryKey: ['letters'] });
       queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ['document', id] });
+      } else if (realDoc?.id) {
+        queryClient.invalidateQueries({ queryKey: ['document', realDoc.id] });
+      }
       if (!isEdit && realDoc?.id) {
         navigate(`/documents/letters/${realDoc.id}/edit`, { replace: true });
       }
@@ -283,7 +294,7 @@ export const LetterBuilderPage: React.FC = () => {
         documentTitle={formValues?.title || 'New Letter'}
         documentNumber={existingDoc?.documentNumber}
         isEdit={isEdit}
-        version={existingDoc?.version || 1}
+        version={existingDoc?.versionCounter || existingDoc?.version || 1}
         status={existingDoc?.status || 'DRAFT'}
         backPath="/documents/letters"
         previewMode={previewMode}

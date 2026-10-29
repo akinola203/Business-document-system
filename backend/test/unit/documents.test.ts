@@ -1,8 +1,18 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
 import { BadRequestException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { DocumentsService } from '../../src/modules/documents/documents.service';
 import { DocumentStatus, DocumentType } from '@prisma/client';
+import { QueryDocumentsDto } from '../../src/modules/documents/dto/query-documents.dto';
+import { QueryPaymentsDto } from '../../src/modules/payments/dto/query-payments.dto';
+import { QueryNotificationsDto } from '../../src/modules/notifications/dto/query-notifications.dto';
+import { QuerySupplyItemsDto } from '../../src/modules/supplies/dto/query-supply-items.dto';
+import {
+  hasDocumentPermission,
+  assertDocumentPermission,
+} from '../../src/modules/documents/utils/document-permissions.util';
+import { ForbiddenException } from '@nestjs/common';
 
 test('DocumentsService Unit Tests', async (t) => {
   let documentsDb: any[] = [];
@@ -42,6 +52,25 @@ test('DocumentsService Unit Tests', async (t) => {
         const idx = documentsDb.findIndex((d) => d.id === where.id);
         documentsDb[idx] = { ...documentsDb[idx], ...data };
         return documentsDb[idx];
+      },
+      updateMany: async ({ where, data }: any) => {
+        let count = 0;
+        documentsDb = documentsDb.map((d) => {
+          const matchId = !where.id || d.id === where.id;
+          const matchCompany = !where.companyId || d.companyId === where.companyId;
+          const matchStatus = !where.status || (where.status.in ? where.status.in.includes(d.status) : d.status === where.status);
+          const matchVersion = where.versionCounter === undefined || d.versionCounter === where.versionCounter;
+          if (matchId && matchCompany && matchStatus && matchVersion) {
+            count++;
+            const updated = { ...d, ...data };
+            if (data.versionCounter && typeof data.versionCounter === 'object' && 'increment' in data.versionCounter) {
+              updated.versionCounter = (d.versionCounter || 0) + data.versionCounter.increment;
+            }
+            return updated;
+          }
+          return d;
+        });
+        return { count };
       },
     },
     invoice: {
@@ -232,5 +261,62 @@ test('DocumentsService Unit Tests', async (t) => {
     const issued = await service.issue('comp-1', 'doc-let-approved', {}, 'usr-admin-1');
     assert.equal(issued.status, DocumentStatus.ISSUED);
     assert.equal(versionsDb.length, 3);
+  });
+
+  await t.test('transforms "false" and "true" strings properly to boolean primitives in query DTOs', async () => {
+    const docQueryFalse = plainToInstance(QueryDocumentsDto, { isArchived: 'false' });
+    assert.strictEqual(docQueryFalse.isArchived, false);
+    const docQueryTrue = plainToInstance(QueryDocumentsDto, { isArchived: 'true' });
+    assert.strictEqual(docQueryTrue.isArchived, true);
+
+    const payQueryFalse = plainToInstance(QueryPaymentsDto, { includeReversed: 'false' });
+    assert.strictEqual(payQueryFalse.includeReversed, false);
+    const payQueryTrue = plainToInstance(QueryPaymentsDto, { includeReversed: 'true' });
+    assert.strictEqual(payQueryTrue.includeReversed, true);
+
+    const notifQueryFalse = plainToInstance(QueryNotificationsDto, { unreadOnly: 'false' });
+    assert.strictEqual(notifQueryFalse.unreadOnly, false);
+    const notifQueryTrue = plainToInstance(QueryNotificationsDto, { unreadOnly: 'true' });
+    assert.strictEqual(notifQueryTrue.unreadOnly, true);
+
+    const supplyQueryFalse = plainToInstance(QuerySupplyItemsDto, { lowStockOnly: 'false' });
+    assert.strictEqual(supplyQueryFalse.lowStockOnly, false);
+    const supplyQueryTrue = plainToInstance(QuerySupplyItemsDto, { lowStockOnly: 'true' });
+    assert.strictEqual(supplyQueryTrue.lowStockOnly, true);
+  });
+
+  await t.test('hasDocumentPermission honors <domain>:manage and * wildcards', async () => {
+    const managerUser: any = {
+      id: 'u-1',
+      role: 'Staff',
+      permissions: ['invoice:manage'],
+    };
+
+    assert.strictEqual(hasDocumentPermission(managerUser, DocumentType.INVOICE, 'view'), true);
+    assert.strictEqual(hasDocumentPermission(managerUser, DocumentType.INVOICE, 'approve'), true);
+    assert.strictEqual(hasDocumentPermission(managerUser, DocumentType.INVOICE, 'cancel'), true);
+    assert.strictEqual(hasDocumentPermission(managerUser, DocumentType.WAYBILL, 'approve'), false);
+
+    const superUser: any = {
+      id: 'u-2',
+      role: 'CustomRole',
+      permissions: ['*'],
+    };
+    assert.strictEqual(hasDocumentPermission(superUser, DocumentType.INVOICE, 'approve'), true);
+    assert.strictEqual(hasDocumentPermission(superUser, DocumentType.WAYBILL, 'issue'), true);
+    assert.strictEqual(hasDocumentPermission(superUser, DocumentType.LETTER, 'cancel'), true);
+
+    const viewerUser: any = {
+      id: 'u-3',
+      role: 'Staff',
+      permissions: ['invoice:view'],
+    };
+    assert.strictEqual(hasDocumentPermission(viewerUser, DocumentType.INVOICE, 'view'), true);
+    assert.strictEqual(hasDocumentPermission(viewerUser, DocumentType.INVOICE, 'approve'), false);
+
+    assert.throws(
+      () => assertDocumentPermission(viewerUser, DocumentType.INVOICE, 'approve'),
+      ForbiddenException,
+    );
   });
 });

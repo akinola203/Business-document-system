@@ -247,13 +247,23 @@ export class DocumentsService {
         }
       }
 
-      const result = await tx.document.update({
-        where: { id: document.id },
+      const cancelResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: document.status,
+        },
         data: {
           status: DocumentStatus.CANCELLED,
           cancellationReason: reason,
         },
       });
+
+      if (cancelResult.count !== 1) {
+        throw new ConflictException(
+          'Document status was concurrently modified before cancellation.',
+        );
+      }
 
       await this.auditService.logAction(
         {
@@ -268,7 +278,7 @@ export class DocumentsService {
         tx,
       );
 
-      return result;
+      return document;
     });
 
     await this.notificationsService.createNotification(
@@ -281,7 +291,7 @@ export class DocumentsService {
     );
 
     this.logger.log(`Document "${document.documentNumber}" cancelled by user "${actorId}".`);
-    return updated;
+    return this.findOne(companyId, document.id);
   }
 
   /**
@@ -447,13 +457,39 @@ export class DocumentsService {
 
     const comment = (dto.comment || dto.notes)?.trim() || null;
 
+    const approverUserId = dto.approverId || actorId;
+    const approverMembership = await this.prisma.companyUser.findUnique({
+      where: {
+        companyId_userId: {
+          companyId,
+          userId: approverUserId,
+        },
+      },
+    });
+
+    if (!approverMembership || approverMembership.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'Designated approver is not an active member of this organization.',
+      );
+    }
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const stepNumber = document.approvals.length + 1;
 
-      const doc = await tx.document.update({
-        where: { id: document.id },
+      const submitResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: { in: [DocumentStatus.DRAFT, DocumentStatus.REJECTED] },
+        },
         data: { status: DocumentStatus.PENDING_APPROVAL },
       });
+
+      if (submitResult.count !== 1) {
+        throw new ConflictException(
+          'Document status was concurrently modified before submission for approval.',
+        );
+      }
 
       await tx.documentApproval.create({
         data: {
@@ -477,11 +513,11 @@ export class DocumentsService {
         tx,
       );
 
-      return doc;
+      return document;
     });
 
     this.logger.log(`Document "${document.documentNumber}" submitted for approval by user "${actorId}".`);
-    return this.findOne(companyId, updated.id);
+    return this.findOne(companyId, document.id);
   }
 
   /**
@@ -521,11 +557,21 @@ export class DocumentsService {
 
     const comment = (dto.comment || dto.notes)?.trim() || null;
 
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const doc = await tx.document.update({
-        where: { id: document.id },
+    await this.prisma.$transaction(async (tx) => {
+      const approveResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: DocumentStatus.PENDING_APPROVAL,
+        },
         data: { status: DocumentStatus.APPROVED },
       });
+
+      if (approveResult.count !== 1) {
+        throw new ConflictException(
+          'Document status was concurrently modified before approval.',
+        );
+      }
 
       // Update pending approval step(s)
       await tx.documentApproval.updateMany({
@@ -550,7 +596,7 @@ export class DocumentsService {
         tx,
       );
 
-      return doc;
+      return document;
     });
 
     await this.notificationsService.createNotification(
@@ -563,7 +609,7 @@ export class DocumentsService {
     );
 
     this.logger.log(`Document "${document.documentNumber}" approved by user "${approverId}".`);
-    return this.findOne(companyId, updated.id);
+    return this.findOne(companyId, document.id);
   }
 
   /**
@@ -588,11 +634,21 @@ export class DocumentsService {
       throw new BadRequestException('Rejection reason or notes is required.');
     }
 
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const doc = await tx.document.update({
-        where: { id: document.id },
+    await this.prisma.$transaction(async (tx) => {
+      const rejectResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: DocumentStatus.PENDING_APPROVAL,
+        },
         data: { status: DocumentStatus.REJECTED },
       });
+
+      if (rejectResult.count !== 1) {
+        throw new ConflictException(
+          'Document status was concurrently modified before rejection.',
+        );
+      }
 
       // Update pending approval step
       await tx.documentApproval.updateMany({
@@ -617,7 +673,7 @@ export class DocumentsService {
         tx,
       );
 
-      return doc;
+      return document;
     });
 
     await this.notificationsService.createNotification(
@@ -630,7 +686,7 @@ export class DocumentsService {
     );
 
     this.logger.log(`Document "${document.documentNumber}" rejected by user "${rejectorId}".`);
-    return this.findOne(companyId, updated.id);
+    return this.findOne(companyId, document.id);
   }
 
   /**
@@ -768,8 +824,12 @@ export class DocumentsService {
         },
       });
 
-      const updatedDoc = await tx.document.update({
-        where: { id: document.id },
+      const issueResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: DocumentStatus.APPROVED,
+        },
         data: {
           status: DocumentStatus.ISSUED,
           currentVersionId: version.id,
@@ -777,6 +837,12 @@ export class DocumentsService {
           versionCounter: { increment: 1 },
         },
       });
+
+      if (issueResult.count !== 1) {
+        throw new ConflictException(
+          'Document status was concurrently modified before issuance.',
+        );
+      }
 
       await this.auditService.logAction(
         {
@@ -795,7 +861,7 @@ export class DocumentsService {
         tx,
       );
 
-      return updatedDoc;
+      return document;
     });
 
     await this.notificationsService.createNotification(
@@ -808,7 +874,7 @@ export class DocumentsService {
     );
 
     this.logger.log(`Document "${document.documentNumber}" issued by user "${actorId}".`);
-    return this.findOne(companyId, issued.id);
+    return this.findOne(companyId, document.id);
   }
 
   /**
@@ -1018,28 +1084,61 @@ export class DocumentsService {
     const dataFrom = vFrom.snapshotData as any;
     const dataTo = vTo.snapshotData as any;
 
-    const fromDoc = dataFrom?.document || {};
-    const toDoc = dataTo?.document || {};
+    const normalizeSnapshot = (data: any) => {
+      const doc = data?.document ?? data ?? {};
+      const items: any[] =
+        data?.specialized?.invoice?.items ??
+        data?.specialized?.waybill?.items ??
+        data?.items ??
+        doc?.items ??
+        [];
+      const totalAmount = doc?.totalAmount ?? data?.totalAmount ?? 0;
+      const subtotal = doc?.subtotal ?? data?.subtotal ?? 0;
+      const title = doc?.title ?? data?.title;
+      const status = doc?.status ?? data?.status;
+      const issueDate = doc?.issueDate ?? data?.issueDate;
+      const dueDate = doc?.dueDate ?? data?.dueDate;
+      const documentNumber = doc?.documentNumber ?? data?.documentNumber;
+
+      return {
+        doc,
+        items,
+        totalAmount,
+        subtotal,
+        title,
+        status,
+        issueDate,
+        dueDate,
+        documentNumber,
+      };
+    };
+
+    const normFrom = normalizeSnapshot(dataFrom);
+    const normTo = normalizeSnapshot(dataTo);
 
     // Financial difference calculation
-    const fromTotal = new Decimal(fromDoc.totalAmount || 0);
-    const toTotal = new Decimal(toDoc.totalAmount || 0);
+    const fromTotal = new Decimal(normFrom.totalAmount || 0);
+    const toTotal = new Decimal(normTo.totalAmount || 0);
     const totalDiff = toTotal.minus(fromTotal);
 
-    const fromSubtotal = new Decimal(fromDoc.subtotal || 0);
-    const toSubtotal = new Decimal(toDoc.subtotal || 0);
+    const fromSubtotal = new Decimal(normSubtotal(normFrom.subtotal));
+    const toSubtotal = new Decimal(normSubtotal(normTo.subtotal));
     const subtotalDiff = toSubtotal.minus(fromSubtotal);
+
+    function normSubtotal(val: any) {
+      return val || 0;
+    }
 
     // Field level changes
     const fieldChanges: Array<{ field: string; from: unknown; to: unknown }> = [];
-    if (fromDoc.title !== toDoc.title) fieldChanges.push({ field: 'title', from: fromDoc.title, to: toDoc.title });
-    if (fromDoc.status !== toDoc.status) fieldChanges.push({ field: 'status', from: fromDoc.status, to: toDoc.status });
-    if (fromDoc.issueDate !== toDoc.issueDate) fieldChanges.push({ field: 'issueDate', from: fromDoc.issueDate, to: toDoc.issueDate });
-    if (fromDoc.dueDate !== toDoc.dueDate) fieldChanges.push({ field: 'dueDate', from: fromDoc.dueDate, to: toDoc.dueDate });
+    if (normFrom.title !== normTo.title) fieldChanges.push({ field: 'title', from: normFrom.title, to: normTo.title });
+    if (normFrom.status !== normTo.status) fieldChanges.push({ field: 'status', from: normFrom.status, to: normTo.status });
+    if (normFrom.issueDate !== normTo.issueDate) fieldChanges.push({ field: 'issueDate', from: normFrom.issueDate, to: normTo.issueDate });
+    if (normFrom.dueDate !== normTo.dueDate) fieldChanges.push({ field: 'dueDate', from: normFrom.dueDate, to: normTo.dueDate });
 
     // Item differences (for invoice items or waybill items)
-    const fromItems: any[] = dataFrom?.specialized?.invoice?.items || dataFrom?.specialized?.waybill?.items || [];
-    const toItems: any[] = dataTo?.specialized?.invoice?.items || dataTo?.specialized?.waybill?.items || [];
+    const fromItems = normFrom.items;
+    const toItems = normTo.items;
 
     const itemChanges = {
       fromItemCount: fromItems.length,
@@ -1049,7 +1148,7 @@ export class DocumentsService {
 
     return {
       documentId: id,
-      documentNumber: fromDoc.documentNumber,
+      documentNumber: normFrom.documentNumber || normTo.documentNumber,
       fromVersion: vFrom.versionNumber,
       toVersion: vTo.versionNumber,
       fromCreatedAt: vFrom.createdAt,

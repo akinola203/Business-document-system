@@ -36,10 +36,10 @@ export class FinancialMathUtil {
    * Calculates precise line item financials: gross, discount, tax, and line total.
    */
   static calculateLineItem(item: RawLineItem): CalculatedLineItem {
-    const qty = new Decimal(item.quantity || 0);
-    const price = new Decimal(item.unitPrice || 0);
-    const discountPct = new Decimal(item.discountPercent || 0);
-    const taxPct = new Decimal(item.taxRate !== undefined ? item.taxRate : 7.50);
+    const qty = new Decimal(item.quantity ?? 0);
+    const price = new Decimal(item.unitPrice ?? 0);
+    const discountPct = new Decimal(item.discountPercent ?? 0);
+    const taxPct = new Decimal(item.taxRate ?? 7.50);
 
     const gross = qty.times(price);
     const discount = gross.times(discountPct.dividedBy(100)).toDecimalPlaces(2);

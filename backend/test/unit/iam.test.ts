@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UsersService } from '../../src/modules/iam/users.service';
 import { RolesService } from '../../src/modules/iam/roles.service';
 import { CompanyUserStatus } from '@prisma/client';
@@ -32,7 +32,9 @@ test('Administrative IAM (Users & Roles) Unit Tests', async (t) => {
     },
     companyUser: {
       count: async ({ where }: any) => {
-        let list = companyUsersDb.filter((cu) => cu.companyId === where.companyId);
+        let list = companyUsersDb;
+        if (where.companyId) list = list.filter((cu) => cu.companyId === where.companyId);
+        if (where.userId) list = list.filter((cu) => cu.userId === where.userId);
         if (where.status) list = list.filter((cu) => cu.status === where.status);
         if (where.role?.name?.equals) {
           const roleName = where.role.name.equals.toLowerCase();
@@ -82,10 +84,21 @@ test('Administrative IAM (Users & Roles) Unit Tests', async (t) => {
           (c) => c.companyId === where.companyId_userId?.companyId && c.userId === where.companyId_userId?.userId,
         );
         if (!cu) return null;
+        const role = rolesDb.find((r) => r.id === cu.roleId);
         return {
           ...cu,
           user: usersDb.find((u) => u.id === cu.userId),
-          role: rolesDb.find((r) => r.id === cu.roleId),
+          role: role
+            ? {
+                ...role,
+                rolePermissions: rolePermissionsDb
+                  .filter((rp) => rp.roleId === role.id)
+                  .map((rp) => ({
+                    ...rp,
+                    permission: permissionsDb.find((p) => p.id === rp.permissionId),
+                  })),
+              }
+            : null,
         };
       },
       create: async ({ data }: any) => {
@@ -183,6 +196,12 @@ test('Administrative IAM (Users & Roles) Unit Tests', async (t) => {
       },
     },
     rolePermission: {
+      findMany: async ({ where }: any) => {
+        if (where?.roleId) {
+          return rolePermissionsDb.filter((rp) => rp.roleId === where.roleId);
+        }
+        return rolePermissionsDb;
+      },
       deleteMany: async ({ where }: any) => {
         rolePermissionsDb = rolePermissionsDb.filter((rp) => rp.roleId !== where.roleId);
         return { count: 1 };
@@ -412,6 +431,26 @@ test('Administrative IAM (Users & Roles) Unit Tests', async (t) => {
     assert.ok(auditLogs.some((a) => a.action === 'USER_PASSWORD_RESET'));
   });
 
+  await t.test('UsersService.resetPassword throws ForbiddenException if user belongs to multiple companies', async () => {
+    companyUsersDb.push({
+      id: 'cu-extra',
+      companyId: 'comp-2',
+      userId: 'usr-staff-1',
+      roleId: 'role-staff',
+      status: CompanyUserStatus.ACTIVE,
+    });
+
+    await assert.rejects(
+      async () => {
+        await usersService.resetPassword('comp-1', 'usr-staff-1', {}, 'usr-admin-1');
+      },
+      ForbiddenException,
+    );
+
+    // Clean up
+    companyUsersDb = companyUsersDb.filter((cu) => cu.id !== 'cu-extra');
+  });
+
   // 6. RolesService.findAllRoles & findAllPermissions
   await t.test('RolesService.findAllRoles retrieves company and system roles', async () => {
     const roles = await rolesService.findAllRoles('comp-1');
@@ -424,6 +463,21 @@ test('Administrative IAM (Users & Roles) Unit Tests', async (t) => {
   });
 
   // 7. RolesService.createRole
+  await t.test('RolesService.createRole rejects reserved names (admin, administrator, owner)', async () => {
+    for (const reserved of ['admin', 'Administrator', 'OWNER']) {
+      await assert.rejects(
+        async () => {
+          await rolesService.createRole(
+            'comp-1',
+            { name: reserved, permissionIds: ['p-invoice-view'] },
+            'usr-admin-1',
+          );
+        },
+        BadRequestException,
+      );
+    }
+  });
+
   await t.test('RolesService.createRole creates custom role scoped to company', async () => {
     const role = await rolesService.createRole(
       'comp-1',
@@ -457,11 +511,28 @@ test('Administrative IAM (Users & Roles) Unit Tests', async (t) => {
     );
   });
 
-  // 8. RolesService.updateRolePermissions
-  await t.test('RolesService.updateRolePermissions prevents stripping core permissions from Admin role', async () => {
+  await t.test('RolesService.createRole prevents privilege escalation by non-admin caller', async () => {
+    // usr-staff-1 only has role-staff which does not have p-roles-manage
     await assert.rejects(
       async () => {
-        // Strip down Admin role to only invoice:view (missing users:view, users:manage, roles:manage, etc.)
+        await rolesService.createRole(
+          'comp-1',
+          {
+            name: 'Attempted Escalation Role',
+            permissionIds: ['p-roles-manage'],
+          },
+          'usr-staff-1',
+        );
+      },
+      ForbiddenException,
+    );
+  });
+
+  // 8. RolesService.updateRolePermissions
+  await t.test('RolesService.updateRolePermissions rejects editing global system roles (companyId: null)', async () => {
+    await assert.rejects(
+      async () => {
+        // Attempt to edit global system role role-admin
         await rolesService.updateRolePermissions(
           'comp-1',
           'role-admin',
@@ -469,7 +540,7 @@ test('Administrative IAM (Users & Roles) Unit Tests', async (t) => {
           'usr-admin-1',
         );
       },
-      BadRequestException,
+      NotFoundException,
     );
   });
 

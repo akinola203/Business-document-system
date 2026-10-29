@@ -176,4 +176,26 @@ test('PDF Engine & Version-Linked Storage Unit Tests', async (t) => {
       /Document with ID "doc-inv-1" not found/,
     );
   });
+
+  await t.test('5. Concurrent calls for uncompiled document version share single generation promise', async () => {
+    const ver = versionsStore[0];
+    ver.pdfFileId = null;
+    let generateCount = 0;
+
+    pdfService.generatePdfFromHtml = async () => {
+      generateCount++;
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return syntheticPdfBuffer;
+    };
+
+    const [res1, res2, res3] = await Promise.all([
+      pdfService.getOrGenerateDocumentPdf('comp-1', 'doc-inv-1', 1),
+      pdfService.getOrGenerateDocumentPdf('comp-1', 'doc-inv-1', 1),
+      pdfService.getOrGenerateDocumentPdf('comp-1', 'doc-inv-1', 1),
+    ]);
+
+    assert.strictEqual(generateCount, 1, 'generatePdfFromHtml was only executed once across concurrent calls');
+    assert.strictEqual(res1.fileId, res2.fileId);
+    assert.strictEqual(res2.fileId, res3.fileId);
+  });
 });

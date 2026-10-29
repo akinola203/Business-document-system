@@ -7,13 +7,15 @@ import {
   IsBoolean,
   IsDateString,
   Length,
+  Validate,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { z } from 'zod';
+import { Type, Transform } from 'class-transformer';
 import { InvoiceItemDto } from './invoice-item.dto';
+import { IsDueDateAfterOrEqualIssueDateConstraint } from './create-invoice.dto';
 
 export class UpdateInvoiceDto {
   @ApiPropertyOptional({ example: 'Commercial Supply of Portland Cement - Order #4501', description: 'Document header title' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsOptional()
   @IsString()
   title?: string;
@@ -41,6 +43,7 @@ export class UpdateInvoiceDto {
   @ApiPropertyOptional({ example: '2026-11-23', description: 'Invoice payment due date' })
   @IsOptional()
   @IsDateString()
+  @Validate(IsDueDateAfterOrEqualIssueDateConstraint)
   dueDate?: string;
 
   @ApiPropertyOptional({ example: 'NGN', description: 'Currency code' })
@@ -79,6 +82,11 @@ export class UpdateInvoiceDto {
   @IsString()
   templateVersionId?: string;
 
+  @ApiPropertyOptional({ description: 'Selected Client Address ID for billing override' })
+  @IsOptional()
+  @IsString()
+  selectedAddressId?: string;
+
   @ApiPropertyOptional({ type: [InvoiceItemDto], description: 'Updated list of invoice line items' })
   @IsOptional()
   @IsArray()
@@ -91,21 +99,3 @@ export class UpdateInvoiceDto {
   @Type(() => Number)
   expectedVersion?: number;
 }
-
-export const updateInvoiceSchema = z.object({
-  title: z.string().optional(),
-  clientId: z.string().optional(),
-  branchId: z.string().optional(),
-  departmentId: z.string().optional(),
-  issueDate: z.string().optional(),
-  dueDate: z.string().optional(),
-  currency: z.string().optional(),
-  paymentTerms: z.string().optional(),
-  poNumber: z.string().optional(),
-  notes: z.string().optional(),
-  bankDetailsVisible: z.boolean().optional(),
-  templateId: z.string().optional(),
-  templateVersionId: z.string().optional(),
-  items: z.array(z.any()).optional(),
-  expectedVersion: z.number().optional(),
-}).passthrough();

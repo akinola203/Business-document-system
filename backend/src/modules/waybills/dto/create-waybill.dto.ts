@@ -8,11 +8,12 @@ import {
   ArrayMinSize,
   IsDateString,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { WaybillItemDto } from './waybill-item.dto';
 
 export class CreateWaybillDto {
   @ApiProperty({ example: 'Consignment Dispatch - Dangote Hub Ota', description: 'Waybill document title' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsNotEmpty()
   @IsString()
   title!: string;

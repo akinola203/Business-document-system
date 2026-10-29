@@ -40,6 +40,18 @@ test('Optimistic Concurrency Control (OCC) Tests', async (t) => {
           }
           return invoiceDoc;
         },
+        updateMany: async ({ where, data }: any) => {
+          const matchVersion = where.versionCounter === undefined || invoiceDoc.versionCounter === where.versionCounter;
+          const matchStatus = !where.status || (where.status.in ? where.status.in.includes(invoiceDoc.status) : invoiceDoc.status === where.status);
+          if (matchVersion && matchStatus) {
+            if (data.versionCounter?.increment) {
+              invoiceDoc.versionCounter += data.versionCounter.increment;
+            }
+            if (data.status) invoiceDoc.status = data.status;
+            return { count: 1 };
+          }
+          return { count: 0 };
+        },
       },
       invoice: {
         update: async () => invoiceDoc.invoice,
@@ -109,6 +121,18 @@ test('Optimistic Concurrency Control (OCC) Tests', async (t) => {
             waybillDoc.versionCounter = prevVersion + data.versionCounter.increment;
           }
           return waybillDoc;
+        },
+        updateMany: async ({ where, data }: any) => {
+          const matchVersion = where.versionCounter === undefined || waybillDoc.versionCounter === where.versionCounter;
+          const matchStatus = !where.status || (where.status.in ? where.status.in.includes(waybillDoc.status) : waybillDoc.status === where.status);
+          if (matchVersion && matchStatus) {
+            if (data.versionCounter?.increment) {
+              waybillDoc.versionCounter += data.versionCounter.increment;
+            }
+            if (data.status) waybillDoc.status = data.status;
+            return { count: 1 };
+          }
+          return { count: 0 };
         },
       },
       waybill: {
@@ -182,6 +206,18 @@ test('Optimistic Concurrency Control (OCC) Tests', async (t) => {
             letterDoc.versionCounter = prevVersion + data.versionCounter.increment;
           }
           return letterDoc;
+        },
+        updateMany: async ({ where, data }: any) => {
+          const matchVersion = where.versionCounter === undefined || letterDoc.versionCounter === where.versionCounter;
+          const matchStatus = !where.status || (where.status.in ? where.status.in.includes(letterDoc.status) : letterDoc.status === where.status);
+          if (matchVersion && matchStatus) {
+            if (data.versionCounter?.increment) {
+              letterDoc.versionCounter += data.versionCounter.increment;
+            }
+            if (data.status) letterDoc.status = data.status;
+            return { count: 1 };
+          }
+          return { count: 0 };
         },
       },
       letter: {

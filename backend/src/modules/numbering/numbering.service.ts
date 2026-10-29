@@ -17,7 +17,12 @@ export class NumberingService {
     companyId: string,
     documentType: DocumentType,
   ): Promise<string> {
-    const currentYear = new Date().getFullYear();
+    // Use Lagos timezone (Africa/Lagos, UTC+1) to determine the accounting calendar year
+    const lagosYearString = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Africa/Lagos',
+      year: 'numeric',
+    }).format(new Date());
+    const currentYear = parseInt(lagosYearString, 10);
 
     // 1. Find or initialize the sequence counter for this year
     let sequence = await tx.documentNumberSequence.findUnique({

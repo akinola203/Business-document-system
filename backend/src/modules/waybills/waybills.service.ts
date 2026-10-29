@@ -22,6 +22,7 @@ import {
   WaybillDeliveryStatus,
   Prisma,
 } from '@prisma/client';
+import { validateTenantScope } from '../../common/utils/tenant-validation.util';
 
 @Injectable()
 export class WaybillsService {
@@ -68,6 +69,13 @@ export class WaybillsService {
     if (!targetClientId) {
       throw new BadRequestException('A recipient client must be specified for the waybill.');
     }
+
+    await validateTenantScope(this.prisma, companyId, {
+      clientId: targetClientId,
+      branchId: dto.branchId,
+      departmentId: dto.departmentId,
+      templateId: dto.templateId,
+    });
 
     const client = await this.prisma.client.findFirst({
       where: { id: targetClientId, companyId },
@@ -177,11 +185,21 @@ export class WaybillsService {
   async updateDraft(companyId: string, id: string, dto: UpdateWaybillDto, actorId: string) {
     const document = await this.findOne(companyId, id);
 
-    if (document.status !== DocumentStatus.DRAFT) {
+    if (
+      document.status !== DocumentStatus.DRAFT &&
+      document.status !== DocumentStatus.REJECTED
+    ) {
       throw new BadRequestException(
-        `Only DRAFT waybills can be modified. Current status is ${document.status}.`,
+        `Only DRAFT or REJECTED waybills can be modified. Current status is ${document.status}.`,
       );
     }
+
+    // Validate foreign keys belong to caller company if updated
+    await validateTenantScope(this.prisma, companyId, {
+      clientId: dto.clientId,
+      branchId: dto.branchId,
+      departmentId: dto.departmentId,
+    });
 
     if (dto.expectedVersion !== undefined && document.versionCounter !== dto.expectedVersion) {
       throw new ConflictException(
@@ -190,6 +208,25 @@ export class WaybillsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      const claimResult = await tx.document.updateMany({
+        where: {
+          id: document.id,
+          companyId,
+          status: { in: [DocumentStatus.DRAFT, DocumentStatus.REJECTED] },
+          ...(dto.expectedVersion !== undefined ? { versionCounter: dto.expectedVersion } : {}),
+        },
+        data: {
+          versionCounter: { increment: 1 },
+          status: DocumentStatus.DRAFT,
+        },
+      });
+
+      if (claimResult.count !== 1) {
+        throw new ConflictException(
+          'Waybill was concurrently modified or is not in an editable status (DRAFT or REJECTED).',
+        );
+      }
+
       await tx.document.update({
         where: { id: document.id },
         data: {
@@ -197,7 +234,6 @@ export class WaybillsService {
           clientId: dto.clientId,
           branchId: dto.branchId,
           departmentId: dto.departmentId,
-          versionCounter: { increment: 1 },
         },
       });
 

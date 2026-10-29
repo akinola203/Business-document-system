@@ -64,8 +64,16 @@ export function hasDocumentPermission(
   action: DocumentAction,
 ): boolean {
   if (user.role === 'Admin') return true;
+  if (!Array.isArray(user.permissions)) return false;
+  if (user.permissions.includes('*') || user.permissions.includes('*:*')) return true;
+
   const required = DOCUMENT_PERMISSION_MATRIX[documentType][action];
-  return Array.isArray(user.permissions) && user.permissions.includes(required);
+  if (user.permissions.includes(required)) return true;
+
+  const [domain] = required.split(':');
+  if (user.permissions.includes(`${domain}:manage`) || user.permissions.includes(`${domain}:*`)) return true;
+
+  return false;
 }
 
 export function assertDocumentPermission(

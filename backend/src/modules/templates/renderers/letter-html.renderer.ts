@@ -1,3 +1,5 @@
+import * as sanitizeHtml from 'sanitize-html';
+
 export interface LetterRenderContext {
   company: {
     name: string;
@@ -244,10 +246,9 @@ function escapeHtml(str: string): string {
 }
 
 /**
- * Basic HTML sanitizer to allow safe formatting tags while neutralizing script tags,
- * event handlers, and malicious iframes.
+ * HTML sanitizer using sanitize-html with strict allowlist and zero attributes.
  */
-function sanitizeRichHtml(html: string): string {
+export function sanitizeRichHtml(html: string): string {
   if (!html) return '';
   // If plain text with line breaks, format as paragraphs
   if (!html.includes('<') && !html.includes('>')) {
@@ -257,10 +258,12 @@ function sanitizeRichHtml(html: string): string {
       .join('');
   }
 
-  // Strip script and unsafe tags
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/on\w+="[^"]*"/gi, '')
-    .replace(/on\w+='[^']*'/gi, '');
+  return sanitizeHtml(html, {
+    allowedTags: [
+      'p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li',
+      'h1', 'h2', 'h3', 'blockquote',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    ],
+    allowedAttributes: {},
+  });
 }

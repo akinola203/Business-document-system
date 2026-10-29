@@ -40,6 +40,55 @@ export class FilesService {
   ) {}
 
   /**
+   * Validates file binary signature (magic bytes) against declared MIME type.
+   */
+  private validateMagicBytes(buffer: Buffer, mime: string): boolean {
+    if (!buffer || buffer.length === 0) return false;
+
+    switch (mime) {
+      case 'application/pdf':
+        // %PDF (0x25 0x50 0x44 0x46)
+        return buffer.length >= 4 && buffer.subarray(0, 4).equals(Buffer.from([0x25, 0x50, 0x44, 0x46]));
+      case 'image/png':
+        // \x89PNG\r\n\x1a\n
+        return (
+          buffer.length >= 8 &&
+          buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+        );
+      case 'image/jpeg':
+        // \xff\xd8\xff
+        return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+      case 'image/webp':
+        // RIFF....WEBP
+        return (
+          buffer.length >= 12 &&
+          buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+          buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+        );
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+        // PK\x03\x04 (ZIP container)
+        return buffer.length >= 4 && buffer.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+      case 'application/msword':
+      case 'application/vnd.ms-excel':
+        // D0 CF 11 E0 (OLE) or PK\x03\x04
+        return (
+          buffer.length >= 4 &&
+          (buffer.subarray(0, 4).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0])) ||
+            buffer.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04])))
+        );
+      case 'text/plain':
+      case 'text/csv':
+      case 'image/svg+xml':
+        // Text types: must not contain binary null bytes in first 512 bytes
+        const sample = buffer.subarray(0, Math.min(buffer.length, 512));
+        return !sample.includes(0x00);
+      default:
+        return true;
+    }
+  }
+
+  /**
    * Sanitizes original filename to prevent directory traversal, control characters, or script injection.
    */
   private sanitizeFilename(name: string): string {
@@ -77,6 +126,12 @@ export class FilesService {
     if (!validExtensions.includes(ext)) {
       throw new BadRequestException(
         `File extension "${ext}" does not match reported MIME type "${file.mimetype}".`,
+      );
+    }
+
+    if (!this.validateMagicBytes(file.buffer, mime)) {
+      throw new BadRequestException(
+        `File binary signature (magic bytes) does not match reported MIME type "${file.mimetype}".`,
       );
     }
 

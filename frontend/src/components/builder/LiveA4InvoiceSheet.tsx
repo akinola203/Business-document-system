@@ -1,6 +1,7 @@
 import React from 'react';
 import { Company, Client, ClientAddress } from '../../types';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import { calcLine, calcTotals } from '../../lib/money';
 import { Landmark, ShieldCheck, CreditCard } from 'lucide-react';
 
 export interface InvoiceLiveFormValues {
@@ -42,7 +43,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
 }) => {
   const currency = formValues?.currency || 'NGN';
 
-  // Calculate precision line items and totals
+  // Calculate precision line items and totals using decimal.js
   const calculatedItems = (formValues?.items || []).map((item, index) => {
     if (!item) {
       return {
@@ -63,13 +64,9 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
     const qty = Math.max(0, Number(item.quantity) || 0);
     const price = Math.max(0, Number(item.unitPrice) || 0);
     const discPercent = Math.max(0, Math.min(100, Number(item.discountPercent) || 0));
-    const taxRate = item.taxRate !== undefined && item.taxRate !== '' ? Math.max(0, Number(item.taxRate)) : 7.5;
+    const taxRate = item.taxRate !== undefined && item.taxRate !== null && item.taxRate !== '' ? Math.max(0, Number(item.taxRate)) : 7.5;
 
-    const baseAmount = Math.round((qty * price + Number.EPSILON) * 100) / 100;
-    const discountAmount = Math.round((baseAmount * (discPercent / 100) + Number.EPSILON) * 100) / 100;
-    const taxableAmount = Math.max(0, Math.round((baseAmount - discountAmount + Number.EPSILON) * 100) / 100);
-    const taxAmount = Math.round((taxableAmount * (taxRate / 100) + Number.EPSILON) * 100) / 100;
-    const lineTotal = Math.round((taxableAmount + taxAmount + Number.EPSILON) * 100) / 100;
+    const line = calcLine(qty, price, discPercent, taxRate);
 
     return {
       lineNumber: index + 1,
@@ -79,24 +76,38 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
       unitPrice: price,
       discountPercent: discPercent,
       taxRate,
-      lineTotal,
-      baseAmount,
-      discountAmount,
-      taxAmount,
+      lineTotal: line.total,
+      baseAmount: line.gross,
+      discountAmount: line.discount,
+      taxAmount: line.tax,
     };
   });
 
-  const subtotal = calculatedItems.reduce((acc, it) => acc + (it.baseAmount || 0), 0);
-  const discountTotal = calculatedItems.reduce((acc, it) => acc + (it.discountAmount || 0), 0);
-  const taxTotal = calculatedItems.reduce((acc, it) => acc + (it.taxAmount || 0), 0);
-  const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
+  const totals = calcTotals(
+    (formValues?.items || []).map((item) => ({
+      quantity: Math.max(0, Number(item?.quantity) || 0),
+      unitPrice: Math.max(0, Number(item?.unitPrice) || 0),
+      discountPercent: Math.max(0, Math.min(100, Number(item?.discountPercent) || 0)),
+      taxRate: item?.taxRate !== undefined && item?.taxRate !== null && item?.taxRate !== '' ? Math.max(0, Number(item.taxRate)) : 7.5,
+    })),
+  );
+
+  const subtotal = totals.grossSubtotal;
+  const discountTotal = totals.totalDiscount;
+  const taxTotal = totals.totalTax;
+  const grandTotal = totals.grandTotal;
 
   // Address resolution
+  const line1 = selectedAddress?.addressLine1 || selectedAddress?.line1 || '';
+  const line2 = selectedAddress?.addressLine2 || selectedAddress?.line2 || '';
+  const fallbackFirstAddr = selectedClient?.addresses?.[0];
+  const fallbackLine = fallbackFirstAddr ? (fallbackFirstAddr.addressLine1 || fallbackFirstAddr.line1) : '';
+
   const formattedAddress =
     formValues?.customBillingAddress ||
     (selectedAddress
-      ? `${selectedAddress.line1 || ''}${selectedAddress.line2 ? `, ${selectedAddress.line2}` : ''}, ${selectedAddress.city || ''}, ${selectedAddress.state || ''}, ${selectedAddress.country || ''}`
-      : selectedClient?.address || selectedClient?.addresses?.[0]?.line1 || 'No billing address specified');
+      ? `${line1}${line2 ? `, ${line2}` : ''}, ${selectedAddress.city || ''}, ${selectedAddress.state || ''}, ${selectedAddress.country || ''}`
+      : selectedClient?.address || fallbackLine || 'No billing address specified');
 
   const showBank = formValues?.bankDetailsVisible ?? company?.settings?.showBankDetailsOnInvoice ?? true;
 
@@ -137,9 +148,11 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
                 )}
               </div>
             </div>
-            <p className="text-[11px] text-slate-600 max-w-xs mt-1.5 leading-snug">
-              {company?.address || '1 Alade Ibukun Close, Ayo Irewolede CDA, Ewupe, Ota, Ogun State, Nigeria'}
-            </p>
+            {company?.address && (
+              <p className="text-[11px] text-slate-600 max-w-xs mt-1.5 leading-snug">
+                {company.address}
+              </p>
+            )}
             <div className="flex items-center gap-3 text-[10px] text-slate-500 mt-1">
               <span>Email: {company?.email || 'billing@aoa77.com'}</span>
               <span>Tel: {company?.phone || '+234 803 000 0001'}</span>

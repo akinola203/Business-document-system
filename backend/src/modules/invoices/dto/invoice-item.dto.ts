@@ -12,6 +12,7 @@ export class InvoiceItemDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 4 })
   @Min(0.0001, { message: 'Quantity must be greater than zero' })
+  @Max(1000000000, { message: 'Quantity cannot exceed 1,000,000,000' })
   quantity!: number;
 
   @ApiProperty({ example: 'Bags', description: 'Unit of measure (e.g. Bags, Hours, Pcs, Drums, Kg)' })
@@ -23,6 +24,7 @@ export class InvoiceItemDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0, { message: 'Unit price cannot be negative' })
+  @Max(1000000000000, { message: 'Unit price cannot exceed 1,000,000,000,000' })
   unitPrice!: number;
 
   @ApiPropertyOptional({ example: 0.00, default: 0.00, description: 'Percentage line discount (0 - 100)' })

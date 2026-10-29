@@ -18,7 +18,9 @@ import {
   Building,
   FileText,
   Lock,
+  Printer,
 } from 'lucide-react';
+import { downloadDocumentPdf, printDocumentPdf } from '../../../lib/pdf-download';
 
 interface LetterInspectorProps {
   document: DocumentRecord;
@@ -34,25 +36,37 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
   onEditDraft,
 }) => {
   const { isAdmin, canApprove, canIssue, canCancel, hasPermission } = usePermissions();
-  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isPdfDownloading, setIsPdfDownloading] = useState(false);
+  const [isPdfPrinting, setIsPdfPrinting] = useState(false);
 
   const letData: LetterSpecialization | null | undefined = document.letter;
   const status = document.status;
 
   const handlePdfDownload = async () => {
-    setIsPdfLoading(true);
+    setIsPdfDownloading(true);
     try {
-      const response = await apiClient.get(`/documents/${document.id}/pdf`, {
-        responseType: 'blob',
+      await downloadDocumentPdf({
+        documentId: document.id,
+        documentNumber: document.documentNumber,
+        documentType: 'Letter',
       });
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
     } catch (err: any) {
       console.error('Failed to download Letter PDF:', err);
-      alert('Unable to generate or download Letter PDF.');
+      alert('Unable to download Letter PDF. Please verify permissions.');
     } finally {
-      setIsPdfLoading(false);
+      setIsPdfDownloading(false);
+    }
+  };
+
+  const handlePdfPrint = async () => {
+    setIsPdfPrinting(true);
+    try {
+      await printDocumentPdf(document.id);
+    } catch (err: any) {
+      console.error('Failed to print Letter PDF:', err);
+      alert('Unable to load Letter PDF for printing. Please verify permissions.');
+    } finally {
+      setIsPdfPrinting(false);
     }
   };
 
@@ -166,14 +180,27 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
           <div className="flex items-center gap-1.5">
             <button
               onClick={handlePdfDownload}
-              disabled={isPdfLoading}
-              title="Download Official Letter PDF"
+              disabled={isPdfDownloading}
+              title="📥 Download Letter PDF to Device"
               className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center justify-center text-white transition-all shadow-sm disabled:opacity-50"
             >
-              {isPdfLoading ? (
+              {isPdfDownloading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Download className="w-4 h-4" />
+              )}
+            </button>
+
+            <button
+              onClick={handlePdfPrint}
+              disabled={isPdfPrinting}
+              title="🖨️ Print / Open Letter PDF"
+              className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center justify-center text-white transition-all shadow-sm disabled:opacity-50"
+            >
+              {isPdfPrinting ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Printer className="w-4 h-4" />
               )}
             </button>
 

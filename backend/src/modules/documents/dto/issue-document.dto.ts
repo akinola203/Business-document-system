@@ -1,18 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
-import { z } from 'zod';
-
-export const issueDocumentSchema = z.object({
-  expectedVersion: z.number().int().positive().optional(),
-  notes: z.string().max(500).optional(),
-  // Waybill dispatch details if issuing a waybill
-  vehicleNumber: z.string().min(1).max(50).optional(),
-  driverName: z.string().min(1).max(100).optional(),
-  driverPhone: z.string().min(1).max(30).optional(),
-  trackingNumber: z.string().max(100).optional(),
-}).passthrough();
-
-export type IssueDocumentPayload = z.infer<typeof issueDocumentSchema>;
 
 export class IssueDocumentDto {
   @ApiPropertyOptional({ example: 1, description: 'Expected versionCounter for optimistic concurrency control (OCC)' })
