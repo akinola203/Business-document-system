@@ -12,19 +12,25 @@ export class MailService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
-    const smtpHost = this.configService.get<string>('SMTP_HOST', 'smtp.gmail.com');
-    const smtpPort = Number(this.configService.get<number | string>('SMTP_PORT', 465));
-    const smtpUser = this.configService.get<string>('SMTP_USER');
-    const smtpPass = this.configService.get<string>('SMTP_PASS');
+    const rawHost = this.configService.get<string>('SMTP_HOST', 'smtp.gmail.com');
+    const smtpHost = typeof rawHost === 'string' ? rawHost.trim() : 'smtp.gmail.com';
+
+    const rawPort = this.configService.get<number | string>('SMTP_PORT', 465);
+    const smtpPort = Number(String(rawPort).trim()) || 465;
+
+    const rawUser = this.configService.get<string>('SMTP_USER');
+    const smtpUser = rawUser ? rawUser.trim() : undefined;
+
+    const rawPass = this.configService.get<string>('SMTP_PASS');
+    const smtpPass = rawPass ? rawPass.trim().replace(/\s+/g, '') : undefined;
+
     const smtpSecure =
       this.configService.get<string | boolean>('SMTP_SECURE') !== undefined
         ? String(this.configService.get('SMTP_SECURE')).toLowerCase() === 'true'
         : smtpPort === 465;
 
-    this.fromAddress = this.configService.get<string>(
-      'SMTP_FROM',
-      'AOA 77 Security <no-reply@aoa77.com>',
-    );
+    const rawFrom = this.configService.get<string>('SMTP_FROM');
+    this.fromAddress = rawFrom?.trim() || (smtpUser ? `AOA 77 Security <${smtpUser}>` : 'AOA 77 Security <no-reply@aoa77.com>');
 
     if (smtpUser && smtpPass) {
       try {
@@ -37,7 +43,9 @@ export class MailService implements OnModuleInit {
             pass: smtpPass,
           },
         });
-        this.logger.log(`SMTP transporter initialized with ${smtpHost}:${smtpPort} (User: ${smtpUser})`);
+        this.logger.log(
+          `SMTP transporter initialized with ${smtpHost}:${smtpPort} (Secure: ${smtpSecure}, User: ${smtpUser})`,
+        );
       } catch (err: any) {
         this.logger.error(`Failed to initialize SMTP transporter: ${err.message}`);
         this.transporter = null;

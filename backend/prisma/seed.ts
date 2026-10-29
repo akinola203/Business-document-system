@@ -336,6 +336,33 @@ async function main() {
     },
   });
 
+  const ownerUser = await prisma.user.upsert({
+    where: { email: 'akinakinlade777@gmail.com' },
+    update: { passwordHash, isActive: true },
+    create: {
+      email: 'akinakinlade777@gmail.com',
+      passwordHash,
+      firstName: 'Akin',
+      lastName: 'Akinlade',
+      phone: '+234 803 777 7777',
+      isActive: true,
+    },
+  });
+
+  await prisma.companyUser.upsert({
+    where: { companyId_userId: { companyId: company.id, userId: ownerUser.id } },
+    update: { roleId: roleAdmin.id, branchId: branchOta.id, departmentId: deptAccounts.id },
+    create: {
+      companyId: company.id,
+      userId: ownerUser.id,
+      roleId: roleAdmin.id,
+      branchId: branchOta.id,
+      departmentId: deptAccounts.id,
+      isOwner: true,
+      status: CompanyUserStatus.ACTIVE,
+    },
+  });
+
   const managerUser = await prisma.user.upsert({
     where: { email: 'manager@aoa77.com' },
     update: { passwordHash, isActive: true },

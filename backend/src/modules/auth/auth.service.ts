@@ -344,7 +344,9 @@ export class AuthService {
 
     // Anti-enumeration: Return generic success response even if account does not exist
     if (!user || !user.isActive) {
-      this.logger.log(`Password reset requested for non-existent or inactive email: ${email}`);
+      this.logger.warn(
+        `[AuthService] Password reset requested for non-existent or inactive email: "${email}". No email will be sent. (If this is your personal account, ensure the user record exists in the database!)`,
+      );
       return {
         message: 'If an account exists with this email address, a password reset link has been sent.',
       };
