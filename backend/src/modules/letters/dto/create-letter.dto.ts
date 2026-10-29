@@ -54,21 +54,21 @@ export class CreateLetterDto {
   @IsString()
   subject!: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '<p>Dear Dr. Raji,</p><p>We have the pleasure of submitting our corporate supply proposal...</p>',
     description: 'Sanitized HTML letter body',
   })
-  @IsNotEmpty({ message: 'HTML body is required' })
+  @IsOptional()
   @IsString()
-  bodyHtml!: string;
+  bodyHtml?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Dear Dr. Raji, We have the pleasure of submitting our corporate supply proposal...',
     description: 'Plain text fallback representation',
   })
-  @IsNotEmpty({ message: 'Plain text body is required' })
+  @IsOptional()
   @IsString()
-  bodyText!: string;
+  bodyText?: string;
 
   @ApiProperty({ example: 'Alade Adebayo', description: 'Authorized corporate signatory' })
   @IsNotEmpty({ message: 'Signatory name is required' })

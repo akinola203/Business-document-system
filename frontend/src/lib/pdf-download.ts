@@ -23,10 +23,31 @@ export async function downloadDocumentPdf({
     ? `/documents/${documentId}/preview-pdf`
     : `/documents/${documentId}/pdf`;
 
-  const response = await apiClient.get(endpoint, {
-    responseType: 'blob',
-    params: { download: 'true' },
-  });
+  let response;
+  try {
+    response = await apiClient.get(endpoint, {
+      responseType: 'blob',
+      params: { download: 'true' },
+    });
+  } catch (err: any) {
+    if (err?.response?.data instanceof Blob) {
+      try {
+        const text = await err.response.data.text();
+        const json = JSON.parse(text);
+        if (json?.message) {
+          err.message = json.message;
+        }
+      } catch {}
+    }
+    throw err;
+  }
+
+  // Check if a 200 OK was returned with application/json error payload
+  if (response.data?.type === 'application/json') {
+    const text = await response.data.text();
+    const json = JSON.parse(text);
+    throw new Error(json?.message || 'Server failed to compile PDF');
+  }
 
   const rawFilename =
     documentNumber?.trim() || `${documentType.toLowerCase()}_${documentId.slice(0, 8)}`;
@@ -55,10 +76,31 @@ export async function downloadDocumentPdf({
  * Opens the document PDF in a new browser tab for immediate viewing/printing.
  */
 export async function printDocumentPdf(documentId: string): Promise<void> {
-  const response = await apiClient.get(`/documents/${documentId}/pdf`, {
-    responseType: 'blob',
-    params: { download: 'false' },
-  });
+  let response;
+  try {
+    response = await apiClient.get(`/documents/${documentId}/pdf`, {
+      responseType: 'blob',
+      params: { download: 'false' },
+    });
+  } catch (err: any) {
+    if (err?.response?.data instanceof Blob) {
+      try {
+        const text = await err.response.data.text();
+        const json = JSON.parse(text);
+        if (json?.message) {
+          err.message = json.message;
+        }
+      } catch {}
+    }
+    throw err;
+  }
+
+  if (response.data?.type === 'application/json') {
+    const text = await response.data.text();
+    const json = JSON.parse(text);
+    throw new Error(json?.message || 'Server failed to compile PDF');
+  }
+
   const blob = new Blob([response.data], { type: 'application/pdf' });
   const url = window.URL.createObjectURL(blob);
   window.open(url, '_blank');

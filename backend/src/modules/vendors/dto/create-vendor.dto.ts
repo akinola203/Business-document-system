@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, IsEmail, IsEnum } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VendorCategory } from '@prisma/client';
 
@@ -24,6 +25,7 @@ export class CreateVendorDto {
   contactPerson?: string;
 
   @ApiPropertyOptional({ example: 'logistics@nnpcretail.com' })
+  @Transform(({ value }: { value: any }) => (typeof value === 'string' && value.trim() === '' ? undefined : value))
   @IsOptional()
   @IsEmail()
   email?: string;

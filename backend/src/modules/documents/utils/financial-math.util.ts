@@ -31,15 +31,27 @@ export interface CalculatedDocumentSummary {
   items: CalculatedLineItem[];
 }
 
+function toSafeDecimal(val: any, fallback = 0): Decimal {
+  if (val === null || val === undefined || val === '' || Number.isNaN(val)) {
+    return new Decimal(fallback);
+  }
+  try {
+    const d = new Decimal(val);
+    return d.isNaN() ? new Decimal(fallback) : d;
+  } catch {
+    return new Decimal(fallback);
+  }
+}
+
 export class FinancialMathUtil {
   /**
    * Calculates precise line item financials: gross, discount, tax, and line total.
    */
   static calculateLineItem(item: RawLineItem): CalculatedLineItem {
-    const qty = new Decimal(item.quantity ?? 0);
-    const price = new Decimal(item.unitPrice ?? 0);
-    const discountPct = new Decimal(item.discountPercent ?? 0);
-    const taxPct = new Decimal(item.taxRate ?? 7.50);
+    const qty = toSafeDecimal(item.quantity, 0);
+    const price = toSafeDecimal(item.unitPrice, 0);
+    const discountPct = toSafeDecimal(item.discountPercent, 0);
+    const taxPct = toSafeDecimal(item.taxRate, 7.50);
 
     const gross = qty.times(price);
     const discount = gross.times(discountPct.dividedBy(100)).toDecimalPlaces(2);
@@ -82,7 +94,7 @@ export class FinancialMathUtil {
     }
 
     const netSubtotal = grossSubtotal.minus(totalDiscount).toDecimalPlaces(2);
-    const paid = new Decimal(totalPaid || 0).toDecimalPlaces(2);
+    const paid = toSafeDecimal(totalPaid, 0).toDecimalPlaces(2);
     const balance = totalAmount.minus(paid).toDecimalPlaces(2);
 
     return {

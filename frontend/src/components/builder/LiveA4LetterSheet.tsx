@@ -31,7 +31,7 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
   documentNumber,
 }) => {
   // Convert newlines in plain text to clean paragraphs
-  const paragraphs = (formValues.bodyText || '')
+  const paragraphs = (formValues?.bodyText || '')
     .split('\n\n')
     .map((p) => p.trim())
     .filter(Boolean);

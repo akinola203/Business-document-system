@@ -66,10 +66,14 @@ export const App: React.FC = () => {
             <Route path="/documents/letters/new" element={<LetterBuilderPage />} />
             <Route path="/documents/letters/:id/edit" element={<LetterBuilderPage />} />
             {/* Direct Route Aliases */}
+            <Route path="/documents" element={<Navigate to="/documents/invoices" replace />} />
             <Route path="/invoices" element={<Navigate to="/documents/invoices" replace />} />
             <Route path="/waybills" element={<Navigate to="/documents/waybills" replace />} />
             <Route path="/letters" element={<Navigate to="/documents/letters" replace />} />
             <Route path="/ledger" element={<Navigate to="/payments" replace />} />
+            <Route path="/settings" element={<Navigate to="/settings/company" replace />} />
+            <Route path="/settings/audit-logs" element={<Navigate to="/audit-logs" replace />} />
+            <Route path="/audit" element={<Navigate to="/audit-logs" replace />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/vendors" element={<VendorsPage />} />

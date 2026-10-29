@@ -59,7 +59,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
       });
     } catch (err: any) {
       console.error('Failed to download Waybill PDF:', err);
-      alert('Unable to download Waybill PDF. Please verify permissions.');
+      alert(err?.message || 'Unable to download Waybill PDF. Please verify permissions.');
     } finally {
       setIsPdfDownloading(false);
     }
@@ -71,7 +71,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
       await printDocumentPdf(document.id);
     } catch (err: any) {
       console.error('Failed to print Waybill PDF:', err);
-      alert('Unable to load Waybill PDF for printing. Please verify permissions.');
+      alert(err?.message || 'Unable to load Waybill PDF for printing. Please verify permissions.');
     } finally {
       setIsPdfPrinting(false);
     }

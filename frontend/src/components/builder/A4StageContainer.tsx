@@ -89,7 +89,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
       });
     } catch (err: any) {
       console.error('Failed to download PDF:', err);
-      alert('Unable to generate or download document PDF. Please check server logs.');
+      alert(err?.message || 'Unable to generate or download document PDF. Please check server logs.');
     } finally {
       setIsDownloadingPdf(false);
     }

@@ -26,6 +26,18 @@ export interface DocumentTotalsResult {
   grandTotal: number;
 }
 
+function toSafeDecimal(val: any, fallback: number = 0): Decimal {
+  if (val === null || val === undefined || val === '' || Number.isNaN(val)) {
+    return new Decimal(fallback);
+  }
+  try {
+    const d = new Decimal(val);
+    return d.isNaN() ? new Decimal(fallback) : d;
+  } catch {
+    return new Decimal(fallback);
+  }
+}
+
 /**
  * Calculates line financials mirroring backend FinancialMathUtil.calculateLineItem
  */
@@ -35,10 +47,10 @@ export function calcLine(
   discountPct: number | string | Decimal = 0,
   taxRate: number | string | Decimal = 7.5,
 ): LineResult {
-  const dQty = new Decimal(qty ?? 0);
-  const dPrice = new Decimal(unitPrice ?? 0);
-  const dDiscountPct = new Decimal(discountPct ?? 0);
-  const dTaxPct = new Decimal(taxRate ?? 7.5);
+  const dQty = toSafeDecimal(qty, 0);
+  const dPrice = toSafeDecimal(unitPrice, 0);
+  const dDiscountPct = toSafeDecimal(discountPct, 0);
+  const dTaxPct = toSafeDecimal(taxRate, 7.5);
 
   const gross = dQty.times(dPrice);
   const discount = gross.times(dDiscountPct.dividedBy(100)).toDecimalPlaces(2);
@@ -64,11 +76,11 @@ export function calcTotals(lines: LineInput[]): DocumentTotalsResult {
   let totalTax = new Decimal(0);
   let grandTotal = new Decimal(0);
 
-  for (const line of lines) {
-    const dQty = new Decimal(line.quantity ?? 0);
-    const dPrice = new Decimal(line.unitPrice ?? 0);
-    const dDiscountPct = new Decimal(line.discountPercent ?? 0);
-    const dTaxPct = new Decimal(line.taxRate ?? 7.5);
+  for (const line of lines || []) {
+    const dQty = toSafeDecimal(line?.quantity, 0);
+    const dPrice = toSafeDecimal(line?.unitPrice, 0);
+    const dDiscountPct = toSafeDecimal(line?.discountPercent, 0);
+    const dTaxPct = toSafeDecimal(line?.taxRate, 7.5);
 
     const gross = dQty.times(dPrice);
     const discount = gross.times(dDiscountPct.dividedBy(100)).toDecimalPlaces(2);

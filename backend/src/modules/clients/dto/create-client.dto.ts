@@ -10,7 +10,7 @@ import {
   ValidateNested,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ClientType } from '@prisma/client';
 import { CreateAddressDto } from './create-address.dto';
 
@@ -36,6 +36,7 @@ export class CreateClientDto {
   companyName?: string;
 
   @ApiPropertyOptional({ example: 'procurement@dangote-hub.ng', description: 'Billing/accounts email address' })
+  @Transform(({ value }: { value: any }) => (typeof value === 'string' && value.trim() === '' ? undefined : value))
   @IsOptional()
   @IsEmail()
   email?: string;

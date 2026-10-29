@@ -57,6 +57,9 @@ export class LettersService {
         },
       });
 
+      const bodyText = dto.bodyText?.trim() || dto.bodyHtml?.replace(/<[^>]+>/g, ' ').trim() || '';
+      const bodyHtml = dto.bodyHtml ? sanitizeRichHtml(dto.bodyHtml.trim()) : `<p>${bodyText}</p>`;
+
       await tx.letter.create({
         data: {
           documentId: document.id,
@@ -66,8 +69,8 @@ export class LettersService {
           recipientOrganization: dto.recipientOrganization?.trim(),
           recipientAddress: dto.recipientAddress?.trim(),
           subject: dto.subject.trim(),
-          bodyHtml: sanitizeRichHtml(dto.bodyHtml.trim()),
-          bodyText: dto.bodyText.trim(),
+          bodyHtml,
+          bodyText,
           signatoryName: dto.signatoryName.trim(),
           signatoryTitle: dto.signatoryTitle?.trim(),
           signatoryDepartment: dto.signatoryDepartment?.trim(),
@@ -169,8 +172,16 @@ export class LettersService {
           recipientOrganization: dto.recipientOrganization !== undefined ? dto.recipientOrganization?.trim() : undefined,
           recipientAddress: dto.recipientAddress !== undefined ? dto.recipientAddress?.trim() : undefined,
           subject: dto.subject !== undefined ? dto.subject.trim() : undefined,
-          bodyHtml: dto.bodyHtml !== undefined ? sanitizeRichHtml(dto.bodyHtml.trim()) : undefined,
-          bodyText: dto.bodyText !== undefined ? dto.bodyText.trim() : undefined,
+          bodyHtml: dto.bodyHtml !== undefined
+            ? sanitizeRichHtml(dto.bodyHtml.trim())
+            : dto.bodyText !== undefined
+              ? `<p>${dto.bodyText.trim()}</p>`
+              : undefined,
+          bodyText: dto.bodyText !== undefined
+            ? dto.bodyText.trim()
+            : dto.bodyHtml !== undefined
+              ? dto.bodyHtml.replace(/<[^>]+>/g, ' ').trim()
+              : undefined,
           signatoryName: dto.signatoryName !== undefined ? dto.signatoryName.trim() : undefined,
           signatoryTitle: dto.signatoryTitle !== undefined ? dto.signatoryTitle?.trim() : undefined,
           signatoryDepartment: dto.signatoryDepartment !== undefined ? dto.signatoryDepartment?.trim() : undefined,

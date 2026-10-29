@@ -37,7 +37,7 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
   selectedClient,
   documentNumber,
 }) => {
-  const items = formValues.items || [];
+  const items = formValues?.items || [];
 
   const totalQuantity = items.reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
   const totalPackages = items.reduce((acc, it) => acc + (Number(it.packageCount) || 0), 0);

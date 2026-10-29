@@ -52,7 +52,7 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
       });
     } catch (err: any) {
       console.error('Failed to download Letter PDF:', err);
-      alert('Unable to download Letter PDF. Please verify permissions.');
+      alert(err?.message || 'Unable to download Letter PDF. Please verify permissions.');
     } finally {
       setIsPdfDownloading(false);
     }
@@ -64,7 +64,7 @@ export const LetterInspector: React.FC<LetterInspectorProps> = ({
       await printDocumentPdf(document.id);
     } catch (err: any) {
       console.error('Failed to print Letter PDF:', err);
-      alert('Unable to load Letter PDF for printing. Please verify permissions.');
+      alert(err?.message || 'Unable to load Letter PDF for printing. Please verify permissions.');
     } finally {
       setIsPdfPrinting(false);
     }

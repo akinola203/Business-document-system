@@ -63,7 +63,7 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
       });
     } catch (err: any) {
       console.error('Failed to download PDF:', err);
-      alert('Unable to download invoice PDF. Please verify permissions.');
+      alert(err?.message || 'Unable to download invoice PDF. Please verify permissions.');
     } finally {
       setIsPdfDownloading(false);
     }
@@ -76,7 +76,7 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
       await printDocumentPdf(document.id);
     } catch (err: any) {
       console.error('Failed to print PDF:', err);
-      alert('Unable to load invoice PDF for printing. Please verify permissions.');
+      alert(err?.message || 'Unable to load invoice PDF for printing. Please verify permissions.');
     } finally {
       setIsPdfPrinting(false);
     }
