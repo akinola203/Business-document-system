@@ -67,6 +67,12 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
     };
   }, [pdfBlobUrl]);
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setZoomLevel(0.55);
+    }
+  }, []);
+
   const handlePrint = () => {
     window.print();
   };
@@ -96,9 +102,9 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
   };
 
   return (
-    <div className="bg-[#16181F] rounded-[32px] p-4 md:p-6 shadow-2xl flex flex-col items-center min-h-[840px] sticky top-6 border border-white/10 text-white overflow-hidden">
+    <div className="bg-[#16181F] rounded-[24px] md:rounded-[32px] p-3 md:p-6 shadow-2xl flex flex-col items-center min-h-[500px] md:min-h-[840px] md:sticky md:top-6 border border-white/10 text-white overflow-hidden max-w-full w-full">
       {/* 1. Stage Top Controls Bar */}
-      <div className="w-full flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-white/10 px-2">
+      <div className="w-full flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-white/10 px-1 md:px-2">
         {/* Left Status Indicator */}
         <div className="flex items-center gap-2">
           {previewMode === 'LIVE' ? (
@@ -117,6 +123,15 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
         {/* Center: Zoom Controls */}
         {previewMode === 'LIVE' && (
           <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-1 rounded-full text-xs">
+            <button
+              type="button"
+              onClick={() => setZoomLevel(0.55)}
+              className={`px-2 py-1 rounded-full font-bold transition-all sm:hidden ${
+                zoomLevel === 0.55 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              55%
+            </button>
             <button
               type="button"
               onClick={() => setZoomLevel(0.75)}
@@ -209,13 +224,15 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
       </div>
 
       {/* 2. Main Stage Stage Viewing Area */}
-      <div className="w-full flex-1 flex justify-center items-start overflow-y-auto max-h-[calc(100vh-210px)] min-h-[640px] py-8 md:py-12 px-3 md:px-6 a4-scroll dark-scroll">
+      <div className="w-full max-w-full flex-1 flex justify-center items-start overflow-y-auto overflow-x-auto max-h-[calc(100vh-210px)] min-h-[460px] md:min-h-[640px] py-4 md:py-12 px-1 md:px-6 a4-scroll dark-scroll">
         {previewMode === 'LIVE' ? (
           <div
-            className="w-full flex justify-center transition-transform duration-200 origin-top"
+            className="w-full flex justify-center transition-transform duration-200 origin-top overflow-visible"
             style={{ transform: `scale(${zoomLevel})` }}
           >
-            {children}
+            <div className="shrink-0 max-w-full">
+              {children}
+            </div>
           </div>
         ) : (
           /* Server Preview Mode */

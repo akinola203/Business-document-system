@@ -24,6 +24,8 @@ import {
   MapPin,
   Phone,
   User,
+  Eye,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 // Zod Validation Schema for Waybills
@@ -59,6 +61,7 @@ export const WaybillBuilderPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [previewMode, setPreviewMode] = React.useState<'LIVE' | 'SERVER'>('LIVE');
+  const [mobileViewTab, setMobileViewTab] = React.useState<'form' | 'preview'>('form');
   const [activeCatalogIndex, setActiveCatalogIndex] = React.useState<number | null>(null);
 
   // 1. Fetch Company Profile (for default origin address)
@@ -428,9 +431,33 @@ export const WaybillBuilderPage: React.FC = () => {
 
       {/* 2. Split-Screen Studio Layout */}
       <ErrorBoundary fallbackTitle="Waybill Studio Workspace Error">
+        {/* Mobile View Tab Switcher (< lg) */}
+        <div className="flex lg:hidden items-center p-1 bg-slate-200/80 rounded-2xl w-full max-w-xs mx-auto shadow-inner mb-4">
+          <button
+            type="button"
+            onClick={() => setMobileViewTab('form')}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileViewTab === 'form' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Form Editor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileViewTab('preview')}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mobileViewTab === 'preview' ? 'bg-[#5847F6] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Live A4 Preview</span>
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Interactive Form Studio (45% -> 6 cols) */}
-        <div className="lg:col-span-6 space-y-6">
+          <div className={`lg:col-span-6 space-y-6 ${mobileViewTab === 'form' ? 'block' : 'hidden lg:block'}`}>
           {/* Card 1: Consignee & Routing Bay */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
@@ -796,7 +823,7 @@ export const WaybillBuilderPage: React.FC = () => {
         </div>
 
         {/* Right Sticky Dark Obsidian A4 Stage (55% -> 6 cols) */}
-        <div className="lg:col-span-6">
+        <div className={`lg:col-span-6 ${mobileViewTab === 'preview' ? 'block' : 'hidden lg:block'}`}>
           <ErrorBoundary fallbackTitle="Live A4 Waybill Preview Error">
             <A4StageContainer
               previewMode={previewMode}

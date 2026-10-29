@@ -19,7 +19,7 @@ export class PdfService implements OnModuleDestroy {
   private browserInstance: Browser | null = null;
   private isLaunching = false;
   private activePageCount = 0;
-  private readonly maxConcurrentPages = 3;
+  private readonly maxConcurrentPages = 2;
   private readonly waitingQueue: Array<() => void> = [];
   private readonly generatingPdfs = new Map<
     string,
@@ -76,12 +76,22 @@ export class PdfService implements OnModuleDestroy {
 
     this.isLaunching = true;
     try {
-      this.logger.log('Initializing shared Puppeteer headless browser instance...');
+      this.logger.log('Initializing shared Puppeteer headless browser instance (Render low-memory tuned)...');
       const args = [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-extensions',
+        '--disable-software-rasterizer',
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-sync',
+        '--disable-translate',
+        '--mute-audio',
+        '--safebrowsing-disable-auto-update',
         '--font-render-hinting=medium',
       ];
 
@@ -129,48 +139,48 @@ export class PdfService implements OnModuleDestroy {
    */
   async generatePdfFromHtml(html: string): Promise<Buffer> {
     await this.acquirePageSlot();
+    let page: puppeteer.Page | null = null;
     try {
       const browser = await this.getBrowser();
-      const page = await browser.newPage();
+      page = await browser.newPage();
 
-      try {
-        await page.setJavaScriptEnabled(false);
-        await page.setRequestInterception(true);
-        page.on('request', (req) => {
-          const url = req.url();
-          if (url.startsWith('data:') || url === 'about:blank') {
-            req.continue();
-          } else {
-            req.abort();
-          }
-        });
+      await page.setJavaScriptEnabled(false);
+      await page.setRequestInterception(true);
+      page.on('request', (req) => {
+        const url = req.url();
+        if (url.startsWith('data:') || url === 'about:blank') {
+          req.continue();
+        } else {
+          req.abort();
+        }
+      });
 
-        await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
-        await page.setContent(html, {
-          waitUntil: ['load', 'domcontentloaded'],
-          timeout: 30000,
-        });
+      await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
+      await page.setContent(html, {
+        waitUntil: ['load', 'domcontentloaded'],
+        timeout: 30000,
+      });
 
-        const pdfUint8Array = await page.pdf({
-          format: 'A4',
-          printBackground: true,
-          preferCSSPageSize: true,
-          margin: {
-            top: '0mm',
-            bottom: '0mm',
-            left: '0mm',
-            right: '0mm',
-          },
-        });
+      const pdfUint8Array = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: {
+          top: '0mm',
+          bottom: '0mm',
+          left: '0mm',
+          right: '0mm',
+        },
+      });
 
-        return Buffer.from(pdfUint8Array);
-      } catch (err: any) {
-        this.logger.error(`Puppeteer PDF compilation failed: ${err.message}`, err.stack);
-        throw new BadRequestException(`Failed to compile document PDF: ${err.message}`);
-      } finally {
+      return Buffer.from(pdfUint8Array);
+    } catch (err: any) {
+      this.logger.error(`Puppeteer PDF compilation failed: ${err.message}`, err.stack);
+      throw new BadRequestException(`Failed to compile document PDF: ${err.message}`);
+    } finally {
+      if (page) {
         await page.close().catch(() => {});
       }
-    } finally {
       this.releasePageSlot();
     }
   }

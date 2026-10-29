@@ -44,7 +44,7 @@ export const OverviewDashboard: React.FC = () => {
       : DEMO_INVOICES.slice(0, 5);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8 max-w-full overflow-hidden">
       {/* 1. Header & Primary Quick Action Pills */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -63,7 +63,7 @@ export const OverviewDashboard: React.FC = () => {
         </div>
 
         {/* Floating Quick Action Pills */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
           <button
             onClick={() => navigate('/documents/invoices/new')}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs md:text-sm font-semibold shadow-lg shadow-indigo-500/25 transition-all"
@@ -99,7 +99,7 @@ export const OverviewDashboard: React.FC = () => {
       </div>
 
       {/* 2. 4-Column Bento KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
         {/* KPI 1: Overdue & Action Required */}
         <div
           onClick={() => navigate('/documents/invoices?filter=overdue')}
