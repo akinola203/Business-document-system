@@ -301,6 +301,39 @@ test('AuthService Unit Tests', async (t) => {
     assert.ok(mockUserDb.passwordResetExpiresAt > new Date());
   });
 
+  await t.test('forgotPassword dispatches email via MailService when injected', async () => {
+    let sentEmailTo = '';
+    let sentResetUrl = '';
+    let sentUserName = '';
+
+    const mockMailService: any = {
+      sendPasswordResetEmail: async (to: string, resetUrl: string, userName?: string) => {
+        sentEmailTo = to;
+        sentResetUrl = resetUrl;
+        sentUserName = userName || '';
+        return { delivered: true, simulated: false };
+      },
+    };
+
+    const authWithMail = new AuthService(mockPrisma, mockJwtService, mockConfigService, mockMailService);
+
+    mockUserDb = {
+      id: 'usr-1',
+      email: 'executive@aoa77.com',
+      firstName: 'Adebayo',
+      lastName: 'Akinola',
+      isActive: true,
+      passwordResetToken: null,
+      passwordResetExpiresAt: null,
+    };
+
+    const res = await authWithMail.forgotPassword({ email: 'executive@aoa77.com' });
+    assert.ok(res.message.includes('If an account exists'));
+    assert.equal(sentEmailTo, 'executive@aoa77.com');
+    assert.ok(sentResetUrl.includes('/reset-password?token='));
+    assert.equal(sentUserName, 'Adebayo');
+  });
+
   await t.test('resetPassword rejects invalid or unknown token', async () => {
     await assert.rejects(
       async () => {

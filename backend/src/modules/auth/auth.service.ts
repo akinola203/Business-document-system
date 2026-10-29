@@ -4,12 +4,14 @@ import {
   ForbiddenException,
   BadRequestException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -23,6 +25,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Optional() private readonly mailService?: MailService,
   ) {}
 
   /**
@@ -358,21 +361,26 @@ export class AuthService {
       },
     });
 
-    const appUrl =
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') ||
       this.configService.get<string>('APP_URL') ||
       process.env.FRONTEND_URL ||
       'http://localhost:5173';
-    const cleanAppUrl = appUrl.replace(/\/+$/, '');
-    const resetLink = `${cleanAppUrl}/auth/reset-password?token=${resetToken}`;
+    const cleanFrontendUrl = frontendUrl.replace(/\/+$/, '');
+    const resetLink = `${cleanFrontendUrl}/reset-password?token=${resetToken}`;
 
-    this.logger.log(
-      `\n======================================================\n` +
-      `[PASSWORD RESET EMAIL DISPATCH SIMULATION]\n` +
-      `To: ${user.email} (${user.firstName} ${user.lastName})\n` +
-      `Reset URL: ${resetLink}\n` +
-      `Expires At: ${expiresAt.toISOString()} (20 minutes)\n` +
-      `======================================================\n`,
-    );
+    if (this.mailService) {
+      await this.mailService.sendPasswordResetEmail(user.email, resetLink, user.firstName);
+    } else {
+      this.logger.log(
+        `\n======================================================\n` +
+        `[PASSWORD RESET EMAIL DISPATCH SIMULATION]\n` +
+        `To: ${user.email} (${user.firstName} ${user.lastName})\n` +
+        `Reset URL: ${resetLink}\n` +
+        `Expires At: ${expiresAt.toISOString()} (20 minutes)\n` +
+        `======================================================\n`,
+      );
+    }
 
     return {
       message: 'If an account exists with this email address, a password reset link has been sent.',
