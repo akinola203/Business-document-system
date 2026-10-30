@@ -55,7 +55,12 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
       : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  const itemsRows = (wb.items || [])
+  const items = wb.items || [];
+  const totalQuantity = items.reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
+  const totalPackages = items.reduce((acc, it) => acc + (Number(it.packageCount) || 0), 0);
+  const totalWeight = items.reduce((acc, it) => acc + (Number(it.weightKg) || 0), 0);
+
+  const itemsRows = items
     .map(
       (item) => `
       <tr>
@@ -227,6 +232,87 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .font-semibold { font-weight: 600; }
+
+    .totals-box {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      box-sizing: border-box;
+    }
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .totals-table tr td {
+      padding: 4px 0;
+      vertical-align: middle;
+    }
+    .totals-label {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: #64748b;
+      text-align: left;
+      white-space: nowrap;
+      padding-right: 12px;
+    }
+    .totals-value {
+      font-size: 9pt;
+      font-weight: 700;
+      color: #0f172a;
+      text-align: right;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    .grand-total-row td {
+      border-top: 2px solid #0f172a;
+      border-bottom: 2px solid #0f172a;
+      padding: 6px 0 !important;
+    }
+    .totals-label-grand {
+      font-size: 9pt;
+      font-weight: 900;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: left;
+      white-space: nowrap;
+      padding-right: 12px;
+    }
+    .totals-value-grand {
+      font-size: 11pt;
+      font-weight: 900;
+      color: #0f172a;
+      text-align: right;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    .total-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 8.5pt;
+      width: 100%;
+    }
+    .total-line > span:first-child {
+      text-align: left;
+      color: #64748b;
+      font-weight: 600;
+      padding-right: 12px;
+      white-space: nowrap;
+    }
+    .total-line > span:last-child {
+      text-align: right;
+      color: #0f172a;
+      font-weight: 700;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+    }
+
     .sign-section {
       width: 100%;
       border-collapse: collapse;
@@ -349,6 +435,50 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
     <tbody>
       ${itemsRows || '<tr><td colspan="5" class="text-center" style="padding: 20px;">No items listed on this consignment.</td></tr>'}
     </tbody>
+    ${
+      items.length > 0
+        ? `
+    <tfoot>
+      <tr style="background: #f1f5f9; font-weight: 700; border-top: 2px solid #0f172a;">
+        <td colspan="2" style="padding: 7px 8px; text-transform: uppercase; font-size: 8pt; color: #475569; letter-spacing: 0.5px;">Consignment Totals:</td>
+        <td class="text-right" style="padding: 7px 8px; font-weight: 800; color: #0f172a;">${totalQuantity.toLocaleString()}</td>
+        <td class="text-right" style="padding: 7px 8px; color: #334155;">${totalPackages > 0 ? totalPackages.toLocaleString() : '—'}</td>
+        <td class="text-right" style="padding: 7px 8px; font-weight: 800; color: #0f172a;">${totalWeight > 0 ? totalWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' kg' : '—'}</td>
+      </tr>
+    </tfoot>`
+        : ''
+    }
+  </table>
+
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; page-break-inside: avoid;">
+    <tr>
+      <td style="width: 52%; vertical-align: top; padding-right: 20px;">
+        <div style="font-size: 8pt; color: #64748b; line-height: 1.45; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
+          <strong style="color: #334155; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.5px; display: block; margin-bottom: 2px;">Delivery Endorsement:</strong>
+          The receiver confirms receipt of all packages listed above in undamaged condition. Any shortage, seal tampering, or transit damage must be noted prior to signing.
+        </div>
+      </td>
+      <td style="width: 48%; vertical-align: top;">
+        <div class="totals-box">
+          <table class="totals-table">
+            <tbody>
+              <tr>
+                <td class="totals-label">Total Cargo Units</td>
+                <td class="totals-value">${totalQuantity.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td class="totals-label">Total Packages</td>
+                <td class="totals-value">${totalPackages > 0 ? totalPackages.toLocaleString() : '—'}</td>
+              </tr>
+              <tr class="grand-total-row">
+                <td class="totals-label-grand">Gross Weight</td>
+                <td class="totals-value-grand">${totalWeight > 0 ? totalWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' KG' : '—'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </td>
+    </tr>
   </table>
 
   <table class="sign-section">

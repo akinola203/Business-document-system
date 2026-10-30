@@ -282,6 +282,14 @@ test('Templates & HTML Renderers Unit Tests', async (t) => {
     assert.ok(html.includes('Portland Limestone Cement 50kg'));
     assert.ok(html.includes('INV-2026-000042'));
     assert.ok(html.includes('215,000.00'));
+    assert.ok(html.includes('totals-table'));
+    assert.ok(html.includes('totals-label'));
+    assert.ok(html.includes('totals-value'));
+    assert.ok(html.includes('Subtotal'));
+    assert.ok(html.includes('Total Amount'));
+    assert.ok(!html.includes('Subtotal:NGN'));
+    assert.ok(!html.includes('Total NGN Amount:'));
+    assert.ok(!html.includes('BalanceNGN Due:'));
   });
 
   await t.test('2. Waybill HTML renderer includes logistics, carrier, and 3 signature blocks', () => {
@@ -328,6 +336,8 @@ test('Templates & HTML Renderers Unit Tests', async (t) => {
     assert.ok(html.includes('1. Dispatched By'));
     assert.ok(html.includes('2. Carrier Acknowledgement'));
     assert.ok(html.includes('3. Consignee Delivery Receipt'));
+    assert.ok(html.includes('Consignment Totals:'));
+    assert.ok(html.includes('totals-table'));
   });
 
   await t.test('3. Letter HTML renderer strips unsafe scripts and renders corporate correspondence', () => {

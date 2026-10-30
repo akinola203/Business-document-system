@@ -237,63 +237,178 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
 
     .summary-container {
       width: 100%;
-      margin-top: 15px;
+      margin-top: 16px;
+      border-collapse: collapse;
+      page-break-inside: avoid;
     }
     .summary-container td {
       vertical-align: top;
     }
     .payment-instructions {
-      width: 55%;
-      padding-right: 20px;
+      width: 52%;
+      padding-right: 24px;
+    }
+    .totals-cell {
+      width: 48%;
+      vertical-align: top;
     }
     .bank-card {
       background: #f0fdf4;
       border: 1px solid #bbf7d0;
       border-radius: 6px;
       padding: 10px 14px;
-      font-size: 9pt;
+      font-size: 8.5pt;
     }
     .bank-card-title {
       font-weight: 700;
       color: #166534;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
       text-transform: uppercase;
       font-size: 8pt;
       letter-spacing: 0.5px;
     }
     .bank-row {
-      margin-bottom: 2px;
+      margin-bottom: 3px;
       color: #1e293b;
     }
 
     .totals-box {
-      width: 45%;
+      width: 100%;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 12px 14px;
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-sizing: border-box;
     }
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .totals-table tr td {
+      padding: 4px 0;
+      vertical-align: middle;
+    }
+    .totals-label {
+      font-size: 9pt;
+      font-weight: 600;
+      color: #64748b;
+      text-align: left;
+      white-space: nowrap;
+      padding-right: 14px;
+    }
+    .totals-value {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      text-align: right;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    .text-discount {
+      color: #059669 !important;
+    }
+    .grand-total-row td {
+      border-top: 2px solid #0f172a;
+      border-bottom: 2px solid #0f172a;
+      padding: 8px 0 !important;
+    }
+    .totals-label-grand {
+      font-size: 10pt;
+      font-weight: 900;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: left;
+      white-space: nowrap;
+      padding-right: 14px;
+    }
+    .totals-value-grand {
+      font-size: 12.5pt;
+      font-weight: 900;
+      color: #0f172a;
+      text-align: right;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    .balance-due-row td {
+      padding-top: 8px !important;
+      padding-bottom: 0 !important;
+    }
+    .balance-due-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      padding: 7px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .totals-label-balance {
+      font-size: 8.5pt;
+      font-weight: 800;
+      color: #991b1b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: left;
+      white-space: nowrap;
+      padding-right: 14px;
+    }
+    .totals-value-balance {
+      font-size: 11pt;
+      font-weight: 900;
+      color: #991b1b;
+      text-align: right;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Fallback and utility flex classes for .total-line */
     .total-line {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 6px;
-      font-size: 9.5pt;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 9pt;
+      width: 100%;
+    }
+    .total-line > span:first-child {
+      text-align: left;
+      color: #64748b;
+      font-weight: 600;
+      padding-right: 14px;
+      white-space: nowrap;
+    }
+    .total-line > span:last-child {
+      text-align: right;
+      color: #0f172a;
+      font-weight: 700;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
     }
     .grand-total {
       border-top: 2px solid #0f172a;
-      padding-top: 6px;
+      border-bottom: 2px solid #0f172a;
+      padding-top: 8px;
+      padding-bottom: 8px;
       margin-top: 6px;
-      font-size: 12pt;
-      font-weight: 800;
+      margin-bottom: 6px;
+      font-size: 11pt;
+      font-weight: 900;
       color: #0f172a;
     }
     .balance-due {
-      background: #fee2e2;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
       color: #991b1b;
       font-weight: 800;
-      padding: 6px 8px;
-      border-radius: 4px;
-      margin-top: 6px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      margin-top: 8px;
     }
 
     .footer {
@@ -386,13 +501,38 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
         }
         ${inv.notes ? `<div style="margin-top: 10px; font-size: 8.5pt; color: #64748b;"><strong>Notes:</strong> ${escapeHtml(inv.notes)}</div>` : ''}
       </td>
-      <td style="width: 45%;">
+      <td class="totals-cell">
         <div class="totals-box">
-          <div class="total-line"><span>Subtotal:</span><span>${formatCurrency(ctx.subtotal)}</span></div>
-          ${Number(ctx.discountAmount) > 0 ? `<div class="total-line"><span>Total Discount:</span><span>-${formatCurrency(ctx.discountAmount)}</span></div>` : ''}
-          <div class="total-line"><span>Value Added Tax (VAT):</span><span>${formatCurrency(ctx.taxAmount)}</span></div>
-          <div class="total-line grand-total"><span>Total Amount:</span><span>${formatCurrency(ctx.totalAmount)}</span></div>
-          <div class="total-line balance-due"><span>Balance Due:</span><span>${formatCurrency(ctx.balanceDue)}</span></div>
+          <table class="totals-table">
+            <tbody>
+              <tr>
+                <td class="totals-label">Subtotal</td>
+                <td class="totals-value">${formatCurrency(ctx.subtotal)}</td>
+              </tr>
+              ${Number(ctx.discountAmount) > 0 ? `
+              <tr>
+                <td class="totals-label text-discount">Total Discount</td>
+                <td class="totals-value text-discount">-${formatCurrency(ctx.discountAmount)}</td>
+              </tr>` : ''}
+              <tr>
+                <td class="totals-label">Value Added Tax (VAT)</td>
+                <td class="totals-value">${formatCurrency(ctx.taxAmount)}</td>
+              </tr>
+              <tr class="grand-total-row">
+                <td class="totals-label-grand">Total Amount</td>
+                <td class="totals-value-grand">${formatCurrency(ctx.totalAmount)}</td>
+              </tr>
+              ${Number(ctx.balanceDue) > 0 || ctx.paymentStatus === 'PARTIALLY_PAID' || ctx.paymentStatus === 'UNPAID' ? `
+              <tr class="balance-due-row">
+                <td colspan="2">
+                  <div class="balance-due-box">
+                    <span class="totals-label-balance">Balance Due</span>
+                    <span class="totals-value-balance">${formatCurrency(ctx.balanceDue)}</span>
+                  </div>
+                </td>
+              </tr>` : ''}
+            </tbody>
+          </table>
         </div>
       </td>
     </tr>

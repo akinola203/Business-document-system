@@ -163,6 +163,63 @@ export function renderLetterHtml(ctx: LetterRenderContext): string {
       color: #64748b;
       margin-top: 2px;
     }
+    .totals-box {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      box-sizing: border-box;
+      margin-top: 14px;
+      margin-bottom: 14px;
+    }
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .totals-table tr td {
+      padding: 4px 0;
+      vertical-align: middle;
+    }
+    .totals-label {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: #64748b;
+      text-align: left;
+      white-space: nowrap;
+      padding-right: 12px;
+    }
+    .totals-value {
+      font-size: 9pt;
+      font-weight: 700;
+      color: #0f172a;
+      text-align: right;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    .total-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 8.5pt;
+      width: 100%;
+    }
+    .total-line > span:first-child {
+      text-align: left;
+      color: #64748b;
+      font-weight: 600;
+      padding-right: 12px;
+      white-space: nowrap;
+    }
+    .total-line > span:last-child {
+      text-align: right;
+      color: #0f172a;
+      font-weight: 700;
+      white-space: nowrap;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace, sans-serif;
+    }
     .footer {
       position: fixed;
       bottom: 0;
