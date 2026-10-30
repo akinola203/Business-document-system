@@ -112,7 +112,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   const showBank = formValues?.bankDetailsVisible ?? company?.settings?.showBankDetailsOnInvoice ?? true;
 
   return (
-    <div className="aspect-[1/1.414] w-full max-w-[680px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300 my-auto">
+    <div className="w-[794px] min-h-[1123px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-8 text-left relative flex flex-col justify-between border border-slate-300">
       {/* 1. Header & Financial Ledger Brand Identity */}
       <div>
         {/* Ledger Top Bar */}
@@ -242,10 +242,19 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
 
         {/* 3. Line Items Table (Financial Ledger Layout) */}
         <div className="overflow-hidden border border-slate-300 rounded-lg">
-          <table className="w-full text-left text-[11px]">
+          <table className="w-full table-fixed text-left text-[11px]">
+            <colgroup>
+              <col className="w-9" />
+              <col className="w-auto" />
+              <col className="w-[70px]" />
+              <col className="w-[110px]" />
+              <col className="w-[54px]" />
+              <col className="w-[100px]" />
+              <col className="w-[130px]" />
+            </colgroup>
             <thead className="bg-slate-900 text-white font-bold uppercase text-[9px] tracking-wider">
               <tr>
-                <th className="py-2.5 px-3 w-8 text-center">#</th>
+                <th className="py-2.5 px-3 text-center">#</th>
                 <th className="py-2.5 px-3">Item Description</th>
                 <th className="py-2.5 px-3 text-right">Qty</th>
                 <th className="py-2.5 px-3 text-right">Unit Price ({currency})</th>
@@ -267,7 +276,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
                     <td className="py-2 px-3 text-center text-slate-400 font-mono text-[10px]">
                       {item.lineNumber}
                     </td>
-                    <td className="py-2 px-3 font-semibold text-slate-900 max-w-[200px] break-words">
+                    <td className="py-2 px-3 font-semibold text-slate-900 break-words">
                       {item.description}
                     </td>
                     <td className="py-2 px-3 text-right tabular-nums font-medium text-slate-700 whitespace-nowrap">

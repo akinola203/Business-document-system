@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, Printer, Sparkles, Server, FileText, RefreshCw, AlertCircle, Download } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
 import { downloadDocumentPdf } from '../../lib/pdf-download';
@@ -10,19 +10,88 @@ interface A4StageContainerProps {
   children: React.ReactNode;
 }
 
+const A4_WIDTH = 794;
+const A4_HEIGHT = 1123;
+
 export const A4StageContainer: React.FC<A4StageContainerProps> = ({
   previewMode,
   documentId,
   onSaveDraft,
   children,
 }) => {
-  const [zoomLevel, setZoomLevel] = useState<number>(1.0); // 0.75, 1.0, or Fit (0.85)
+  const stageRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [contentHeight, setContentHeight] = useState<number>(A4_HEIGHT);
+  const [zoomMode, setZoomMode] = useState<'fit' | number>('fit');
   const [serverPreviewType, setServerPreviewType] = useState<'HTML' | 'PDF'>('HTML');
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isServerLoading, setIsServerLoading] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // Measure container width via ResizeObserver on the scroll stage ref
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+
+    const updateWidth = () => {
+      if (el) {
+        setContainerWidth(el.clientWidth);
+      }
+    };
+
+    updateWidth();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const width = entry.contentRect.width || (entry.target as HTMLElement).clientWidth;
+          if (width > 0) {
+            setContainerWidth(width);
+          }
+        }
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    } else {
+      window.addEventListener('resize', updateWidth);
+      return () => window.removeEventListener('resize', updateWidth);
+    }
+  }, []);
+
+  // Monitor content height changes (e.g. multiple items or multi-page letter)
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    const updateHeight = () => {
+      if (el) {
+        const measured = Math.max(A4_HEIGHT, el.scrollHeight || el.clientHeight || A4_HEIGHT);
+        setContentHeight(measured);
+      }
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => {
+        updateHeight();
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+  }, [children]);
+
+  // Calculate dynamic auto-scale when zoomMode is 'fit'
+  const autoScale = useMemo(() => {
+    if (!containerWidth) return 0.85;
+    const availableWidth = containerWidth - 48; // 24px padding on each side
+    return Math.min(1, Math.max(0.4, availableWidth / A4_WIDTH));
+  }, [containerWidth]);
+
+  const currentScale = zoomMode === 'fit' ? autoScale : zoomMode;
 
   // Fetch server preview when switching to SERVER mode if document has an ID
   const fetchServerPreview = async () => {
@@ -53,25 +122,19 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (previewMode === 'SERVER' && documentId) {
       fetchServerPreview();
     }
   }, [previewMode, documentId, serverPreviewType]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (pdfBlobUrl) {
         URL.revokeObjectURL(pdfBlobUrl);
       }
     };
   }, [pdfBlobUrl]);
-
-  React.useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setZoomLevel(0.55);
-    }
-  }, []);
 
   const handlePrint = () => {
     window.print();
@@ -125,36 +188,36 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
           <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-1 rounded-full text-xs">
             <button
               type="button"
-              onClick={() => setZoomLevel(0.55)}
-              className={`px-2 py-1 rounded-full font-bold transition-all sm:hidden ${
-                zoomLevel === 0.55 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
+              onClick={() => setZoomMode(0.55)}
+              className={`px-2.5 py-1 rounded-full font-bold transition-all sm:hidden ${
+                zoomMode === 0.55 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               55%
             </button>
             <button
               type="button"
-              onClick={() => setZoomLevel(0.75)}
+              onClick={() => setZoomMode(0.75)}
               className={`px-2.5 py-1 rounded-full font-bold transition-all ${
-                zoomLevel === 0.75 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
+                zoomMode === 0.75 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               75%
             </button>
             <button
               type="button"
-              onClick={() => setZoomLevel(0.9)}
+              onClick={() => setZoomMode('fit')}
               className={`px-2.5 py-1 rounded-full font-bold transition-all ${
-                zoomLevel === 0.9 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
+                zoomMode === 'fit' ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               Fit
             </button>
             <button
               type="button"
-              onClick={() => setZoomLevel(1.0)}
+              onClick={() => setZoomMode(1.0)}
               className={`px-2.5 py-1 rounded-full font-bold transition-all ${
-                zoomLevel === 1.0 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
+                zoomMode === 1.0 ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               100%
@@ -223,15 +286,31 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
         </div>
       </div>
 
-      {/* 2. Main Stage Stage Viewing Area */}
-      <div className="w-full max-w-full flex-1 flex justify-center items-start overflow-y-auto overflow-x-auto max-h-[calc(100vh-210px)] min-h-[460px] md:min-h-[640px] py-4 md:py-12 px-1 md:px-6 a4-scroll dark-scroll">
+      {/* 2. Main Stage Viewing Area */}
+      <div
+        ref={stageRef}
+        className="w-full max-w-full flex-1 overflow-y-auto overflow-x-auto max-h-[calc(100vh-210px)] min-h-[460px] md:min-h-[640px] py-6 px-4 md:px-6 a4-scroll dark-scroll"
+      >
         {previewMode === 'LIVE' ? (
-          <div
-            className="w-full flex justify-center transition-transform duration-200 origin-top overflow-visible"
-            style={{ transform: `scale(${zoomLevel})` }}
-          >
-            <div className="shrink-0 max-w-full">
-              {children}
+          <div className="min-w-full w-max flex items-start justify-center">
+            <div
+              className="relative shrink-0 shadow-2xl transition-all duration-150"
+              style={{
+                width: `${A4_WIDTH * currentScale}px`,
+                height: `${contentHeight * currentScale}px`,
+              }}
+            >
+              <div
+                ref={contentRef}
+                style={{
+                  width: `${A4_WIDTH}px`,
+                  minHeight: `${A4_HEIGHT}px`,
+                  transform: `scale(${currentScale})`,
+                  transformOrigin: 'top left',
+                }}
+              >
+                {children}
+              </div>
             </div>
           </div>
         ) : (

@@ -37,7 +37,7 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
     .filter(Boolean);
 
   return (
-    <div className="aspect-[1/1.414] w-full max-w-[680px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-10 md:p-14 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300 my-auto">
+    <div className="w-[794px] min-h-[1123px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-10 md:p-14 text-left relative flex flex-col justify-between border border-slate-300">
       {/* 1. Official Corporate Letterhead */}
       <div>
         {/* Executive Letterhead Crest & Branding */}

@@ -44,7 +44,7 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
   const totalWeight = items.reduce((acc, it) => acc + (Number(it.weightKg) || 0), 0);
 
   return (
-    <div className="aspect-[1/1.414] w-full max-w-[680px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-8 md:p-10 overflow-hidden text-left relative flex flex-col justify-between border border-slate-300 my-auto">
+    <div className="w-[794px] min-h-[1123px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-8 text-left relative flex flex-col justify-between border border-slate-300">
       {/* 1. Header & Logistics Brand Identity */}
       <div>
         {/* Logistics Industrial Banner */}
@@ -183,7 +183,15 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
 
         {/* 3. Cargo Consignment Items Table */}
         <div className="overflow-hidden border border-slate-300 rounded-lg">
-          <table className="w-full text-left text-[11px]">
+          <table className="w-full table-fixed text-left text-[11px]">
+            <colgroup>
+              <col className="w-9" />
+              <col className="w-auto" />
+              <col className="w-[100px]" />
+              <col className="w-[90px]" />
+              <col className="w-[110px]" />
+              <col className="w-[134px]" />
+            </colgroup>
             <thead className="bg-sky-900 text-white font-bold uppercase text-[9px] tracking-wider">
               <tr>
                 <th className="py-2.5 px-3 w-8 text-center">#</th>
