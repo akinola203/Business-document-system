@@ -463,16 +463,16 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
           <table class="totals-table">
             <tbody>
               <tr>
-                <td class="totals-label">Total Cargo Units</td>
-                <td class="totals-value">${totalQuantity.toLocaleString()}</td>
+                <td class="totals-label">Total Cargo Units:</td>
+                <td class="totals-value text-right">${totalQuantity.toLocaleString()}</td>
               </tr>
               <tr>
-                <td class="totals-label">Total Packages</td>
-                <td class="totals-value">${totalPackages > 0 ? totalPackages.toLocaleString() : '—'}</td>
+                <td class="totals-label">Total Packages:</td>
+                <td class="totals-value text-right">${totalPackages > 0 ? totalPackages.toLocaleString() : '—'}</td>
               </tr>
               <tr class="grand-total-row">
-                <td class="totals-label-grand">Gross Weight</td>
-                <td class="totals-value-grand">${totalWeight > 0 ? totalWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' KG' : '—'}</td>
+                <td class="totals-label-grand">Gross Weight:</td>
+                <td class="totals-value-grand text-right">${totalWeight > 0 ? totalWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' KG' : '—'}</td>
               </tr>
             </tbody>
           </table>

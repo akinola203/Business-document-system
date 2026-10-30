@@ -66,7 +66,7 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
 
   const formatCurrency = (val: string | number) => {
     const num = Number(val) || 0;
-    return `${ctx.currency} ${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `${ctx.currency}&nbsp;${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const itemsRows = (inv.items || [])
@@ -283,9 +283,10 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
     .totals-table {
       width: 100%;
       border-collapse: collapse;
+      table-layout: auto;
     }
     .totals-table tr td {
-      padding: 4px 0;
+      padding: 6px 0;
       vertical-align: middle;
     }
     .totals-label {
@@ -294,7 +295,7 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
       color: #64748b;
       text-align: left;
       white-space: nowrap;
-      padding-right: 14px;
+      padding-right: 18px;
     }
     .totals-value {
       font-size: 9.5pt;
@@ -321,10 +322,10 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
       letter-spacing: 0.5px;
       text-align: left;
       white-space: nowrap;
-      padding-right: 14px;
+      padding-right: 18px;
     }
     .totals-value-grand {
-      font-size: 12.5pt;
+      font-size: 13pt;
       font-weight: 900;
       color: #0f172a;
       text-align: right;
@@ -333,29 +334,30 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
       font-variant-numeric: tabular-nums;
     }
     .balance-due-row td {
-      padding-top: 8px !important;
-      padding-bottom: 0 !important;
-    }
-    .balance-due-box {
       background: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 6px;
-      padding: 7px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      box-sizing: border-box;
+      padding: 7px 10px !important;
+      border-top: 1px solid #fecaca;
+      border-bottom: 1px solid #fecaca;
+    }
+    .balance-due-row td:first-child {
+      border-left: 1px solid #fecaca;
+      border-top-left-radius: 6px;
+      border-bottom-left-radius: 6px;
+    }
+    .balance-due-row td:last-child {
+      border-right: 1px solid #fecaca;
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
     }
     .totals-label-balance {
-      font-size: 8.5pt;
+      font-size: 9pt;
       font-weight: 800;
       color: #991b1b;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       text-align: left;
       white-space: nowrap;
-      padding-right: 14px;
+      padding-right: 18px;
     }
     .totals-value-balance {
       font-size: 11pt;
@@ -372,7 +374,7 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
+      padding: 6px 0;
       font-size: 9pt;
       width: 100%;
     }
@@ -380,7 +382,7 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
       text-align: left;
       color: #64748b;
       font-weight: 600;
-      padding-right: 14px;
+      padding-right: 18px;
       white-space: nowrap;
     }
     .total-line > span:last-child {
@@ -506,30 +508,27 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
           <table class="totals-table">
             <tbody>
               <tr>
-                <td class="totals-label">Subtotal</td>
-                <td class="totals-value">${formatCurrency(ctx.subtotal)}</td>
+                <td class="totals-label">Subtotal:</td>
+                <td class="totals-value text-right">${formatCurrency(ctx.subtotal)}</td>
               </tr>
               ${Number(ctx.discountAmount) > 0 ? `
               <tr>
-                <td class="totals-label text-discount">Total Discount</td>
-                <td class="totals-value text-discount">-${formatCurrency(ctx.discountAmount)}</td>
+                <td class="totals-label text-discount">Total Discount:</td>
+                <td class="totals-value text-discount text-right">-${formatCurrency(ctx.discountAmount)}</td>
               </tr>` : ''}
               <tr>
-                <td class="totals-label">Value Added Tax (VAT)</td>
-                <td class="totals-value">${formatCurrency(ctx.taxAmount)}</td>
+                <td class="totals-label">Value Added Tax (VAT):</td>
+                <td class="totals-value text-right">${formatCurrency(ctx.taxAmount)}</td>
               </tr>
               <tr class="grand-total-row">
-                <td class="totals-label-grand">Total Amount</td>
-                <td class="totals-value-grand">${formatCurrency(ctx.totalAmount)}</td>
+                <td class="totals-label-grand">Total Amount:</td>
+                <td class="totals-value-grand text-right">${formatCurrency(ctx.totalAmount)}</td>
               </tr>
               ${Number(ctx.balanceDue) > 0 || ctx.paymentStatus === 'PARTIALLY_PAID' || ctx.paymentStatus === 'UNPAID' ? `
+              <tr style="height: 6px;"><td colspan="2" style="padding: 0; height: 6px;"></td></tr>
               <tr class="balance-due-row">
-                <td colspan="2">
-                  <div class="balance-due-box">
-                    <span class="totals-label-balance">Balance Due</span>
-                    <span class="totals-value-balance">${formatCurrency(ctx.balanceDue)}</span>
-                  </div>
-                </td>
+                <td class="totals-label-balance">Balance Due:</td>
+                <td class="totals-value-balance text-right">${formatCurrency(ctx.balanceDue)}</td>
               </tr>` : ''}
             </tbody>
           </table>

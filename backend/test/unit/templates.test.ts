@@ -285,8 +285,11 @@ test('Templates & HTML Renderers Unit Tests', async (t) => {
     assert.ok(html.includes('totals-table'));
     assert.ok(html.includes('totals-label'));
     assert.ok(html.includes('totals-value'));
-    assert.ok(html.includes('Subtotal'));
-    assert.ok(html.includes('Total Amount'));
+    assert.ok(html.includes('Subtotal:'));
+    assert.ok(html.includes('Value Added Tax (VAT):'));
+    assert.ok(html.includes('Total Amount:'));
+    assert.ok(html.includes('Balance Due:'));
+    assert.ok(!html.includes('BalancENGN'));
     assert.ok(!html.includes('Subtotal:NGN'));
     assert.ok(!html.includes('Total NGN Amount:'));
     assert.ok(!html.includes('BalanceNGN Due:'));
