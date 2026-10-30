@@ -700,124 +700,164 @@ export const WaybillBuilderPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Cargo Items List */}
-            <div className="space-y-4">
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-slate-100 font-mono text-[11px] font-bold text-slate-600 flex items-center justify-center">
-                        #{index + 1}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setActiveCatalogIndex(index)}
-                        className="px-2.5 py-0.5 rounded-full bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold border border-sky-200 flex items-center gap-1 transition-colors cursor-pointer"
-                      >
-                        <span>📦 Pick from Supplies Catalog</span>
-                      </button>
-                    </div>
+            {/* Cargo Items Table */}
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-2.5 px-2.5 w-10 text-center">#</th>
+                    <th className="py-2.5 px-3 min-w-[200px]">Cargo Description</th>
+                    <th className="py-2.5 px-2 w-20 text-right">Qty</th>
+                    <th className="py-2.5 px-2 w-20">Unit</th>
+                    <th className="py-2.5 px-2 w-20 text-right">Packages</th>
+                    <th className="py-2.5 px-2 w-24">Pkg Type</th>
+                    <th className="py-2.5 px-2 w-24 text-right">Weight (kg)</th>
+                    <th className="py-2.5 px-2 w-20 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {fields.map((field, index) => (
+                    <tr key={field.id} className="hover:bg-slate-50/60 transition-colors group">
+                      {/* # Index */}
+                      <td className="py-2 px-2 text-center font-mono text-[11px] font-bold text-slate-400">
+                        {index + 1}
+                      </td>
 
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const current = formValues?.items?.[index];
-                          if (current) {
-                            append({
-                              ...current,
-                              description: current.description ? `${current.description} (Copy)` : 'Cargo Item (Copy)',
-                            });
-                          }
-                        }}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
-                        title="Duplicate cargo item"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
-                        title="Remove item"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
+                      {/* Cargo Description */}
+                      <td className="py-2 px-2.5">
+                        <div className="space-y-1">
+                          <input
+                            type="text"
+                            {...register(`items.${index}.description` as const)}
+                            placeholder="Cargo description..."
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                          />
+                          {errors.items?.[index]?.description && (
+                            <p className="text-[10px] text-rose-500 font-medium">
+                              {errors.items[index]?.description?.message}
+                            </p>
+                          )}
+                        </div>
+                      </td>
 
-                  <div>
-                    <input
-                      type="text"
-                      {...register(`items.${index}.description` as const)}
-                      placeholder="Cargo description (e.g. Portland Composite Cement 50kg)..."
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                    />
-                    {errors.items?.[index]?.description && (
-                      <p className="text-[10px] text-rose-500 mt-0.5">
-                        {errors.items[index]?.description?.message}
-                      </p>
-                    )}
-                  </div>
+                      {/* Qty */}
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          step="any"
+                          {...register(`items.${index}.quantity` as const)}
+                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                        />
+                      </td>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Quantity</label>
-                      <input
-                        type="number"
-                        step="any"
-                        {...register(`items.${index}.quantity` as const)}
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
+                      {/* Unit */}
+                      <td className="py-2 px-2">
+                        <input
+                          type="text"
+                          {...register(`items.${index}.unit` as const)}
+                          placeholder="Units"
+                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                        />
+                      </td>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Unit</label>
-                      <input
-                        type="text"
-                        {...register(`items.${index}.unit` as const)}
-                        placeholder="e.g. Bags"
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
+                      {/* Packages */}
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          {...register(`items.${index}.packageCount` as const)}
+                          placeholder="1"
+                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                        />
+                      </td>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Packages</label>
-                      <input
-                        type="number"
-                        {...register(`items.${index}.packageCount` as const)}
-                        placeholder="e.g. 50"
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
+                      {/* Package Type */}
+                      <td className="py-2 px-2">
+                        <input
+                          type="text"
+                          {...register(`items.${index}.packageType` as const)}
+                          placeholder="e.g. Pallets"
+                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                        />
+                      </td>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Package Type</label>
-                      <input
-                        type="text"
-                        {...register(`items.${index}.packageType` as const)}
-                        placeholder="e.g. Pallets"
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
+                      {/* Weight (kg) */}
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          step="any"
+                          {...register(`items.${index}.weightKg` as const)}
+                          placeholder="0"
+                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                        />
+                      </td>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Weight (kg)</label>
-                      <input
-                        type="number"
-                        step="any"
-                        {...register(`items.${index}.weightKg` as const)}
-                        placeholder="e.g. 2500"
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      {/* Actions */}
+                      <td className="py-2 px-2 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setActiveCatalogIndex(index)}
+                            className="p-1 rounded-md text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                            title="Pick from Supplies Catalog"
+                          >
+                            <Package className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = formValues?.items?.[index];
+                              if (current) {
+                                append({
+                                  ...current,
+                                  description: current.description ? `${current.description} (Copy)` : 'Cargo Item (Copy)',
+                                });
+                              }
+                            }}
+                            className="p-1 rounded-md text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                            title="Duplicate cargo item"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            disabled={fields.length === 1}
+                            className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                            title="Remove item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bottom Add Cargo Row */}
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={() =>
+                  append({
+                    description: '',
+                    quantity: 1,
+                    unit: 'Units',
+                    packageCount: 1,
+                    packageType: 'Standard Carton',
+                    weightKg: 0,
+                  })
+                }
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-sky-50/50 text-sky-700 border border-dashed border-sky-300 hover:border-sky-400 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Cargo Item</span>
+              </button>
+
+              <span className="text-xs text-slate-500 font-medium">
+                {fields.length} {fields.length === 1 ? 'cargo item' : 'cargo items'} in table
+              </span>
             </div>
           </div>
         </div>

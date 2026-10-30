@@ -24,6 +24,7 @@ import {
   HelpCircle,
   CheckCircle2,
   Eye,
+  Package,
 } from 'lucide-react';
 import { formatCurrency, extractArray } from '../../../lib/utils';
 import { calcLine, calcTotals } from '../../../lib/money';
@@ -807,132 +808,175 @@ export const InvoiceBuilderPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Line Items List */}
-              <div className="space-y-4">
-                {fields.map((field, index) => {
-                  const itemValues = formValues?.items?.[index] as Partial<InvoiceItemValues> | undefined;
-                  const rowCalc = calcLine(
-                    itemValues?.quantity || 0,
-                    itemValues?.unitPrice || 0,
-                    itemValues?.discountPercent || 0,
-                    Number.isFinite(itemValues?.taxRate) ? Number(itemValues?.taxRate) : 7.5,
-                  );
-                  const rowTotal = rowCalc.total;
+              {/* Line Items Table */}
+              <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="py-2.5 px-2.5 w-10 text-center">#</th>
+                      <th className="py-2.5 px-3 min-w-[220px]">Item Description</th>
+                      <th className="py-2.5 px-2 w-20 text-right">Qty</th>
+                      <th className="py-2.5 px-2 w-24">Unit</th>
+                      <th className="py-2.5 px-2 w-32 text-right">Unit Price ({formValues?.currency || 'NGN'})</th>
+                      <th className="py-2.5 px-2 w-20 text-right">VAT %</th>
+                      <th className="py-2.5 px-3 w-28 text-right">Total</th>
+                      <th className="py-2.5 px-2 w-20 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {fields.map((field, index) => {
+                      const itemValues = formValues?.items?.[index] as Partial<InvoiceItemValues> | undefined;
+                      const rowCalc = calcLine(
+                        itemValues?.quantity || 0,
+                        itemValues?.unitPrice || 0,
+                        itemValues?.discountPercent || 0,
+                        Number.isFinite(itemValues?.taxRate) ? Number(itemValues?.taxRate) : 7.5,
+                      );
+                      const rowTotal = rowCalc.total;
 
-                  return (
-                    <div
-                      key={field.id}
-                      className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3 relative group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-slate-100 font-mono text-[11px] font-bold text-slate-600 flex items-center justify-center">
-                            #{index + 1}
-                          </span>
-                          <span className="text-xs font-bold text-slate-800">Item Position</span>
-                          <button
-                            type="button"
-                            onClick={() => setActiveCatalogIndex(index)}
-                            className="ml-2 px-2.5 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[10px] font-bold border border-indigo-200 flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            <span>📦 Pick from Supplies Catalog</span>
-                          </button>
-                        </div>
+                      return (
+                        <tr key={field.id} className="hover:bg-slate-50/60 transition-colors group">
+                          {/* # Index */}
+                          <td className="py-2 px-2 text-center font-mono text-[11px] font-bold text-slate-400">
+                            {index + 1}
+                          </td>
 
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900 tabular-nums">
+                          {/* Item Description */}
+                          <td className="py-2 px-2.5">
+                            <div className="space-y-1">
+                              <input
+                                type="text"
+                                {...register(`items.${index}.description` as const)}
+                                placeholder="Item description or SKU..."
+                                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:border-transparent transition-all"
+                              />
+                              {errors.items?.[index]?.description && (
+                                <p className="text-[10px] text-rose-500 font-medium">
+                                  {errors.items[index]?.description?.message}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Qty */}
+                          <td className="py-2 px-2">
+                            <input
+                              type="number"
+                              step="any"
+                              {...register(`items.${index}.quantity` as const)}
+                              className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:border-transparent transition-all"
+                            />
+                          </td>
+
+                          {/* Unit */}
+                          <td className="py-2 px-2">
+                            <input
+                              type="text"
+                              {...register(`items.${index}.unit` as const)}
+                              placeholder="e.g. Bags"
+                              className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:border-transparent transition-all"
+                            />
+                          </td>
+
+                          {/* Unit Price */}
+                          <td className="py-2 px-2">
+                            <input
+                              type="number"
+                              step="any"
+                              {...register(`items.${index}.unitPrice` as const)}
+                              placeholder="0.00"
+                              className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:border-transparent transition-all"
+                            />
+                          </td>
+
+                          {/* VAT % */}
+                          <td className="py-2 px-2">
+                            <input
+                              type="number"
+                              step="any"
+                              {...register(`items.${index}.taxRate` as const)}
+                              placeholder="7.5"
+                              className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:border-transparent transition-all"
+                            />
+                          </td>
+
+                          {/* Total */}
+                          <td className="py-2 px-3 text-right font-mono font-bold text-xs text-slate-900 tabular-nums whitespace-nowrap">
                             {formatCurrency(rowTotal, formValues?.currency || 'NGN')}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const current = formValues?.items?.[index];
-                              if (current) {
-                                append({
-                                  description: current.description ? `${current.description} (Copy)` : 'Copy of Item',
-                                  quantity: Number(current.quantity) || 1,
-                                  unit: current.unit || 'Units',
-                                  unitPrice: Number(current.unitPrice) || 0,
-                                  discountPercent: Number(current.discountPercent) || 0,
-                                  taxRate: Number(current.taxRate ?? 7.5) || 7.5,
-                                });
-                              }
-                            }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                            title="Duplicate line item"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => remove(index)}
-                            disabled={fields.length === 1}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
-                            title="Delete line item"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
+                          </td>
 
-                      <div>
-                        <input
-                          type="text"
-                          {...register(`items.${index}.description` as const)}
-                          placeholder="Item description (e.g. Industrial Portland Cement 50kg)..."
-                          className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                        />
-                        {errors.items?.[index]?.description && (
-                          <p className="text-[10px] text-rose-500 mt-0.5">
-                            {errors.items[index]?.description?.message}
-                          </p>
-                        )}
-                      </div>
+                          {/* Actions */}
+                          <td className="py-2 px-2 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setActiveCatalogIndex(index)}
+                                className="p-1 rounded-md text-slate-400 hover:text-[#5847F6] hover:bg-indigo-50 transition-colors"
+                                title="Pick from Supplies Catalog"
+                              >
+                                <Package className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const current = formValues?.items?.[index];
+                                  if (current) {
+                                    append({
+                                      description: current.description ? `${current.description} (Copy)` : 'Copy of Item',
+                                      quantity: Number(current.quantity) || 1,
+                                      unit: current.unit || 'Units',
+                                      unitPrice: Number(current.unitPrice) || 0,
+                                      discountPercent: Number(current.discountPercent) || 0,
+                                      taxRate: Number(current.taxRate ?? 7.5) || 7.5,
+                                    });
+                                  }
+                                }}
+                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                title="Duplicate line item"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => remove(index)}
+                                disabled={fields.length === 1}
+                                className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                                title="Delete line item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Quantity</label>
-                          <input
-                            type="number"
-                            step="any"
-                            {...register(`items.${index}.quantity` as const)}
-                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                          />
-                        </div>
+              {/* Bottom Add Item Row */}
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    append({
+                      description: '',
+                      quantity: 1,
+                      unit: 'Units',
+                      unitPrice: 0,
+                      discountPercent: 0,
+                      taxRate: 7.5,
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-indigo-50/50 text-[#5847F6] border border-dashed border-indigo-300 hover:border-indigo-400 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Add Item</span>
+                </button>
 
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Unit</label>
-                          <input
-                            type="text"
-                            {...register(`items.${index}.unit` as const)}
-                            placeholder="e.g. Bags"
-                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Unit Price</label>
-                          <input
-                            type="number"
-                            step="any"
-                            {...register(`items.${index}.unitPrice` as const)}
-                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">VAT %</label>
-                          <input
-                            type="number"
-                            step="any"
-                            {...register(`items.${index}.taxRate` as const)}
-                            className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                <span className="text-xs text-slate-500 font-medium">
+                  {fields.length} {fields.length === 1 ? 'line item' : 'line items'} in table
+                </span>
               </div>
 
               {/* Quick Live Totals Badge inside Card */}
