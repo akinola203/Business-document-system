@@ -702,38 +702,38 @@ export const WaybillBuilderPage: React.FC = () => {
 
             {/* Cargo Items Table */}
             <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[560px]">
                 <thead>
-                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="py-2.5 px-2.5 w-10 text-center">#</th>
-                    <th className="py-2.5 px-3 min-w-[200px]">Cargo Description</th>
-                    <th className="py-2.5 px-2 w-20 text-right">Qty</th>
-                    <th className="py-2.5 px-2 w-20">Unit</th>
-                    <th className="py-2.5 px-2 w-20 text-right">Packages</th>
-                    <th className="py-2.5 px-2 w-24">Pkg Type</th>
-                    <th className="py-2.5 px-2 w-24 text-right">Weight (kg)</th>
-                    <th className="py-2.5 px-2 w-20 text-center">Actions</th>
+                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th className="py-2 px-2 w-8 text-center">#</th>
+                    <th className="py-2 px-2 min-w-[180px]">Cargo Description</th>
+                    <th className="py-2 px-1.5 w-16 text-right">Qty</th>
+                    <th className="py-2 px-1.5 w-16">Unit</th>
+                    <th className="py-2 px-1.5 w-16 text-right">Packages</th>
+                    <th className="py-2 px-1.5 w-20">Pkg Type</th>
+                    <th className="py-2 px-1.5 w-20 text-right">Weight (kg)</th>
+                    <th className="py-2 px-1.5 w-20 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {fields.map((field, index) => (
-                    <tr key={field.id} className="hover:bg-slate-50/60 transition-colors group">
+                    <tr key={field.id} className="hover:bg-slate-50/70 transition-colors group">
                       {/* # Index */}
-                      <td className="py-2 px-2 text-center font-mono text-[11px] font-bold text-slate-400">
+                      <td className="py-1.5 px-2 text-center font-mono text-[11px] font-bold text-slate-400">
                         {index + 1}
                       </td>
 
                       {/* Cargo Description */}
-                      <td className="py-2 px-2.5">
-                        <div className="space-y-1">
+                      <td className="py-1.5 px-1.5">
+                        <div className="space-y-0.5">
                           <input
                             type="text"
                             {...register(`items.${index}.description` as const)}
                             placeholder="Cargo description..."
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                            className="w-full h-8 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
                           />
                           {errors.items?.[index]?.description && (
-                            <p className="text-[10px] text-rose-500 font-medium">
+                            <p className="text-[10px] text-rose-500 font-medium leading-tight">
                               {errors.items[index]?.description?.message}
                             </p>
                           )}
@@ -741,59 +741,59 @@ export const WaybillBuilderPage: React.FC = () => {
                       </td>
 
                       {/* Qty */}
-                      <td className="py-2 px-2">
+                      <td className="py-1.5 px-1.5">
                         <input
                           type="number"
                           step="any"
                           {...register(`items.${index}.quantity` as const)}
-                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                          className="w-full h-8 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
                         />
                       </td>
 
                       {/* Unit */}
-                      <td className="py-2 px-2">
+                      <td className="py-1.5 px-1.5">
                         <input
                           type="text"
                           {...register(`items.${index}.unit` as const)}
                           placeholder="Units"
-                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                          className="w-full h-8 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
                         />
                       </td>
 
                       {/* Packages */}
-                      <td className="py-2 px-2">
+                      <td className="py-1.5 px-1.5">
                         <input
                           type="number"
                           {...register(`items.${index}.packageCount` as const)}
                           placeholder="1"
-                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                          className="w-full h-8 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
                         />
                       </td>
 
                       {/* Package Type */}
-                      <td className="py-2 px-2">
+                      <td className="py-1.5 px-1.5">
                         <input
                           type="text"
                           {...register(`items.${index}.packageType` as const)}
                           placeholder="e.g. Pallets"
-                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                          className="w-full h-8 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
                         />
                       </td>
 
                       {/* Weight (kg) */}
-                      <td className="py-2 px-2">
+                      <td className="py-1.5 px-1.5">
                         <input
                           type="number"
                           step="any"
                           {...register(`items.${index}.weightKg` as const)}
                           placeholder="0"
-                          className="w-full px-2 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
+                          className="w-full h-8 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs tabular-nums text-slate-900 text-right focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 transition-all"
                         />
                       </td>
 
                       {/* Actions */}
-                      <td className="py-2 px-2 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1">
+                      <td className="py-1.5 px-1.5 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-0.5">
                           <button
                             type="button"
                             onClick={() => setActiveCatalogIndex(index)}
@@ -835,8 +835,8 @@ export const WaybillBuilderPage: React.FC = () => {
               </table>
             </div>
 
-            {/* Bottom Add Cargo Row */}
-            <div className="flex items-center justify-between pt-1">
+            {/* Bottom Add Cargo Bar */}
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={() =>
@@ -849,15 +849,11 @@ export const WaybillBuilderPage: React.FC = () => {
                     weightKg: 0,
                   })
                 }
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-sky-50/50 text-sky-700 border border-dashed border-sky-300 hover:border-sky-400 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-white hover:bg-sky-50/60 text-sky-700 border-2 border-dashed border-sky-200 hover:border-sky-400 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 <span>+ Add Cargo Item</span>
               </button>
-
-              <span className="text-xs text-slate-500 font-medium">
-                {fields.length} {fields.length === 1 ? 'cargo item' : 'cargo items'} in table
-              </span>
             </div>
           </div>
         </div>
