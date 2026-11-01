@@ -18,11 +18,13 @@ import {
   Calendar,
   Layers,
   ChevronRight,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
 import { DEMO_REPORTS_SUMMARY } from '../../lib/mock-data';
 import { ReportsSummary } from '../../types';
 import { RecessedTabNotch, TabItem } from '../../components/workspace/RecessedTabNotch';
+import { exportExecutiveReportToExcel } from '../../lib/excel-export';
 
 type DateRange = 'month' | 'quarter' | 'ytd' | 'all';
 type ReportTab = 'financial' | 'aging' | 'logistics' | 'velocity';
@@ -144,6 +146,19 @@ export const ReportsPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+
+  const handleExportExcel = async () => {
+    try {
+      setIsExportingExcel(true);
+      await exportExecutiveReportToExcel(summary, dateRange, currency);
+    } catch (err) {
+      console.error('Failed to export Excel report:', err);
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
   const handlePrintBrief = () => {
     window.print();
   };
@@ -193,15 +208,25 @@ export const ReportsPage: React.FC = () => {
 
           {/* Action Dock Pills */}
           <button
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-60"
+            title="Download multi-sheet executive financial report as styled Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{isExportingExcel ? 'Exporting...' : 'Export Excel (.xlsx)'}</span>
+          </button>
+          <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-sm cursor-pointer"
+            title="Download flat CSV"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export CSV</span>
+            <span>CSV</span>
           </button>
           <button
             onClick={handlePrintBrief}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-sm cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Brief</span>

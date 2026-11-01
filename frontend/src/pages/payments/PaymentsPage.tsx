@@ -21,12 +21,26 @@ import {
   FileSpreadsheet,
   Building,
 } from 'lucide-react';
+import { exportPaymentsToExcel } from '../../lib/excel-export';
 
 export const PaymentsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<PaymentRecord | null>(null);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+
+  const handleExportExcel = async () => {
+    try {
+      setIsExportingExcel(true);
+      const paymentsToExport = filteredPayments.length > 0 ? filteredPayments : allPayments;
+      await exportPaymentsToExcel(paymentsToExport);
+    } catch (err) {
+      console.error('Failed to export payments to Excel:', err);
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
 
   // 1. Fetch Payments from Backend with Mock Fallback
   const { data: paymentsData, isLoading: isPaymentsLoading } = useQuery<{ items?: PaymentRecord[]; data?: PaymentRecord[] }>({
@@ -124,13 +138,24 @@ export const PaymentsPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsRecordModalOpen(true)}
-          className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Record Payment</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="px-4 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-60"
+            title="Export Payments Ledger to Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>{isExportingExcel ? 'Exporting...' : 'Export Excel'}</span>
+          </button>
+          <button
+            onClick={() => setIsRecordModalOpen(true)}
+            className="px-5 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Record Payment</span>
+          </button>
+        </div>
       </div>
 
       {/* =========================================================================

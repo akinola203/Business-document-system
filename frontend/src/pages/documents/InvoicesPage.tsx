@@ -23,7 +23,9 @@ import {
   TrendingUp,
   CheckCircle2,
   FileText,
+  FileSpreadsheet,
 } from 'lucide-react';
+import { exportInvoicesToExcel } from '../../lib/excel-export';
 
 export const InvoicesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -70,6 +72,19 @@ export const InvoicesPage: React.FC = () => {
   const [activeActionModal, setActiveActionModal] = useState<LifecycleActionType | null>(null);
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+
+  const handleExportExcel = async () => {
+    try {
+      setIsExportingExcel(true);
+      const invoicesToExport = filteredInvoices.length > 0 ? filteredInvoices : allInvoices;
+      await exportInvoicesToExcel(invoicesToExport);
+    } catch (err) {
+      console.error('Failed to export invoices to Excel:', err);
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
 
   // Query invoices from backend
   const { data: invoicesData, isLoading } = useQuery({
@@ -247,13 +262,24 @@ export const InvoicesPage: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => navigate('/documents/invoices/new')}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Create an invoice</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-60"
+            title="Export Invoices Ledger to Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>{isExportingExcel ? 'Exporting...' : 'Export Excel'}</span>
+          </button>
+          <button
+            onClick={() => navigate('/documents/invoices/new')}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Create an invoice</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Tier 2: 4-Column Bento KPI Grid */}
