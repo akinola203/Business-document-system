@@ -1,8 +1,8 @@
 import React from 'react';
-import { Company, Client, ClientAddress } from '../../types';
+import { Company, Client, ClientAddress, TemplateLayoutConfig } from '../../types';
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { calcLine, calcTotals } from '../../lib/money';
-import { Landmark, ShieldCheck, CreditCard } from 'lucide-react';
+import { Landmark, ShieldCheck, CreditCard, QrCode } from 'lucide-react';
 
 export interface InvoiceLiveFormValues {
   title: string;
@@ -32,6 +32,7 @@ interface LiveA4InvoiceSheetProps {
   selectedClient?: Client | null;
   selectedAddress?: ClientAddress | null;
   documentNumber?: string | null;
+  templateConfig?: Partial<TemplateLayoutConfig>;
 }
 
 export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
@@ -40,8 +41,15 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   selectedClient,
   selectedAddress,
   documentNumber,
+  templateConfig,
 }) => {
   const currency = formValues?.currency || 'NGN';
+  const primaryColor = templateConfig?.primaryColor || '#5847F6';
+  const accentColor = templateConfig?.accentColor || '#0F172A';
+  const logoPosition = templateConfig?.logoPosition || 'left';
+  const showStamp = templateConfig?.showStamp ?? true;
+  const showQrCode = templateConfig?.showQrCode ?? true;
+  const showSignature = templateConfig?.showSignature ?? true;
 
   // Calculate precision line items and totals using decimal.js
   const calculatedItems = (formValues?.items || []).map((item, index) => {
@@ -116,9 +124,15 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
       {/* 1. Header & Financial Ledger Brand Identity */}
       <div>
         {/* Ledger Top Bar */}
-        <div className="flex items-center justify-between pb-2 mb-4 border-b-2 border-slate-900">
+        <div
+          className="flex items-center justify-between pb-2 mb-4 border-b-2"
+          style={{ borderColor: accentColor }}
+        >
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">
+            <span
+              className="px-2.5 py-0.5 rounded text-white text-[10px] font-black uppercase tracking-wider transition-colors"
+              style={{ backgroundColor: accentColor }}
+            >
               COMMERCIAL TAX INVOICE
             </span>
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
@@ -131,13 +145,24 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-between items-start pb-4 border-b border-slate-200">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-xs tracking-tighter">
+        <div
+          className={`flex pb-4 border-b border-slate-200 transition-all ${
+            logoPosition === 'center'
+              ? 'flex-col items-center text-center gap-3'
+              : logoPosition === 'right'
+              ? 'flex-row-reverse justify-between items-start'
+              : 'justify-between items-start'
+          }`}
+        >
+          <div className={logoPosition === 'center' ? 'flex flex-col items-center' : ''}>
+            <div className={`flex items-center gap-2.5 ${logoPosition === 'center' ? 'justify-center' : ''}`}>
+              <div
+                className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-black text-xs tracking-tighter transition-colors"
+                style={{ backgroundColor: primaryColor }}
+              >
                 AOA
               </div>
-              <div>
+              <div className={logoPosition === 'center' ? 'text-center' : ''}>
                 <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight uppercase">
                   {company?.name || 'AOA 77 COMPANY LTD'}
                 </h2>
@@ -149,24 +174,27 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
               </div>
             </div>
             {company?.address && (
-              <p className="text-[11px] text-slate-600 max-w-xs mt-1.5 leading-snug">
+              <p className={`text-[11px] text-slate-600 max-w-xs mt-1.5 leading-snug ${logoPosition === 'center' ? 'mx-auto text-center' : ''}`}>
                 {company.address}
               </p>
             )}
-            <div className="flex items-center gap-3 text-[10px] text-slate-500 mt-1">
+            <div className={`flex items-center gap-3 text-[10px] text-slate-500 mt-1 ${logoPosition === 'center' ? 'justify-center' : ''}`}>
               <span>Email: {company?.email || 'billing@aoa77.com'}</span>
               <span>Tel: {company?.phone || '+234 803 000 0001'}</span>
             </div>
           </div>
 
-          <div className="text-right">
+          <div className={logoPosition === 'center' ? 'text-center w-full max-w-md pt-2 border-t border-slate-100 mt-1' : 'text-right'}>
             <div className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">
               INVOICE NUMBER
             </div>
-            <div className="text-xl md:text-2xl font-black text-[#5847F6] font-mono tracking-tight mt-0.5">
+            <div
+              className="text-xl md:text-2xl font-black font-mono tracking-tight mt-0.5 transition-colors"
+              style={{ color: primaryColor }}
+            >
               {documentNumber ? `#${documentNumber}` : 'AUTO-ALLOCATED'}
             </div>
-            <div className="mt-2 space-y-0.5 text-[11px] text-slate-600">
+            <div className={`mt-2 space-y-0.5 text-[11px] text-slate-600 ${logoPosition === 'center' ? 'flex justify-around space-y-0' : ''}`}>
               <div>
                 <span className="text-slate-400 font-medium">Issue Date: </span>
                 <span className="font-bold text-slate-800">{formatDate(formValues?.issueDate || new Date().toISOString())}</span>
@@ -252,7 +280,10 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
               <col className="w-[100px]" />
               <col className="w-[130px]" />
             </colgroup>
-            <thead className="bg-slate-900 text-white font-bold uppercase text-[9px] tracking-wider">
+            <thead
+              className="text-white font-bold uppercase text-[9px] tracking-wider transition-colors"
+              style={{ backgroundColor: accentColor }}
+            >
               <tr>
                 <th className="py-2.5 px-3 text-center">#</th>
                 <th className="py-2.5 px-3">Item Description</th>
@@ -390,15 +421,37 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
 
         {/* 5. Authorised Signature & Financial Verification Footer */}
         <div className="flex justify-between items-end pt-5 mt-3 border-t border-slate-200 text-[9px] text-slate-400">
-          <div>
-            <span>Corporate Electronic Invoice &bull; Generated by </span>
-            <span className="font-bold text-slate-700">{company?.name || 'AOA 77 COMPANY LTD'}</span>
+          <div className="flex items-center gap-4">
+            <div>
+              <span>Corporate Electronic Invoice &bull; Generated by </span>
+              <span className="font-bold text-slate-700">{company?.name || 'AOA 77 COMPANY LTD'}</span>
+            </div>
+            {showQrCode && (
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded border border-slate-200">
+                <QrCode className="w-3.5 h-3.5 text-slate-800" />
+                <span className="text-[8px] font-mono font-bold text-slate-600">SECURE VERIFIED</span>
+              </div>
+            )}
           </div>
-          <div className="text-right">
-            <div className="w-36 border-b border-slate-400 mb-1" />
-            <span className="font-semibold text-slate-600 uppercase tracking-wider">
-              Authorized Financial Signatory & Stamp
-            </span>
+
+          <div className="flex items-end gap-5">
+            {showStamp && (
+              <div className="border-2 border-dashed border-rose-600/80 rounded-full w-20 h-20 p-1 flex flex-col items-center justify-center text-center text-rose-700 -rotate-12 bg-rose-50/50 select-none shadow-sm">
+                <ShieldCheck className="w-3.5 h-3.5 text-rose-600 mb-0.5" />
+                <span className="text-[7px] font-black uppercase tracking-wider leading-none">OFFICIAL SEAL</span>
+                <span className="text-[6px] font-bold text-rose-600 uppercase tracking-tighter mt-0.5">AOA 77 CO. LTD</span>
+                <span className="text-[5.5px] font-mono text-rose-500 mt-0.5">AUDITED</span>
+              </div>
+            )}
+
+            {showSignature && (
+              <div className="text-right">
+                <div className="w-36 border-b border-slate-400 mb-1" />
+                <span className="font-semibold text-slate-600 uppercase tracking-wider">
+                  Authorized Financial Signatory & Stamp
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

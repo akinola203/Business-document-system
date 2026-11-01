@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { DocumentType, DocumentTemplate, TemplateLayoutConfig, Company, Client } from '../../types';
@@ -6,6 +6,7 @@ import { DEMO_TEMPLATES, DEMO_COMPANY } from '../../lib/mock-data';
 import { LiveA4InvoiceSheet, InvoiceLiveFormValues } from '../../components/builder/LiveA4InvoiceSheet';
 import { LiveA4WaybillSheet, WaybillLiveFormValues } from '../../components/builder/LiveA4WaybillSheet';
 import { LiveA4LetterSheet, LetterLiveFormValues } from '../../components/builder/LiveA4LetterSheet';
+import { LiveA4LayoutCanvas } from '../../components/templates/LiveA4LayoutCanvas';
 import {
   Palette,
   Layout,
@@ -141,6 +142,17 @@ export const TemplatesPage: React.FC = () => {
     }
     setFeedback(null);
   };
+
+  const templateConfig = useMemo<TemplateLayoutConfig>(() => ({
+    primaryColor,
+    accentColor,
+    fontFamily,
+    logoPosition,
+    showBankDetails,
+    showStamp,
+    showSignature,
+    showQrCode,
+  }), [primaryColor, accentColor, fontFamily, logoPosition, showBankDetails, showStamp, showSignature, showQrCode]);
 
   // Save Template Mutation
   const saveMutation = useMutation({
@@ -513,51 +525,38 @@ export const TemplatesPage: React.FC = () => {
 
         {/* Right Obsidian Live A4 Canvas (55% -> 7 cols) */}
         <div className="lg:col-span-7 sticky top-6">
-          <div className="bg-[#16181F] rounded-[32px] p-6 shadow-2xl border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-extrabold text-white uppercase tracking-wider">
-                  Live A4 Layout Canvas — {selectedType}
-                </span>
-              </div>
-              <span className="text-[11px] font-mono text-slate-400">
-                Full Specialized A4 Rendering
-              </span>
-            </div>
-
-            {/* A4 Sheet Container with Dynamic Component Switching */}
-            <div className="flex justify-center py-8 md:py-12 px-3 md:px-6 bg-[#0F1117] rounded-2xl overflow-y-auto max-h-[calc(100vh-200px)] min-h-[640px] a4-scroll dark-scroll border border-slate-800/80">
-              <div
-                className="w-full flex justify-center transition-all duration-300"
-                style={{ fontFamily }}
-              >
-                {selectedType === 'INVOICE' && (
-                  <LiveA4InvoiceSheet
-                    formValues={sampleInvoiceValues}
-                    company={company}
-                    selectedClient={sampleClient}
-                    documentNumber="INV-2026-000042"
-                  />
-                )}
-                {selectedType === 'WAYBILL' && (
-                  <LiveA4WaybillSheet
-                    formValues={sampleWaybillValues}
-                    company={company}
-                    selectedClient={sampleClient}
-                    documentNumber="WB-2026-000018"
-                  />
-                )}
-                {selectedType === 'LETTER' && (
-                  <LiveA4LetterSheet
-                    formValues={sampleLetterValues}
-                    company={company}
-                    documentNumber="LTR-2026-0007"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
+          <LiveA4LayoutCanvas
+            documentType={selectedType}
+            fontFamily={fontFamily}
+            templateConfig={templateConfig}
+          >
+            {selectedType === 'INVOICE' && (
+              <LiveA4InvoiceSheet
+                formValues={sampleInvoiceValues}
+                company={company}
+                selectedClient={sampleClient}
+                documentNumber="INV-2026-000042"
+                templateConfig={templateConfig}
+              />
+            )}
+            {selectedType === 'WAYBILL' && (
+              <LiveA4WaybillSheet
+                formValues={sampleWaybillValues}
+                company={company}
+                selectedClient={sampleClient}
+                documentNumber="WB-2026-000018"
+                templateConfig={templateConfig}
+              />
+            )}
+            {selectedType === 'LETTER' && (
+              <LiveA4LetterSheet
+                formValues={sampleLetterValues}
+                company={company}
+                documentNumber="LTR-2026-0007"
+                templateConfig={templateConfig}
+              />
+            )}
+          </LiveA4LayoutCanvas>
         </div>
       </div>
     </div>
