@@ -1,3 +1,5 @@
+import { escapeHtml } from '../../../common/utils/html-escape.util';
+
 export interface WaybillRenderContext {
   company: {
     name: string;
@@ -519,14 +521,4 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
 </div>
 </body>
 </html>`;
-}
-
-function escapeHtml(str: string): string {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

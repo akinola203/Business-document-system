@@ -1,5 +1,13 @@
-import ExcelJS from 'exceljs';
+import type ExcelJS from 'exceljs';
 import { DocumentRecord, PaymentRecord, ReportsSummary } from '../types';
+
+/**
+ * Dynamically loads ExcelJS on demand to keep it out of the main initial JavaScript bundle.
+ */
+async function loadExcelJS() {
+  const mod = await import('exceljs');
+  return mod.default || mod;
+}
 
 /**
  * Enterprise Design Tokens for Excel Styling
@@ -128,6 +136,7 @@ export async function exportExecutiveReportToExcel(
   dateRange: string,
   currency = 'NGN',
 ): Promise<void> {
+  const ExcelJS = await loadExcelJS();
   const wb = new ExcelJS.Workbook();
   wb.creator = 'AOA 77 Company Ltd';
   wb.lastModifiedBy = 'Finnova Business Document System';
@@ -513,6 +522,7 @@ export async function exportInvoicesToExcel(
   invoices: DocumentRecord[],
   currency = 'NGN',
 ): Promise<void> {
+  const ExcelJS = await loadExcelJS();
   const wb = new ExcelJS.Workbook();
   wb.creator = 'AOA 77 Company Ltd';
   wb.lastModifiedBy = 'Finnova Business Document System';
@@ -629,6 +639,7 @@ export async function exportPaymentsToExcel(
   payments: PaymentRecord[],
   currency = 'NGN',
 ): Promise<void> {
+  const ExcelJS = await loadExcelJS();
   const wb = new ExcelJS.Workbook();
   wb.creator = 'AOA 77 Company Ltd';
   wb.lastModifiedBy = 'Finnova Business Document System';

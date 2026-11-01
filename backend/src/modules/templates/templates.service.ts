@@ -16,7 +16,10 @@ import {
   WaybillRenderContext,
   renderLetterHtml,
   LetterRenderContext,
+  escapeHtml,
 } from './renderers';
+
+export { escapeHtml };
 
 @Injectable()
 export class TemplatesService {

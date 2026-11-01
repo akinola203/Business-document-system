@@ -71,6 +71,19 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('register')
+  @HttpCode(HttpStatus.FORBIDDEN)
+  @ApiOperation({ summary: 'Public self-registration endpoint (Strictly rate-limited)' })
+  @ApiResponse({ status: 403, description: 'Public self-registration is disabled for enterprise tenant security' })
+  async register() {
+    return {
+      statusCode: HttpStatus.FORBIDDEN,
+      message: 'Self-registration is disabled. Please contact your company administrator to receive an onboarding invitation.',
+    };
+  }
+
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rotate refresh token and issue fresh access token' })

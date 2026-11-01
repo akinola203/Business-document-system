@@ -7,6 +7,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Response } from 'express';
 import { PdfService } from './pdf.service';
 import { FilesService } from '../files/files.service';
@@ -15,6 +16,7 @@ import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-
 
 @ApiTags('Document PDF Engine')
 @ApiBearerAuth('JWT-auth')
+@Throttle({ default: { limit: 20, ttl: 60000 } })
 @Controller('documents')
 export class PdfController {
   constructor(

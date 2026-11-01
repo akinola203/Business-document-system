@@ -1,3 +1,5 @@
+import { escapeHtml } from '../../../common/utils/html-escape.util';
+
 export interface InvoiceRenderContext {
   company: {
     name: string;
@@ -543,16 +545,6 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
 </div>
 </body>
 </html>`;
-}
-
-function escapeHtml(str: string): string {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 function getStatusClass(status: string): string {

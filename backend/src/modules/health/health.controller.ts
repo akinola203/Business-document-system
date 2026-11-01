@@ -7,7 +7,7 @@ import { Public } from '../../common/decorators/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Health')
-@Controller('health')
+@Controller(['health', 'api/health'])
 export class HealthController {
   constructor(
     private readonly prisma: PrismaService,

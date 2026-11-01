@@ -1,4 +1,5 @@
 import * as sanitizeHtml from 'sanitize-html';
+import { escapeHtml } from '../../../common/utils/html-escape.util';
 
 export interface LetterRenderContext {
   company: {
@@ -290,16 +291,6 @@ export function renderLetterHtml(ctx: LetterRenderContext): string {
   </div>
 </body>
 </html>`;
-}
-
-function escapeHtml(str: string): string {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 /**

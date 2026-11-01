@@ -25,23 +25,38 @@ async function bootstrap() {
   // Trust reverse proxy for client IP resolution and rate limiters
   (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
 
-  // Security Middleware: Helmet
-  app.use(helmet());
+  // Security Middleware: Helmet with cross-origin resource support for native app and web previews
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   // Cookie Parser for secure httpOnly refresh tokens
   app.use(cookieParser());
 
   // CORS Configuration
+  const frontendUrlEnv = configService.get<string>('FRONTEND_URL');
   const corsOriginEnv = configService.get<string>('CORS_ORIGIN');
   const configuredOrigins = corsOriginEnv
     ? corsOriginEnv.split(',').map((o) => o.trim()).filter(Boolean)
     : [];
 
+  const nativeAppOrigins = [
+    'capacitor://localhost',
+    'tauri://localhost',
+    'http://tauri.localhost',
+    'http://localhost',
+  ];
+
   const allowedOrigins = [
     appUrl,
+    ...(frontendUrlEnv ? [frontendUrlEnv] : []),
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    ...nativeAppOrigins,
     ...configuredOrigins,
   ];
 
@@ -55,13 +70,19 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      // Automatically support Vercel preview and production deployments (*.vercel.app)
-      if (origin.endsWith('.vercel.app')) {
+      // Explicitly allow native app origins and localhost variants
+      if (
+        origin === 'capacitor://localhost' ||
+        origin === 'tauri://localhost' ||
+        origin === 'http://tauri.localhost' ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('http://127.0.0.1')
+      ) {
         return callback(null, true);
       }
 
-      // Allow localhost in non-production environments
-      if (!isProduction && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      // Automatically support Vercel preview and production deployments (*.vercel.app)
+      if (origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }
 
@@ -74,8 +95,10 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Idempotency-Key', 'Idempotency-Key'],
   });
 
-  // Global API Prefix (/api/v1)
-  app.setGlobalPrefix(apiPrefix);
+  // Global API Prefix (/api/v1) with exclusion for uptime health checks
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: ['health', 'health/(.*)', 'api/health', 'api/health/(.*)'],
+  });
 
   // Global Input Validation & Transformation
   app.useGlobalPipes(

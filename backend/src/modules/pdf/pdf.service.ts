@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
@@ -14,7 +15,7 @@ import { TemplatesService } from '../templates/templates.service';
 import { FileCategory } from '@prisma/client';
 
 @Injectable()
-export class PdfService implements OnModuleDestroy {
+export class PdfService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PdfService.name);
   private browserInstance: Browser | null = null;
   private isLaunching = false;
@@ -51,6 +52,13 @@ export class PdfService implements OnModuleDestroy {
     private readonly filesService: FilesService,
     private readonly templatesService: TemplatesService,
   ) {}
+
+  async onModuleInit() {
+    this.logger.log('Pre-warming Puppeteer singleton browser instance on boot...');
+    this.getBrowser().catch((err) => {
+      this.logger.warn(`Deferred Puppeteer pre-warm on boot: ${err.message}`);
+    });
+  }
 
   async onModuleDestroy() {
     await this.closeBrowser();
