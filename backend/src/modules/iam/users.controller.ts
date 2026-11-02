@@ -13,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
@@ -24,7 +25,6 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @RequirePermissions('users:view')
   @ApiOperation({ summary: 'Paginated, searchable list of company users with roles, status, and lastLoginAt' })
   @ApiResponse({ status: 200, description: 'Paginated user list retrieved.' })
   async findAll(
@@ -45,6 +45,44 @@ export class UsersController {
     @Body() dto: CreateUserDto,
   ) {
     return this.usersService.create(user.companyId, dto, user.id);
+  }
+
+  @Patch('me/profile')
+  @ApiOperation({ summary: "Update the authenticated user's own profile (name, email, phone, password)" })
+  @ApiResponse({ status: 200, description: 'Own profile updated successfully.' })
+  async updateMyProfile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateUserProfileDto,
+  ) {
+    return this.usersService.updateProfile(user.companyId, user.id, dto, user);
+  }
+
+  @Patch(':id/profile')
+  @ApiOperation({
+    summary: 'Update user profile and credentials (Admins can edit any user; non-admins can only edit themselves)',
+  })
+  @ApiResponse({ status: 200, description: 'User profile updated successfully.' })
+  @ApiResponse({ status: 403, description: 'Non-admin attempted to edit another user.' })
+  async updateUserProfile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateUserProfileDto,
+  ) {
+    return this.usersService.updateProfile(user.companyId, id, dto, user);
+  }
+
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Update user profile and credentials alias (Admins can edit any user; non-admins can only edit themselves)',
+  })
+  @ApiResponse({ status: 200, description: 'User profile updated successfully.' })
+  @ApiResponse({ status: 403, description: 'Non-admin attempted to edit another user.' })
+  async updateUser(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateUserProfileDto,
+  ) {
+    return this.usersService.updateProfile(user.companyId, id, dto, user);
   }
 
   @Patch(':id/role')
@@ -77,7 +115,7 @@ export class UsersController {
 
   @Post(':id/reset-password')
   @RequirePermissions('users:update')
-  @ApiOperation({ summary: "Admin-triggered password reset, revoking all existing user sessions" })
+  @ApiOperation({ summary: 'Admin-triggered password reset, revoking all existing user sessions' })
   @ApiResponse({ status: 200, description: 'Password reset and sessions revoked.' })
   @ApiResponse({ status: 404, description: 'User not found in company.' })
   async resetPassword(

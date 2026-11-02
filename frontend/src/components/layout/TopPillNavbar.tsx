@@ -23,6 +23,7 @@ import {
   Sparkles,
   Package,
   Zap,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ClientDemoModal } from '../demo/ClientDemoModal';
@@ -219,7 +220,14 @@ export const TopPillNavbar: React.FC = () => {
           {/* Profile Dropdown Menu */}
           {isProfileOpen && (
             <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white shadow-2xl border border-slate-200/90 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-              <div className="p-3 border-b border-slate-100">
+              <div
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  navigate('/settings/users?edit=me');
+                }}
+                title="Click to edit your profile & password"
+                className="p-3 border-b border-slate-100 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors"
+              >
                 <p className="text-xs font-semibold text-slate-900">{user?.fullName}</p>
                 <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
                 <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold">
@@ -229,6 +237,16 @@ export const TopPillNavbar: React.FC = () => {
               </div>
 
               <div className="py-1">
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    navigate('/settings/users?edit=me');
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#5847F6] hover:bg-indigo-50 rounded-xl transition-colors cursor-pointer"
+                >
+                  <UserCog className="w-3.5 h-3.5 text-[#5847F6]" />
+                  Edit My Profile & Password
+                </button>
                 {canManageSettings && (
                   <button
                     onClick={() => {

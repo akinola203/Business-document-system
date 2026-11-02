@@ -15,6 +15,7 @@ import { CreateUserDto, createUserSchema } from './dto/create-user.dto';
 import { UpdateUserRoleDto, updateUserRoleSchema } from './dto/update-user-role.dto';
 import { UpdateUserStatusDto, updateUserStatusSchema } from './dto/update-user-status.dto';
 import { ResetUserPasswordDto, resetUserPasswordSchema } from './dto/reset-user-password.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
 
 @Injectable()
@@ -25,6 +26,53 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
   ) {}
+
+  private formatCompanyUser(cu: any) {
+    if (!cu) return cu;
+    const u = cu.user;
+    if (u) {
+      const fullName =
+        u.fullName ||
+        [u.firstName, u.lastName].filter(Boolean).join(' ').trim() ||
+        u.email ||
+        'User';
+      return {
+        ...cu,
+        user: {
+          ...u,
+          fullName,
+        },
+      };
+    }
+    return cu;
+  }
+
+  private async resolveCompanyUser(companyId: string, targetId: string) {
+    const byComposite = await this.prisma.companyUser.findUnique({
+      where: {
+        companyId_userId: {
+          companyId,
+          userId: targetId,
+        },
+      },
+      include: {
+        role: true,
+        user: true,
+      },
+    });
+    if (byComposite) return byComposite;
+
+    return this.prisma.companyUser.findFirst({
+      where: {
+        companyId,
+        OR: [{ userId: targetId }, { id: targetId }],
+      },
+      include: {
+        role: true,
+        user: true,
+      },
+    });
+  }
 
   private async assertCallerCanAssignRole(companyId: string, actorId: string, targetRoleId: string) {
     const actorMembership = await this.prisma.companyUser.findUnique({
@@ -105,7 +153,7 @@ export class UsersService {
       };
     }
 
-    const [total, items] = await Promise.all([
+    const [total, rawItems] = await Promise.all([
       this.prisma.companyUser.count({ where }),
       this.prisma.companyUser.findMany({
         where,
@@ -151,6 +199,8 @@ export class UsersService {
       }),
     ]);
 
+    const items = (rawItems || []).map((cu) => this.formatCompanyUser(cu));
+
     return {
       items,
       meta: {
@@ -168,6 +218,16 @@ export class UsersService {
   async create(companyId: string, dto: CreateUserDto, actorId: string) {
     createUserSchema.parse(dto);
     const normalizedEmail = dto.email.toLowerCase().trim();
+
+    let resolvedFirstName = dto.firstName?.trim() || '';
+    let resolvedLastName = dto.lastName?.trim() || '';
+    if (!resolvedFirstName && dto.fullName?.trim()) {
+      const parts = dto.fullName.trim().split(/\s+/);
+      resolvedFirstName = parts[0] || 'User';
+      resolvedLastName = parts.slice(1).join(' ') || 'Member';
+    }
+    if (!resolvedFirstName) resolvedFirstName = 'User';
+    if (!resolvedLastName) resolvedLastName = 'Member';
 
     // Verify role exists and is accessible by this company
     const role = await this.prisma.role.findFirst({
@@ -219,8 +279,8 @@ export class UsersService {
         data: {
           email: normalizedEmail,
           passwordHash,
-          firstName: dto.firstName.trim(),
-          lastName: dto.lastName.trim(),
+          firstName: resolvedFirstName,
+          lastName: resolvedLastName,
           phone: dto.phone?.trim(),
           isActive: true,
         },
@@ -254,18 +314,186 @@ export class UsersService {
             userId: newUser.id,
             email: normalizedEmail,
             role: role.name,
-            firstName: dto.firstName,
-            lastName: dto.lastName,
+            firstName: resolvedFirstName,
+            lastName: resolvedLastName,
           },
         },
         tx,
       );
 
-      return { companyUser, temporaryPassword: dto.password ? undefined : plainPassword };
+      return {
+        companyUser: this.formatCompanyUser(companyUser),
+        temporaryPassword: dto.password ? undefined : plainPassword,
+      };
     });
 
     this.logger.log(`New user "${normalizedEmail}" created for company "${companyId}" by "${actorId}".`);
     return created;
+  }
+
+  /**
+   * Updates user profile & credentials with strict RBAC:
+   * - Admins can edit ANY user within their companyId (name, email, phone, password).
+   * - Non-Admins can ONLY edit their own profile (`targetUserId === caller.id`).
+   */
+  async updateProfile(
+    companyId: string,
+    targetId: string,
+    dto: UpdateUserProfileDto,
+    caller: { id: string; role?: string; permissions?: string[] },
+  ) {
+    const companyUser = await this.resolveCompanyUser(companyId, targetId);
+
+    if (!companyUser) {
+      throw new NotFoundException(`User with ID "${targetId}" not found in this company.`);
+    }
+
+    const targetUserId = companyUser.userId;
+
+    // Determine whether caller is an Admin
+    const callerRoleStr = (caller.role || '').toLowerCase();
+    let isCallerAdmin =
+      callerRoleStr === 'admin' ||
+      callerRoleStr === 'administrator' ||
+      callerRoleStr === 'owner' ||
+      (caller.permissions || []).includes('*:*') ||
+      (caller.permissions || []).includes('admin:*');
+
+    if (!isCallerAdmin) {
+      const callerMembership = await this.prisma.companyUser.findUnique({
+        where: {
+          companyId_userId: {
+            companyId,
+            userId: caller.id,
+          },
+        },
+        include: { role: true },
+      });
+      const dbRole = callerMembership?.role?.name?.toLowerCase() || '';
+      if (dbRole === 'admin' || dbRole === 'administrator' || dbRole === 'owner') {
+        isCallerAdmin = true;
+      }
+    }
+
+    // Strict Access Control: Non-Admin users can ONLY edit their own profile
+    if (!isCallerAdmin && targetUserId !== caller.id) {
+      throw new ForbiddenException('Only administrators can edit other users profiles');
+    }
+
+    const updateData: any = {};
+    const auditChanges: Record<string, any> = {};
+
+    // 1. Name update (supports fullName or firstName/lastName)
+    if (dto.fullName !== undefined && dto.fullName.trim().length > 0) {
+      const parts = dto.fullName.trim().split(/\s+/);
+      updateData.firstName = parts[0];
+      updateData.lastName = parts.slice(1).join(' ') || '';
+      auditChanges.fullName = dto.fullName.trim();
+    } else {
+      if (dto.firstName !== undefined && dto.firstName.trim().length > 0) {
+        updateData.firstName = dto.firstName.trim();
+        auditChanges.firstName = updateData.firstName;
+      }
+      if (dto.lastName !== undefined) {
+        updateData.lastName = dto.lastName.trim();
+        auditChanges.lastName = updateData.lastName;
+      }
+    }
+
+    // 2. Email update (with uniqueness check)
+    if (dto.email !== undefined && dto.email.trim().length > 0) {
+      const normalizedEmail = dto.email.toLowerCase().trim();
+      if (normalizedEmail !== companyUser.user.email.toLowerCase()) {
+        const existingWithEmail = await this.prisma.user.findUnique({
+          where: { email: normalizedEmail },
+        });
+        if (existingWithEmail && existingWithEmail.id !== targetUserId) {
+          throw new ConflictException(`Email "${normalizedEmail}" is already in use by another user.`);
+        }
+        updateData.email = normalizedEmail;
+        auditChanges.email = normalizedEmail;
+      }
+    }
+
+    // 3. Phone update
+    if (dto.phone !== undefined) {
+      updateData.phone = dto.phone.trim() || null;
+      auditChanges.phone = updateData.phone;
+    }
+
+    // 4. Password update (optional)
+    const rawNewPassword = (dto.password || dto.newPassword || '').trim();
+    if (rawNewPassword) {
+      if (rawNewPassword.length < 8) {
+        throw new BadRequestException('New password must be at least 8 characters long.');
+      }
+
+      // If non-admin is changing their own password and provided currentPassword, verify it
+      if (!isCallerAdmin && dto.currentPassword) {
+        const isCurrentValid = await argon2
+          .verify(companyUser.user.passwordHash, dto.currentPassword)
+          .catch(() => false);
+        if (!isCurrentValid) {
+          throw new BadRequestException('Current password is incorrect.');
+        }
+      }
+
+      updateData.passwordHash = await argon2.hash(rawNewPassword);
+      updateData.failedLoginAttempts = 0;
+      updateData.lockoutUntil = null;
+      updateData.lockedUntil = null;
+      auditChanges.passwordUpdated = true;
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (Object.keys(updateData).length > 0) {
+        await tx.user.update({
+          where: { id: targetUserId },
+          data: updateData,
+        });
+      }
+
+      const refreshed = await tx.companyUser.findUnique({
+        where: { id: companyUser.id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              isActive: true,
+              lastLoginAt: true,
+              createdAt: true,
+            },
+          },
+          role: true,
+        },
+      });
+
+      await this.auditService.logAction(
+        {
+          companyId,
+          actorId: caller.id,
+          action: 'USER_PROFILE_UPDATED',
+          entityType: 'User',
+          entityId: targetUserId,
+          oldValues: {
+            email: companyUser.user.email,
+            firstName: companyUser.user.firstName,
+            lastName: companyUser.user.lastName,
+          },
+          newValues: auditChanges,
+        },
+        tx,
+      );
+
+      return this.formatCompanyUser(refreshed);
+    });
+
+    this.logger.log(`Profile for user "${targetUserId}" updated by "${caller.id}".`);
+    return updated;
   }
 
   /**
@@ -275,15 +503,7 @@ export class UsersService {
   async updateRole(companyId: string, targetUserId: string, dto: UpdateUserRoleDto, actorId: string) {
     updateUserRoleSchema.parse(dto);
 
-    const companyUser = await this.prisma.companyUser.findUnique({
-      where: {
-        companyId_userId: {
-          companyId,
-          userId: targetUserId,
-        },
-      },
-      include: { role: true },
-    });
+    const companyUser = await this.resolveCompanyUser(companyId, targetUserId);
 
     if (!companyUser) {
       throw new NotFoundException(`User with ID "${targetUserId}" not found in this company.`);
@@ -342,10 +562,10 @@ export class UsersService {
         tx,
       );
 
-      return result;
+      return this.formatCompanyUser(result);
     });
 
-    this.logger.log(`User "${targetUserId}" role changed from "${companyUser.role.name}" to "${newRole.name}" by "${actorId}".`);
+    this.logger.log(`User "${companyUser.userId}" role changed from "${companyUser.role.name}" to "${newRole.name}" by "${actorId}".`);
     return updated;
   }
 
@@ -358,22 +578,16 @@ export class UsersService {
   async updateStatus(companyId: string, targetUserId: string, dto: UpdateUserStatusDto, actorId: string) {
     updateUserStatusSchema.parse(dto);
 
-    if (targetUserId === actorId && dto.status !== CompanyUserStatus.ACTIVE) {
-      throw new BadRequestException('Safety Guardrail: You cannot deactivate or suspend your own account.');
-    }
-
-    const companyUser = await this.prisma.companyUser.findUnique({
-      where: {
-        companyId_userId: {
-          companyId,
-          userId: targetUserId,
-        },
-      },
-      include: { role: true },
-    });
+    const companyUser = await this.resolveCompanyUser(companyId, targetUserId);
 
     if (!companyUser) {
       throw new NotFoundException(`User with ID "${targetUserId}" not found in this company.`);
+    }
+
+    const resolvedUserId = companyUser.userId;
+
+    if (resolvedUserId === actorId && dto.status !== CompanyUserStatus.ACTIVE) {
+      throw new BadRequestException('Safety Guardrail: You cannot deactivate or suspend your own account.');
     }
 
     // Safety guardrail: Do not deactivate the last active Admin
@@ -399,7 +613,7 @@ export class UsersService {
       // If deactivating or suspending, revoke all active refresh tokens immediately
       if (dto.status !== CompanyUserStatus.ACTIVE) {
         await tx.refreshToken.updateMany({
-          where: { userId: targetUserId, isRevoked: false },
+          where: { userId: resolvedUserId, isRevoked: false },
           data: { isRevoked: true },
         });
       }
@@ -428,10 +642,10 @@ export class UsersService {
         tx,
       );
 
-      return result;
+      return this.formatCompanyUser(result);
     });
 
-    this.logger.log(`User "${targetUserId}" status transitioned to "${dto.status}" by "${actorId}".`);
+    this.logger.log(`User "${resolvedUserId}" status transitioned to "${dto.status}" by "${actorId}".`);
     return updated;
   }
 
@@ -441,24 +655,16 @@ export class UsersService {
   async resetPassword(companyId: string, targetUserId: string, dto: ResetUserPasswordDto, actorId: string) {
     resetUserPasswordSchema.parse(dto);
 
-    const companyUser = await this.prisma.companyUser.findUnique({
-      where: {
-        companyId_userId: {
-          companyId,
-          userId: targetUserId,
-        },
-      },
-      include: {
-        user: { select: { id: true, email: true } },
-      },
-    });
+    const companyUser = await this.resolveCompanyUser(companyId, targetUserId);
 
     if (!companyUser) {
       throw new NotFoundException(`User with ID "${targetUserId}" not found in this company.`);
     }
 
+    const resolvedUserId = companyUser.userId;
+
     const membershipCount = await this.prisma.companyUser.count({
-      where: { userId: targetUserId },
+      where: { userId: resolvedUserId },
     });
 
     if (membershipCount > 1) {
@@ -473,12 +679,12 @@ export class UsersService {
     await this.prisma.$transaction(async (tx) => {
       // Invalidate all active sessions immediately
       await tx.refreshToken.updateMany({
-        where: { userId: targetUserId, isRevoked: false },
+        where: { userId: resolvedUserId, isRevoked: false },
         data: { isRevoked: true },
       });
 
       await tx.user.update({
-        where: { id: targetUserId },
+        where: { id: resolvedUserId },
         data: {
           passwordHash,
           failedLoginAttempts: 0,
@@ -493,14 +699,14 @@ export class UsersService {
           actorId,
           action: 'USER_PASSWORD_RESET',
           entityType: 'User',
-          entityId: targetUserId,
+          entityId: resolvedUserId,
           newValues: { email: companyUser.user.email, passwordResetBy: actorId },
         },
         tx,
       );
     });
 
-    this.logger.log(`Password reset for user "${targetUserId}" by admin "${actorId}".`);
+    this.logger.log(`Password reset for user "${resolvedUserId}" by admin "${actorId}".`);
 
     return {
       message: 'Password reset successfully. All active sessions have been revoked.',

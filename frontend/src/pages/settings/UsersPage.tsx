@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { CompanyUser, Role } from '../../types';
 import { DEMO_USERS, DEMO_ROLES } from '../../lib/mock-data';
 import { useAuthStore } from '../../store/auth.store';
+import { usePermissions } from '../../hooks/usePermissions';
 import {
   Users,
   ShieldCheck,
@@ -21,16 +23,21 @@ import {
   RefreshCw,
   Ban,
   Check,
+  UserCog,
+  Phone,
 } from 'lucide-react';
 
 export const UsersPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const { user: currentAuthUser } = useAuthStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user: currentAuthUser, updateUser } = useAuthStore();
+  const { isAdmin } = usePermissions();
 
   const [activeTab, setActiveTab] = useState<'USERS' | 'ROLES'>('USERS');
 
   // Modals state
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<CompanyUser | null>(null);
   const [selectedUserForRole, setSelectedUserForRole] = useState<CompanyUser | null>(null);
   const [selectedUserForPassword, setSelectedUserForPassword] = useState<CompanyUser | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -42,8 +49,23 @@ export const UsersPage: React.FC = () => {
   const [inviteRole, setInviteRole] = useState('role-staff');
   const [invitePhone, setInvitePhone] = useState('');
 
+  // Edit Profile / Credentials form state
+  const [editFullName, setEditFullName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+
   // Password reset state
   const [newPassword, setNewPassword] = useState('');
+
+  const openEditProfileModal = (target: CompanyUser) => {
+    setSelectedUserForEdit(target);
+    setEditFullName(target.user?.fullName || '');
+    setEditEmail(target.user?.email || '');
+    setEditPhone(target.user?.phone || '');
+    setEditPassword('');
+    setErrorMessage(null);
+  };
 
   // 1. Fetch Users
   const { data: usersData } = useQuery<{ items?: CompanyUser[]; data?: CompanyUser[] }>({
@@ -60,6 +82,42 @@ export const UsersPage: React.FC = () => {
       : usersData?.data && usersData.data.length > 0
         ? usersData.data
         : DEMO_USERS;
+
+  // Auto-open Edit My Profile modal when navigated with ?edit=me
+  useEffect(() => {
+    if (searchParams.get('edit') === 'me' && currentAuthUser) {
+      const matched = allUsers.find(
+        (u) =>
+          u.userId === currentAuthUser.id ||
+          u.user?.id === currentAuthUser.id ||
+          u.user?.email?.toLowerCase() === currentAuthUser.email?.toLowerCase(),
+      );
+      const selfTarget: CompanyUser = matched || {
+        id: currentAuthUser.id,
+        userId: currentAuthUser.id,
+        companyId: currentAuthUser.companyId,
+        roleId: 'role-self',
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString(),
+        user: {
+          id: currentAuthUser.id,
+          email: currentAuthUser.email,
+          fullName: currentAuthUser.fullName,
+          phone: null,
+        },
+        role: {
+          id: 'role-self',
+          name: currentAuthUser.roleName || currentAuthUser.role || 'Staff',
+          description: '',
+          isSystem: true,
+          rolePermissions: [],
+        },
+      };
+      openEditProfileModal(selfTarget);
+      searchParams.delete('edit');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, currentAuthUser, allUsers.length]);
 
   // 2. Fetch Roles
   const { data: rolesData } = useQuery<Role[]>({
@@ -186,6 +244,76 @@ export const UsersPage: React.FC = () => {
     },
   });
 
+  // Update User Profile & Credentials Mutation (Admin can edit any user; Non-Admin can only edit own profile)
+  const updateProfileMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedUserForEdit) return;
+      if (!editFullName.trim() || !editEmail.trim()) {
+        throw new Error('Full Name and Email are required.');
+      }
+      if (editPassword.trim() && editPassword.trim().length < 6) {
+        throw new Error('New password must be at least 6 characters.');
+      }
+
+      const isSelf =
+        selectedUserForEdit.userId === currentAuthUser?.id ||
+        selectedUserForEdit.user?.id === currentAuthUser?.id ||
+        selectedUserForEdit.user?.email?.toLowerCase() === currentAuthUser?.email?.toLowerCase();
+
+      if (!isAdmin && !isSelf) {
+        throw new Error('Only administrators can edit other users profiles.');
+      }
+
+      const payload: Record<string, string | undefined> = {
+        fullName: editFullName.trim(),
+        email: editEmail.trim().toLowerCase(),
+        phone: editPhone.trim() || undefined,
+      };
+      if (editPassword.trim()) {
+        payload.password = editPassword.trim();
+      }
+
+      const endpoint =
+        isSelf && !isAdmin
+          ? '/users/me/profile'
+          : `/users/${selectedUserForEdit.userId || selectedUserForEdit.id}/profile`;
+
+      try {
+        const res = await apiClient.patch(endpoint, payload);
+        return { data: res.data, isSelf };
+      } catch (err: any) {
+        if (!err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+          selectedUserForEdit.user.fullName = editFullName.trim();
+          selectedUserForEdit.user.email = editEmail.trim().toLowerCase();
+          selectedUserForEdit.user.phone = editPhone.trim() || null;
+          return { data: selectedUserForEdit, isSelf };
+        }
+        throw err;
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      if (result?.isSelf) {
+        updateUser({
+          fullName: editFullName.trim(),
+          email: editEmail.trim().toLowerCase(),
+        });
+      }
+      setSelectedUserForEdit(null);
+      setEditPassword('');
+      setFeedback(
+        editPassword.trim()
+          ? '✓ Profile details and password credentials updated successfully.'
+          : '✓ User profile details updated successfully.',
+      );
+      setErrorMessage(null);
+    },
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || 'Failed to update user profile.';
+      setErrorMessage(Array.isArray(msg) ? msg.join(', ') : msg);
+    },
+  });
+
   // Reset Password Mutation
   const resetPasswordMutation = useMutation({
     mutationFn: async ({ user, pass }: { user: CompanyUser; pass: string }) => {
@@ -230,13 +358,57 @@ export const UsersPage: React.FC = () => {
         </div>
 
         {activeTab === 'USERS' && (
-          <button
-            onClick={() => setIsInviteModalOpen(true)}
-            className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Invite Team Member</span>
-          </button>
+          <div className="flex items-center gap-2.5">
+            {currentAuthUser && (
+              <button
+                type="button"
+                onClick={() => {
+                  const matched = allUsers.find(
+                    (u) =>
+                      u.userId === currentAuthUser.id ||
+                      u.user?.id === currentAuthUser.id ||
+                      u.user?.email?.toLowerCase() === currentAuthUser.email?.toLowerCase(),
+                  );
+                  openEditProfileModal(
+                    matched || {
+                      id: currentAuthUser.id,
+                      userId: currentAuthUser.id,
+                      companyId: currentAuthUser.companyId,
+                      roleId: 'role-self',
+                      status: 'ACTIVE',
+                      createdAt: new Date().toISOString(),
+                      user: {
+                        id: currentAuthUser.id,
+                        email: currentAuthUser.email,
+                        fullName: currentAuthUser.fullName,
+                        phone: null,
+                      },
+                      role: {
+                        id: 'role-self',
+                        name: currentAuthUser.roleName || currentAuthUser.role || 'Staff',
+                        description: '',
+                        isSystem: true,
+                        rolePermissions: [],
+                      },
+                    },
+                  );
+                }}
+                className="px-4 py-3 rounded-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs font-extrabold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+              >
+                <UserCog className="w-4 h-4 text-[#5847F6]" />
+                <span>Edit My Profile</span>
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setIsInviteModalOpen(true)}
+                className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Invite Team Member</span>
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -298,8 +470,12 @@ export const UsersPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {allUsers.map((u) => {
+                  const isSelf =
+                    u.userId === currentAuthUser?.id ||
+                    u.user?.id === currentAuthUser?.id ||
+                    u.user?.email?.toLowerCase() === currentAuthUser?.email?.toLowerCase();
                   const isCurrentAdmin =
-                    currentAuthUser?.email === u.user?.email ||
+                    isSelf ||
                     (u.role?.name === 'Admin' && allUsers.filter((x) => x.role?.name === 'Admin').length <= 1);
                   const userFullName = u.user?.fullName || u.user?.email || 'User';
 
@@ -311,7 +487,14 @@ export const UsersPage: React.FC = () => {
                             {(userFullName ?? 'US').slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{userFullName}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-slate-900">{userFullName}</p>
+                              {isSelf && (
+                                <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-[#5847F6] border border-indigo-200 text-[10px] font-extrabold">
+                                  You
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-slate-400 font-medium">{u.user?.email || '—'}</p>
                           </div>
                         </div>
@@ -350,39 +533,69 @@ export const UsersPage: React.FC = () => {
 
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Change Role Button */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedUserForRole(u)}
-                            title="Change Role"
-                            className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600 transition-colors cursor-pointer"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
+                          {isAdmin ? (
+                            <>
+                              {/* Edit Profile & Credentials Button (Admin can edit any user) */}
+                              <button
+                                type="button"
+                                onClick={() => openEditProfileModal(u)}
+                                title="Edit Profile & Credentials"
+                                className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <UserCog className="w-3.5 h-3.5" />
+                                <span>Edit Profile</span>
+                              </button>
 
-                          {/* Reset Password Button */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedUserForPassword(u)}
-                            title="Reset Credentials"
-                            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-                          >
-                            <KeyRound className="w-4 h-4" />
-                          </button>
+                              {/* Change Role Button */}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUserForRole(u)}
+                                title="Change Role"
+                                className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600 transition-colors cursor-pointer"
+                              >
+                                <Shield className="w-4 h-4" />
+                              </button>
 
-                          {/* Status Toggle (Disabled for active admin to prevent lockout) */}
-                          <button
-                            type="button"
-                            disabled={isCurrentAdmin && u.status === 'ACTIVE'}
-                            onClick={() => toggleStatusMutation.mutate(u)}
-                            title={isCurrentAdmin ? 'Cannot deactivate active Admin' : 'Toggle Status'}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${u.status === 'ACTIVE'
-                                ? 'hover:bg-rose-50 text-rose-600'
-                                : 'hover:bg-emerald-50 text-emerald-600'
-                              }`}
-                          >
-                            <Ban className="w-4 h-4" />
-                          </button>
+                              {/* Reset Password Button */}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUserForPassword(u)}
+                                title="Reset Credentials"
+                                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                              >
+                                <KeyRound className="w-4 h-4" />
+                              </button>
+
+                              {/* Status Toggle (Disabled for active admin to prevent lockout) */}
+                              <button
+                                type="button"
+                                disabled={isCurrentAdmin && u.status === 'ACTIVE'}
+                                onClick={() => toggleStatusMutation.mutate(u)}
+                                title={isCurrentAdmin ? 'Cannot deactivate active Admin' : 'Toggle Status'}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${u.status === 'ACTIVE'
+                                    ? 'hover:bg-rose-50 text-rose-600'
+                                    : 'hover:bg-emerald-50 text-emerald-600'
+                                  }`}
+                              >
+                                <Ban className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : isSelf ? (
+                            <button
+                              type="button"
+                              onClick={() => openEditProfileModal(u)}
+                              title="Edit My Profile & Password"
+                              className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] font-bold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              <span>Edit My Profile</span>
+                            </button>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 font-semibold text-[11px] inline-flex items-center gap-1">
+                              <Lock className="w-3 h-3" />
+                              <span>Admin Only</span>
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -669,6 +882,131 @@ export const UsersPage: React.FC = () => {
                   className="px-5 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
                 >
                   {resetPasswordMutation.isPending ? 'Resetting...' : 'Confirm Reset'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* 4. Edit User Profile & Credentials Modal (Admin can edit any user; Non-Admin can edit own profile) */}
+      {selectedUserForEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-[32px] p-6 md:p-8 shadow-2xl border border-slate-200 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-[#5847F6] flex items-center justify-center">
+                  <UserCog className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    {selectedUserForEdit.userId === currentAuthUser?.id ||
+                    selectedUserForEdit.user?.email?.toLowerCase() === currentAuthUser?.email?.toLowerCase()
+                      ? 'Edit My Profile & Credentials'
+                      : `Edit User: ${selectedUserForEdit.user?.fullName || selectedUserForEdit.user?.email || 'User'}`}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {isAdmin
+                      ? 'Administrator privilege: update display name, email, or set a new password'
+                      : 'Update your personal display name, email, phone, or password'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedUserForEdit(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateProfileMutation.mutate();
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Full Name / Display Name <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <User className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    value={editFullName}
+                    onChange={(e) => setEditFullName(e.target.value)}
+                    placeholder="e.g. Adebayo Ogunlesi"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Email Address (Login ID) <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    placeholder="name@aoa77.com"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Phone Number <span className="text-slate-400 font-normal">(Optional)</span>
+                </label>
+                <div className="relative">
+                  <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="+234 809 444 5566"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  New Password <span className="text-slate-400 font-normal">(Leave blank to keep current)</span>
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    minLength={6}
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Enter new password (min 6 chars)..."
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedUserForEdit(null)}
+                  className="px-4 py-2 rounded-full bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateProfileMutation.isPending}
+                  className="px-5 py-2 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
+                >
+                  {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

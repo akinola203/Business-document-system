@@ -4,8 +4,9 @@ import { z } from 'zod';
 
 export const createUserSchema = z.object({
   email: z.string().email(),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  fullName: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   password: z.string().min(8, 'Password must be at least 8 characters').optional(),
   phone: z.string().optional(),
   roleId: z.string().min(1, 'Role ID is required'),
@@ -21,15 +22,20 @@ export class CreateUserDto {
   @IsNotEmpty()
   email!: string;
 
-  @ApiProperty({ example: 'Bolaji', description: 'User first name' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'Bolaji Adeyemi', description: 'User full name' })
+  @IsOptional()
   @IsString()
-  firstName!: string;
+  fullName?: string;
 
-  @ApiProperty({ example: 'Adeyemi', description: 'User last name' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'Bolaji', description: 'User first name' })
+  @IsOptional()
   @IsString()
-  lastName!: string;
+  firstName?: string;
+
+  @ApiPropertyOptional({ example: 'Adeyemi', description: 'User last name' })
+  @IsOptional()
+  @IsString()
+  lastName?: string;
 
   @ApiPropertyOptional({ example: 'Password123!', description: 'Initial account password (auto-generated if omitted)' })
   @IsOptional()
