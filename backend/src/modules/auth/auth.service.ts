@@ -51,6 +51,7 @@ export class AuthService {
     familyId?: string,
     ipAddress?: string,
     userAgent?: string,
+    rememberMe = false,
   ) {
     const payload: JwtPayload = {
       sub: userId,
@@ -62,18 +63,23 @@ export class AuthService {
       permissions,
     };
 
+    const accessTokenExpiration = rememberMe
+      ? this.configService.get<string>('JWT_REMEMBER_ME_ACCESS_EXPIRATION', '7d')
+      : this.configService.get<string>('JWT_ACCESS_EXPIRATION', '15m');
+
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
+      expiresIn: accessTokenExpiration,
     });
 
     const rawRefreshToken = crypto.randomBytes(40).toString('hex');
     const tokenHash = this.hashToken(rawRefreshToken);
     const assignedFamilyId = familyId || crypto.randomUUID();
 
-    // 7 days expiration
+    // 30 days if rememberMe, otherwise 7 days
+    const refreshDays = rememberMe ? 30 : 7;
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + refreshDays);
 
     await this.prisma.refreshToken.create({
       data: {
@@ -89,6 +95,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: rawRefreshToken,
+      rememberMe,
     };
   }
 
@@ -237,6 +244,7 @@ export class AuthService {
       undefined,
       ipAddress,
       userAgent,
+      Boolean(loginDto.rememberMe),
     );
 
     return {
@@ -342,6 +350,10 @@ export class AuthService {
 
     const permissions = membership.role.rolePermissions.map((rp) => rp.permission.slug);
 
+    const isRemembered = existingToken.expiresAt
+      ? existingToken.expiresAt.getTime() - existingToken.createdAt.getTime() > 10 * 24 * 60 * 60 * 1000
+      : false;
+
     // Issue new pair continuing the token family
     return this.generateTokens(
       user.id,
@@ -354,6 +366,7 @@ export class AuthService {
       existingToken.familyId,
       ipAddress,
       userAgent,
+      isRemembered,
     );
   }
 

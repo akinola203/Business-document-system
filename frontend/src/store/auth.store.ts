@@ -34,7 +34,7 @@ interface AuthState {
   isLoading: boolean;
   isAdmin: boolean;
   isManager: boolean;
-  login: (tokens: { accessToken: string; refreshToken?: string }, user: AuthUser) => void;
+  login: (tokens: { accessToken: string; refreshToken?: string }, user: AuthUser, rememberMe?: boolean) => void;
   logout: () => void;
   updateUser: (user: Partial<AuthUser>) => void;
   hasPermission: (permission: string) => boolean;
@@ -43,11 +43,12 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => {
-  // Initialize state from localStorage
-  const savedUser = localStorage.getItem('aoa_user');
-  const savedAccess = localStorage.getItem('aoa_access_token');
-  // Purge any stale refresh token stored in localStorage
+  // Initialize state from localStorage (when Remember Me is active) or sessionStorage
+  const savedUser = localStorage.getItem('aoa_user') || sessionStorage.getItem('aoa_user');
+  const savedAccess = localStorage.getItem('aoa_access_token') || sessionStorage.getItem('aoa_access_token');
+  // Purge any stale refresh token stored in storage
   localStorage.removeItem('aoa_refresh_token');
+  sessionStorage.removeItem('aoa_refresh_token');
 
   let initialUser: AuthUser | null = null;
   if (savedUser) {
@@ -55,6 +56,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       initialUser = JSON.parse(savedUser);
     } catch {
       localStorage.removeItem('aoa_user');
+      sessionStorage.removeItem('aoa_user');
     }
   }
 
@@ -67,10 +69,18 @@ export const useAuthStore = create<AuthState>((set, get) => {
     isAdmin: checkIsAdmin(initialUser),
     isManager: checkIsManager(initialUser),
 
-    login: (tokens, user) => {
-      localStorage.setItem('aoa_access_token', tokens.accessToken);
-      localStorage.removeItem('aoa_refresh_token');
-      localStorage.setItem('aoa_user', JSON.stringify(user));
+    login: (tokens, user, rememberMe = true) => {
+      const targetStorage = rememberMe ? localStorage : sessionStorage;
+      const otherStorage = rememberMe ? sessionStorage : localStorage;
+
+      otherStorage.removeItem('aoa_access_token');
+      otherStorage.removeItem('aoa_refresh_token');
+      otherStorage.removeItem('aoa_user');
+
+      targetStorage.setItem('aoa_access_token', tokens.accessToken);
+      targetStorage.setItem('aoa_user', JSON.stringify(user));
+      targetStorage.removeItem('aoa_refresh_token');
+      localStorage.setItem('aoa_remember_me', rememberMe ? 'true' : 'false');
 
       set({
         user,
@@ -86,6 +96,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
       localStorage.removeItem('aoa_access_token');
       localStorage.removeItem('aoa_refresh_token');
       localStorage.removeItem('aoa_user');
+      sessionStorage.removeItem('aoa_access_token');
+      sessionStorage.removeItem('aoa_refresh_token');
+      sessionStorage.removeItem('aoa_user');
 
       set({
         user: null,
@@ -101,7 +114,12 @@ export const useAuthStore = create<AuthState>((set, get) => {
       const current = get().user;
       if (!current) return;
       const updated = { ...current, ...partial };
-      localStorage.setItem('aoa_user', JSON.stringify(updated));
+      if (localStorage.getItem('aoa_user')) {
+        localStorage.setItem('aoa_user', JSON.stringify(updated));
+      }
+      if (sessionStorage.getItem('aoa_user')) {
+        sessionStorage.setItem('aoa_user', JSON.stringify(updated));
+      }
       set({
         user: updated,
         isAdmin: checkIsAdmin(updated),

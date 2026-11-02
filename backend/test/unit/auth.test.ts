@@ -17,6 +17,9 @@ test('AuthService Unit Tests', async (t) => {
   let auditLogCalls: any[] = [];
   let mockClaimCount = 1;
 
+  let lastSignOptions: any = null;
+  let lastCreatedRefreshToken: any = null;
+
   const mockPrisma: any = {
     user: {
       findUnique: async (args: any) => {
@@ -45,7 +48,10 @@ test('AuthService Unit Tests', async (t) => {
       },
     },
     refreshToken: {
-      create: async (args: any) => args.data,
+      create: async (args: any) => {
+        lastCreatedRefreshToken = args.data;
+        return args.data;
+      },
       findUnique: async () => mockRefreshTokenDb,
       update: async () => ({}),
       updateMany: async (args: any) => {
@@ -62,7 +68,10 @@ test('AuthService Unit Tests', async (t) => {
   };
 
   const mockJwtService: any = {
-    sign: () => 'mock-access-token-jwt',
+    sign: (_payload: any, options: any) => {
+      lastSignOptions = options;
+      return 'mock-access-token-jwt';
+    },
   };
 
   const mockConfigService: any = {
@@ -185,6 +194,54 @@ test('AuthService Unit Tests', async (t) => {
     assert.equal(updateCalls[0].data.failedLoginAttempts, 0);
     assert.equal(updateCalls[0].data.lockoutUntil, null);
     assert.equal(updateCalls[0].data.lockedUntil, null);
+  });
+
+  await t.test('login handles rememberMe by extending JWT and refresh token lifetimes', async () => {
+    const passwordHash = await argon2.hash('SecretAOA77!');
+    mockUserDb = {
+      id: 'usr-1',
+      email: 'staff@aoa77.com',
+      passwordHash,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      lockoutUntil: null,
+      isActive: true,
+      companyUsers: [
+        {
+          companyId: 'comp-1',
+          branchId: 'branch-1',
+          departmentId: 'dept-1',
+          status: 'ACTIVE',
+          role: {
+            name: 'Staff',
+            rolePermissions: [{ permission: { slug: 'invoice:create' } }],
+          },
+          company: { id: 'comp-1', name: 'AOA 77 COMPANY LTD' },
+        },
+      ],
+    };
+
+    // 1. Without rememberMe (default session)
+    const standardResult = await authService.login({
+      email: 'staff@aoa77.com',
+      password: 'SecretAOA77!',
+      rememberMe: false,
+    });
+    assert.equal(lastSignOptions.expiresIn, '15m');
+    assert.equal(standardResult.rememberMe, false);
+    const standardDays = Math.round((lastCreatedRefreshToken.expiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+    assert.ok(standardDays >= 6 && standardDays <= 8);
+
+    // 2. With rememberMe = true (extended persistent session)
+    const rememberedResult = await authService.login({
+      email: 'staff@aoa77.com',
+      password: 'SecretAOA77!',
+      rememberMe: true,
+    });
+    assert.equal(lastSignOptions.expiresIn, '7d');
+    assert.equal(rememberedResult.rememberMe, true);
+    const rememberedDays = Math.round((lastCreatedRefreshToken.expiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+    assert.ok(rememberedDays >= 29 && rememberedDays <= 31);
   });
 
   await t.test('refreshTokens atomically claims token and returns new token pair', async () => {

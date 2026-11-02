@@ -29,7 +29,7 @@ const REFRESH_COOKIE_NAME = 'refresh_token';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  private getRefreshCookieOptions() {
+  private getRefreshCookieOptions(rememberMe = false) {
     const isProd = process.env.NODE_ENV === 'production';
     const apiPrefix = process.env.API_PREFIX || 'api/v1';
     const cleanPrefix = apiPrefix.startsWith('/') ? apiPrefix : `/${apiPrefix}`;
@@ -43,11 +43,15 @@ export class AuthController {
       ['strict', 'lax', 'none'].includes(rawSameSite) ? rawSameSite : 'lax'
     ) as 'strict' | 'lax' | 'none';
 
+    const maxAge = rememberMe
+      ? 30 * 24 * 60 * 60 * 1000 // 30 days for Remember Me session
+      : 7 * 24 * 60 * 60 * 1000; // 7 days standard session
+
     return {
       httpOnly: true,
       secure: isProd || sameSiteConfig === 'none',
       sameSite: sameSiteConfig,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge,
       path: cookiePath,
     };
   }
@@ -102,8 +106,12 @@ export class AuthController {
 
     const result = await this.authService.login(loginDto, ipAddress, userAgent);
 
-    // Set refresh token in secure httpOnly cookie
-    res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, this.getRefreshCookieOptions());
+    // Set refresh token in secure httpOnly cookie (extended maxAge if rememberMe)
+    res.cookie(
+      REFRESH_COOKIE_NAME,
+      result.refreshToken,
+      this.getRefreshCookieOptions(Boolean(result.rememberMe ?? loginDto.rememberMe)),
+    );
 
     return {
       user: result.user,
@@ -141,7 +149,11 @@ export class AuthController {
 
     const result = await this.authService.refreshTokens(rawRefreshToken, ipAddress, userAgent);
 
-    res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, this.getRefreshCookieOptions());
+    res.cookie(
+      REFRESH_COOKIE_NAME,
+      result.refreshToken,
+      this.getRefreshCookieOptions(Boolean(result.rememberMe)),
+    );
 
     return {
       accessToken: result.accessToken,

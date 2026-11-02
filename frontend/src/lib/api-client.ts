@@ -27,12 +27,15 @@ export const clearAuthState = () => {
   localStorage.removeItem('aoa_access_token');
   localStorage.removeItem('aoa_refresh_token');
   localStorage.removeItem('aoa_user');
+  sessionStorage.removeItem('aoa_access_token');
+  sessionStorage.removeItem('aoa_refresh_token');
+  sessionStorage.removeItem('aoa_user');
 };
 
 // Request interceptor: Attach access token
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('aoa_access_token');
+    const token = localStorage.getItem('aoa_access_token') || sessionStorage.getItem('aoa_access_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -76,7 +79,12 @@ apiClient.interceptors.response.use(
             if (!newAccessToken) {
               throw new Error('No access token returned from refresh endpoint');
             }
-            localStorage.setItem('aoa_access_token', newAccessToken);
+            const isRemembered = localStorage.getItem('aoa_remember_me') !== 'false';
+            if (isRemembered) {
+              localStorage.setItem('aoa_access_token', newAccessToken);
+            } else {
+              sessionStorage.setItem('aoa_access_token', newAccessToken);
+            }
             apiClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
             return newAccessToken;
           })
