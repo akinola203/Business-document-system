@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: business-doc-backend
+    name: aoa77-backend
     runtime: node
     rootDir: backend
     plan: free

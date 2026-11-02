@@ -100,7 +100,7 @@ async function bootstrap() {
 
   // Global API Prefix (/api/v1) with exclusion for uptime health checks
   app.setGlobalPrefix(apiPrefix, {
-    exclude: ['health', 'health/(.*)', 'api/health', 'api/health/(.*)'],
+    exclude: ['health', 'health/(.*)', 'api/health', 'api/health/(.*)', 'api/v1/health', 'api/v1/health/(.*)'],
   });
 
   // Global Input Validation & Transformation

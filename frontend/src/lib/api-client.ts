@@ -1,19 +1,16 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const DEFAULT_PROD_API_URL = 'https://business-doc-backend.onrender.com/api/v1';
-
-const isFileProtocol =
-  typeof window !== 'undefined' && window.location.protocol === 'file:';
+const DEFAULT_PROD_API_URL = 'https://aoa77-backend.onrender.com/api/v1';
 
 const rawEnvUrl = (
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD || isFileProtocol ? DEFAULT_PROD_API_URL : '')
+  DEFAULT_PROD_API_URL
 )?.trim();
 
 export const API_BASE_URL = rawEnvUrl
   ? (rawEnvUrl.endsWith('/api/v1') ? rawEnvUrl : `${rawEnvUrl.replace(/\/+$/, '')}/api/v1`)
-  : '/api/v1';
+  : DEFAULT_PROD_API_URL;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
