@@ -12,6 +12,7 @@ import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { AuditService } from '../audit/audit.service';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Optional() private readonly mailService?: MailService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   /**
@@ -124,11 +126,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    // Check account lockout
-    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
-      const waitMinutes = Math.ceil((user.lockoutUntil.getTime() - Date.now()) / 60000);
+    // Check account lockout (supports both lockedUntil and lockoutUntil fields)
+    const activeLockUntil = (user as any).lockedUntil || user.lockoutUntil;
+    if (activeLockUntil && activeLockUntil > new Date()) {
+      const waitMinutes = Math.max(1, Math.ceil((activeLockUntil.getTime() - Date.now()) / 60000));
       throw new ForbiddenException(
-        `Account temporarily locked due to excessive failed attempts. Please retry in ${waitMinutes} minute(s).`,
+        `Account temporarily locked due to multiple failed login attempts. Please try again in ${waitMinutes} minutes.`,
       );
     }
 
@@ -151,9 +154,51 @@ export class AuthService {
           where: { id: user.id },
           data: {
             lockoutUntil,
+            lockedUntil: lockoutUntil,
             failedLoginAttempts: 0,
           },
         });
+
+        const primaryCompanyId = user.companyUsers?.[0]?.companyId;
+        if (primaryCompanyId) {
+          if (this.auditService) {
+            await this.auditService
+              .logAction({
+                companyId: primaryCompanyId,
+                actorId: user.id,
+                action: 'USER_ACCOUNT_LOCKED',
+                entityType: 'User',
+                entityId: user.id,
+                newValues: {
+                  email: user.email,
+                  lockedUntil: lockoutUntil.toISOString(),
+                  reason: '5 consecutive failed login attempts',
+                },
+                ipAddress,
+                userAgent,
+              })
+              .catch((err) => this.logger.warn(`Failed to write lockout audit log: ${err.message}`));
+          } else if ((this.prisma as any).auditLog?.create) {
+            await (this.prisma as any).auditLog
+              .create({
+                data: {
+                  companyId: primaryCompanyId,
+                  actorId: user.id,
+                  action: 'USER_ACCOUNT_LOCKED',
+                  entityType: 'User',
+                  entityId: user.id,
+                  newValues: {
+                    email: user.email,
+                    lockedUntil: lockoutUntil.toISOString(),
+                    reason: '5 consecutive failed login attempts',
+                  },
+                  ipAddress,
+                  userAgent,
+                },
+              })
+              .catch(() => {});
+          }
+        }
       }
 
       throw new UnauthorizedException('Invalid email or password.');
@@ -174,6 +219,7 @@ export class AuthService {
       data: {
         failedLoginAttempts: 0,
         lockoutUntil: null,
+        lockedUntil: null,
         lastLoginAt: new Date(),
       },
     });
@@ -452,6 +498,7 @@ export class AuthService {
         passwordResetExpiresAt: null,
         failedLoginAttempts: 0,
         lockoutUntil: null,
+        lockedUntil: null,
       },
     });
 

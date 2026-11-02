@@ -245,6 +245,7 @@ model User {
   isActive            Boolean   @default(true)
   failedLoginAttempts Int       @default(0)
   lockoutUntil        DateTime?
+  lockedUntil         DateTime?
   lastLoginAt         DateTime?
   passwordResetToken  String?   @unique
   passwordResetExpiresAt DateTime?

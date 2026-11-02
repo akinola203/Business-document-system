@@ -9,6 +9,7 @@ test('AuthService Unit Tests', async (t) => {
   let mockRefreshTokenDb: any = null;
   let updateCalls: any[] = [];
   let tokenUpdateManyCalls: any[] = [];
+  let auditLogCalls: any[] = [];
   let mockClaimCount = 1;
 
   const mockPrisma: any = {
@@ -47,6 +48,12 @@ test('AuthService Unit Tests', async (t) => {
         return { count: mockClaimCount };
       },
     },
+    auditLog: {
+      create: async (args: any) => {
+        auditLogCalls.push(args);
+        return args.data;
+      },
+    },
   };
 
   const mockJwtService: any = {
@@ -77,7 +84,8 @@ test('AuthService Unit Tests', async (t) => {
     mockUserDb = {
       id: 'usr-1',
       email: 'locked@aoa77.com',
-      lockoutUntil: new Date(Date.now() + 15 * 60 * 1000), // 15 mins in future
+      lockedUntil: new Date(Date.now() + 15 * 60 * 1000), // 15 mins in future
+      lockoutUntil: new Date(Date.now() + 15 * 60 * 1000),
       isActive: true,
     };
     await assert.rejects(
@@ -90,12 +98,14 @@ test('AuthService Unit Tests', async (t) => {
 
   await t.test('tracks failed attempts and triggers lockout after 5 consecutive failures', async () => {
     updateCalls = [];
+    auditLogCalls = [];
     const passwordHash = await argon2.hash('SecretAOA77!');
     mockUserDb = {
       id: 'usr-1',
       email: 'staff@aoa77.com',
       passwordHash,
       failedLoginAttempts: 4, // 4 failed attempts previously
+      lockedUntil: null,
       lockoutUntil: null,
       isActive: true,
       companyUsers: [
@@ -124,6 +134,9 @@ test('AuthService Unit Tests', async (t) => {
     assert.deepEqual(updateCalls[0].data.failedLoginAttempts, { increment: 1 });
     assert.equal(updateCalls[1].data.failedLoginAttempts, 0);
     assert.ok(updateCalls[1].data.lockoutUntil instanceof Date);
+    assert.ok(updateCalls[1].data.lockedUntil instanceof Date);
+    assert.equal(auditLogCalls.length, 1);
+    assert.equal(auditLogCalls[0].data.action, 'USER_ACCOUNT_LOCKED');
   });
 
   await t.test('resets failed attempts and returns access token on valid credentials', async () => {
@@ -136,6 +149,7 @@ test('AuthService Unit Tests', async (t) => {
       firstName: 'Alade',
       lastName: 'Adebayo',
       failedLoginAttempts: 3,
+      lockedUntil: null,
       lockoutUntil: null,
       isActive: true,
       companyUsers: [
@@ -165,6 +179,7 @@ test('AuthService Unit Tests', async (t) => {
     assert.equal(updateCalls.length, 1);
     assert.equal(updateCalls[0].data.failedLoginAttempts, 0);
     assert.equal(updateCalls[0].data.lockoutUntil, null);
+    assert.equal(updateCalls[0].data.lockedUntil, null);
   });
 
   await t.test('refreshTokens atomically claims token and returns new token pair', async () => {
@@ -368,6 +383,7 @@ test('AuthService Unit Tests', async (t) => {
       passwordResetToken: 'valid-token-xyz',
       passwordResetExpiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 mins in future
       failedLoginAttempts: 3,
+      lockedUntil: new Date(Date.now() + 10 * 60 * 1000),
       lockoutUntil: new Date(Date.now() + 10 * 60 * 1000),
     };
 
@@ -377,6 +393,7 @@ test('AuthService Unit Tests', async (t) => {
     assert.strictEqual(mockUserDb.passwordResetExpiresAt, null);
     assert.strictEqual(mockUserDb.failedLoginAttempts, 0);
     assert.strictEqual(mockUserDb.lockoutUntil, null);
+    assert.strictEqual(mockUserDb.lockedUntil, null);
 
     // Verify new password verifies against Argon2id
     const isNewValid = await argon2.verify(mockUserDb.passwordHash, 'BrandNewSecurePassword123!');

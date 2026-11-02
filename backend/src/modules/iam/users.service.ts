@@ -465,6 +465,7 @@ export class UsersService {
           passwordHash,
           failedLoginAttempts: 0,
           lockoutUntil: null,
+          lockedUntil: null,
         },
       });
 
