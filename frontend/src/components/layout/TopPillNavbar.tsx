@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/auth.store';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -129,7 +129,11 @@ export const TopPillNavbar: React.FC = () => {
   return (
     <header className="w-full flex flex-wrap items-center justify-between gap-3 py-1 px-1">
       {/* 1. Left: Brand Identity (Order 1 on all screens) */}
-      <div className="flex items-center gap-3 order-1">
+      <Link
+        to="/overview"
+        title="Go to Overview"
+        className="flex items-center gap-3 order-1 cursor-pointer hover:opacity-80 transition-opacity"
+      >
         <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#16181F] flex items-center justify-center text-white shadow-sm border border-slate-800 shrink-0">
           <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-[#5847F6]" />
         </div>
@@ -144,7 +148,7 @@ export const TopPillNavbar: React.FC = () => {
           </div>
           <p className="text-[10px] md:text-[11px] text-slate-500 font-normal">Smart Documents, Better Business</p>
         </div>
-      </div>
+      </Link>
 
       {/* 2. Right: Utility Dock (Order 2 on mobile/tablet, Order 3 on xl+) */}
       <div className="flex items-center gap-1.5 md:gap-2 order-2 xl:order-3">
