@@ -136,7 +136,7 @@ export class InvoicesService {
    */
   async updateDraft(companyId: string, id: string, dto: UpdateInvoiceDto, actorId: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.INVOICE },
+      where: { id, companyId, documentType: DocumentType.INVOICE, deletedAt: null },
       include: { invoice: { include: { items: true } } },
     });
 
@@ -238,7 +238,7 @@ export class InvoicesService {
       }
 
       await tx.document.update({
-        where: { id: document.id },
+        where: { id: document.id, companyId },
         data: {
           title: dto.title !== undefined ? dto.title.trim() : undefined,
           clientId: dto.clientId,
@@ -263,7 +263,7 @@ export class InvoicesService {
       });
 
       await tx.invoice.update({
-        where: { id: document.invoice!.id },
+        where: { id: document.invoice!.id, documentId: document.id },
         data: {
           paymentTerms: dto.paymentTerms,
           poNumber: dto.poNumber !== undefined ? dto.poNumber?.trim() : undefined,

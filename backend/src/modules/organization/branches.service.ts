@@ -98,7 +98,7 @@ export class BranchesService {
     const branch = await this.findOne(companyId, id);
 
     const updated = await this.prisma.branch.update({
-      where: { id: branch.id },
+      where: { id: branch.id, companyId },
       data: {
         name: dto.name?.trim(),
         address: dto.address !== undefined ? dto.address?.trim() : undefined,

@@ -144,8 +144,17 @@ export class SuppliesService {
       }
     }
 
+    if (dto.preferredVendorId) {
+      const vendor = await this.prisma.vendor.findFirst({
+        where: { id: dto.preferredVendorId, companyId },
+      });
+      if (!vendor) {
+        throw new NotFoundException(`Preferred vendor "${dto.preferredVendorId}" not found.`);
+      }
+    }
+
     const updated = await this.prisma.supplyItem.update({
-      where: { id },
+      where: { id, companyId },
       data: {
         ...(dto.sku ? { sku: dto.sku.trim().toUpperCase() } : {}),
         ...(dto.name ? { name: dto.name.trim() } : {}),
@@ -278,6 +287,18 @@ export class SuppliesService {
       throw new BadRequestException('At least one supply order line item is required.');
     }
 
+    // Validate all linked supplyItemIds belong to this tenant company
+    for (const item of dto.items) {
+      if (item.supplyItemId) {
+        const supplyItem = await this.prisma.supplyItem.findFirst({
+          where: { id: item.supplyItemId, companyId },
+        });
+        if (!supplyItem) {
+          throw new NotFoundException(`Supply item with ID "${item.supplyItemId}" not found in this company.`);
+        }
+      }
+    }
+
     const supplyNumber = dto.supplyNumber?.trim() || (await this.generateNextSupplyNumber(companyId));
 
     // Calculate authoritative totals
@@ -340,7 +361,7 @@ export class SuppliesService {
         for (const line of lineItemsData) {
           if (line.supplyItemId) {
             await tx.supplyItem.update({
-              where: { id: line.supplyItemId },
+              where: { id: line.supplyItemId, companyId },
               data: {
                 currentStock: { increment: line.quantity },
               },
@@ -350,7 +371,7 @@ export class SuppliesService {
 
         const netPayable = grandTotalDec.minus(amountPaidDec);
         await tx.vendor.update({
-          where: { id: dto.vendorId },
+          where: { id: dto.vendorId, companyId },
           data: {
             totalSuppliedAmount: { increment: grandTotalDec.toNumber() },
             outstandingPayable: { increment: netPayable.toNumber() },
@@ -392,7 +413,7 @@ export class SuppliesService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const updatedOrder = await tx.supplyOrder.update({
-        where: { id },
+        where: { id, companyId },
         data: {
           status: targetStatus,
           notes: dto.notes ? `${order.notes || ''}\n[Status update]: ${dto.notes}`.trim() : order.notes,
@@ -415,7 +436,7 @@ export class SuppliesService {
         for (const item of order.items) {
           if (item.supplyItemId) {
             await tx.supplyItem.update({
-              where: { id: item.supplyItemId },
+              where: { id: item.supplyItemId, companyId },
               data: {
                 currentStock: { increment: item.quantity },
               },
@@ -428,7 +449,7 @@ export class SuppliesService {
         const netPayable = grandTotalDec.minus(amountPaidDec);
 
         await tx.vendor.update({
-          where: { id: order.vendorId },
+          where: { id: order.vendorId, companyId },
           data: {
             totalSuppliedAmount: { increment: grandTotalDec.toNumber() },
             outstandingPayable: { increment: netPayable.toNumber() },
@@ -442,7 +463,7 @@ export class SuppliesService {
         for (const item of order.items) {
           if (item.supplyItemId) {
             await tx.supplyItem.update({
-              where: { id: item.supplyItemId },
+              where: { id: item.supplyItemId, companyId },
               data: {
                 currentStock: { decrement: item.quantity },
               },
@@ -455,7 +476,7 @@ export class SuppliesService {
         const netPayable = grandTotalDec.minus(amountPaidDec);
 
         await tx.vendor.update({
-          where: { id: order.vendorId },
+          where: { id: order.vendorId, companyId },
           data: {
             totalSuppliedAmount: { decrement: grandTotalDec.toNumber() },
             outstandingPayable: { decrement: netPayable.toNumber() },

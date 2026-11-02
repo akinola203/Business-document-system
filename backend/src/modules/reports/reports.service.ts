@@ -15,6 +15,7 @@ export class ReportsService {
     const docWhere: any = {
       companyId,
       isArchived: false,
+      deletedAt: null,
     };
 
     if (currency) {
@@ -42,6 +43,7 @@ export class ReportsService {
         where: {
           companyId,
           isReversed: false,
+          deletedAt: null,
           ...(currency ? { currency } : {}),
           ...(startDate || endDate
             ? {
@@ -54,7 +56,7 @@ export class ReportsService {
         },
       }),
       this.prisma.client.findMany({
-        where: { companyId },
+        where: { companyId, deletedAt: null },
         select: {
           id: true,
           name: true,
@@ -65,8 +67,10 @@ export class ReportsService {
       }),
       this.prisma.waybill.findMany({
         where: {
+          deletedAt: null,
           document: {
             companyId,
+            deletedAt: null,
             ...(branchId ? { branchId } : {}),
             ...(startDate || endDate
               ? {
@@ -86,6 +90,7 @@ export class ReportsService {
         where: {
           document: {
             companyId,
+            deletedAt: null,
           },
         },
       }),

@@ -90,7 +90,7 @@ export class NotificationsService {
     }
 
     return this.prisma.notification.update({
-      where: { id },
+      where: { id, companyId, userId },
       data: { isRead: true },
     });
   }

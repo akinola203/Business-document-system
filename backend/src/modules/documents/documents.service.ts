@@ -200,7 +200,7 @@ export class DocumentsService {
    */
   async getDocumentType(companyId: string, id: string): Promise<DocumentType> {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
       select: { documentType: true },
     });
     if (!document) {
@@ -531,7 +531,7 @@ export class DocumentsService {
     approverId: string,
   ) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
       include: {
         company: { include: { settings: true } },
         approvals: { where: { status: 'PENDING' }, orderBy: { stepNumber: 'asc' } },
@@ -883,14 +883,14 @@ export class DocumentsService {
    */
   async getApprovals(companyId: string, id: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
     });
     if (!document) {
       throw new NotFoundException(`Document with ID "${id}" not found.`);
     }
 
     return this.prisma.documentApproval.findMany({
-      where: { documentId: id },
+      where: { documentId: id, document: { companyId } },
       include: {
         approver: {
           select: { id: true, firstName: true, lastName: true, email: true },
@@ -994,7 +994,7 @@ export class DocumentsService {
       });
 
       await tx.document.update({
-        where: { id: document.id },
+        where: { id: document.id, companyId },
         data: { currentVersionId: version.id },
       });
 
@@ -1028,14 +1028,14 @@ export class DocumentsService {
    */
   async getVersions(companyId: string, id: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
     });
     if (!document) {
       throw new NotFoundException(`Document with ID "${id}" not found.`);
     }
 
     return this.prisma.documentVersion.findMany({
-      where: { documentId: id },
+      where: { documentId: id, document: { companyId } },
       include: {
         createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
       },
@@ -1048,7 +1048,7 @@ export class DocumentsService {
    */
   async getVersion(companyId: string, id: string, versionNumber: number) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
     });
     if (!document) {
       throw new NotFoundException(`Document with ID "${id}" not found.`);
@@ -1173,7 +1173,7 @@ export class DocumentsService {
     const document = await this.findOne(companyId, id);
 
     const updated = await this.prisma.document.update({
-      where: { id: document.id },
+      where: { id: document.id, companyId },
       data: { isArchived },
     });
 
@@ -1200,7 +1200,7 @@ export class DocumentsService {
     await this.prisma.$transaction(async (tx) => {
       if (document.documentType === DocumentType.INVOICE && document.invoice) {
         const activePayments = await tx.payment.count({
-          where: { invoiceId: document.invoice.id, isReversed: false, deletedAt: null },
+          where: { invoiceId: document.invoice.id, companyId, isReversed: false, deletedAt: null },
         });
         if (activePayments > 0) {
           throw new BadRequestException(
@@ -1208,18 +1208,18 @@ export class DocumentsService {
           );
         }
         await tx.invoice.update({
-          where: { id: document.invoice.id },
+          where: { id: document.invoice.id, documentId: document.id },
           data: { deletedAt },
         });
       } else if (document.documentType === DocumentType.WAYBILL && document.waybill) {
         await tx.waybill.update({
-          where: { id: document.waybill.id },
+          where: { id: document.waybill.id, documentId: document.id },
           data: { deletedAt },
         });
       }
 
       await tx.document.update({
-        where: { id: document.id },
+        where: { id: document.id, companyId },
         data: {
           deletedAt,
           isArchived: true,

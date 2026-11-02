@@ -228,7 +228,7 @@ export class WaybillsService {
       }
 
       await tx.document.update({
-        where: { id: document.id },
+        where: { id: document.id, companyId },
         data: {
           title: dto.title !== undefined ? dto.title.trim() : undefined,
           clientId: dto.clientId,
@@ -257,7 +257,7 @@ export class WaybillsService {
       }
 
       await tx.waybill.update({
-        where: { id: document.waybill!.id },
+        where: { id: document.waybill!.id, documentId: document.id },
         data: {
           originAddress: dto.originAddress !== undefined ? dto.originAddress.trim() : undefined,
           destinationAddress:
@@ -316,7 +316,7 @@ export class WaybillsService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       await tx.waybill.update({
-        where: { id: document.waybill!.id },
+        where: { id: document.waybill!.id, documentId: document.id },
         data: {
           deliveryStatus: WaybillDeliveryStatus.READY,
         },
@@ -396,7 +396,7 @@ export class WaybillsService {
     // If document is already ISSUED (e.g. re-dispatching after a previous failure), update delivery status in tx
     const updated = await this.prisma.$transaction(async (tx) => {
       await tx.waybill.update({
-        where: { id: document.waybill!.id },
+        where: { id: document.waybill!.id, documentId: document.id },
         data: {
           deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT,
           vehicleNumber: dto.vehicleNumber.trim(),
@@ -451,7 +451,7 @@ export class WaybillsService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       await tx.waybill.update({
-        where: { id: document.waybill!.id },
+        where: { id: document.waybill!.id, documentId: document.id },
         data: {
           deliveryStatus: WaybillDeliveryStatus.FAILED,
         },
@@ -504,14 +504,25 @@ export class WaybillsService {
       );
     }
 
+    if (dto.receiverSignatureFileId && (this.prisma as any).file?.findFirst) {
+      const sigFile = await this.prisma.file.findFirst({
+        where: { id: dto.receiverSignatureFileId, companyId },
+      });
+      if (!sigFile) {
+        throw new NotFoundException(
+          `Signature file with ID "${dto.receiverSignatureFileId}" not found in this company.`,
+        );
+      }
+    }
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const doc = await tx.document.update({
-        where: { id: document.id },
+        where: { id: document.id, companyId },
         data: { status: DocumentStatus.COMPLETED },
       });
 
       await tx.waybill.update({
-        where: { id: document.waybill!.id },
+        where: { id: document.waybill!.id, documentId: document.id },
         data: {
           deliveryStatus: WaybillDeliveryStatus.DELIVERED,
           receivedByName: dto.receivedByName.trim(),

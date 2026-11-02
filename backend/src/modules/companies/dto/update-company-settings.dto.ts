@@ -78,6 +78,21 @@ export class UpdateCompanySettingsDto {
   @IsBoolean()
   allowSelfApproval?: boolean;
 
+  @ApiPropertyOptional({ description: 'Branding logo File ID' })
+  @IsOptional()
+  @IsString()
+  logoFileId?: string;
+
+  @ApiPropertyOptional({ description: 'Branding corporate stamp File ID' })
+  @IsOptional()
+  @IsString()
+  stampFileId?: string;
+
+  @ApiPropertyOptional({ description: 'Branding authorized signature File ID' })
+  @IsOptional()
+  @IsString()
+  signatureFileId?: string;
+
   @ApiPropertyOptional({ description: 'Additional arbitrary company configuration metadata' })
   @IsOptional()
   @IsObject()

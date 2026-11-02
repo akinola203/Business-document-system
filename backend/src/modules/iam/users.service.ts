@@ -183,6 +183,24 @@ export class UsersService {
 
     await this.assertCallerCanAssignRole(companyId, actorId, dto.roleId);
 
+    if (dto.departmentId && (this.prisma as any).department?.findFirst) {
+      const dept = await this.prisma.department.findFirst({
+        where: { id: dto.departmentId, companyId },
+      });
+      if (!dept) {
+        throw new NotFoundException(`Department with ID "${dto.departmentId}" not found in this company.`);
+      }
+    }
+
+    if (dto.branchId && (this.prisma as any).branch?.findFirst) {
+      const branch = await this.prisma.branch.findFirst({
+        where: { id: dto.branchId, companyId },
+      });
+      if (!branch) {
+        throw new NotFoundException(`Branch with ID "${dto.branchId}" not found in this company.`);
+      }
+    }
+
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },

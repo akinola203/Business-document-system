@@ -1,11 +1,27 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateLetterDto {
   @ApiPropertyOptional({ example: 'Updated Corporate Letter Title', description: 'Internal document title' })
   @IsOptional()
   @IsString()
   title?: string;
+
+  @ApiPropertyOptional({ description: 'Optional linked Client ID' })
+  @IsOptional()
+  @IsString()
+  clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Issuing branch ID' })
+  @IsOptional()
+  @IsString()
+  branchId?: string;
+
+  @ApiPropertyOptional({ description: 'Issuing department ID' })
+  @IsOptional()
+  @IsString()
+  departmentId?: string;
 
   @ApiPropertyOptional({ example: '2026-10-25', description: 'Date appearing on letterhead' })
   @IsOptional()
@@ -79,5 +95,8 @@ export class UpdateLetterDto {
 
   @ApiPropertyOptional({ example: 1, description: 'Expected current version counter for optimistic concurrency control (OCC)' })
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   expectedVersion?: number;
 }

@@ -6,6 +6,8 @@ import {
   ValidateNested,
   IsBoolean,
   IsDateString,
+  IsInt,
+  Min,
   Length,
   Validate,
 } from 'class-validator';
@@ -97,5 +99,7 @@ export class UpdateInvoiceDto {
   @ApiPropertyOptional({ example: 1, description: 'Expected current version counter for optimistic concurrency control (OCC)' })
   @IsOptional()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   expectedVersion?: number;
 }

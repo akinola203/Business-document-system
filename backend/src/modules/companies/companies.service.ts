@@ -46,7 +46,15 @@ export class CompaniesService {
       const result = await tx.company.update({
         where: { id: companyId },
         data: {
-          ...updateDto,
+          ...(updateDto.name !== undefined ? { name: updateDto.name } : {}),
+          ...(updateDto.legalName !== undefined ? { legalName: updateDto.legalName } : {}),
+          ...(updateDto.rcNumber !== undefined ? { rcNumber: updateDto.rcNumber } : {}),
+          ...(updateDto.tin !== undefined ? { tin: updateDto.tin } : {}),
+          ...(updateDto.address !== undefined ? { address: updateDto.address } : {}),
+          ...(updateDto.email !== undefined ? { email: updateDto.email } : {}),
+          ...(updateDto.phone !== undefined ? { phone: updateDto.phone } : {}),
+          ...(updateDto.website !== undefined ? { website: updateDto.website } : {}),
+          ...(updateDto.defaultCurrency !== undefined ? { defaultCurrency: updateDto.defaultCurrency } : {}),
         },
         include: {
           settings: true,
@@ -94,13 +102,43 @@ export class CompaniesService {
     // Ensure company exists
     await this.getCurrentCompany(companyId);
 
+    // Validate branding file IDs belong to caller's company if provided
+    const fileIdsToVerify = [
+      settingsDto.logoFileId,
+      settingsDto.stampFileId,
+      settingsDto.signatureFileId,
+    ].filter((fid): fid is string => Boolean(fid));
+
+    if (fileIdsToVerify.length > 0 && (this.prisma as any).file?.findFirst) {
+      for (const fileId of fileIdsToVerify) {
+        const file = await this.prisma.file.findFirst({
+          where: { id: fileId, companyId },
+        });
+        if (!file) {
+          throw new NotFoundException(`Branding file with ID "${fileId}" not found in this company.`);
+        }
+      }
+    }
+
     const updatedSettings = await this.prisma.$transaction(async (tx) => {
       const currentSettings = await tx.companySetting.findUnique({
         where: { companyId },
       });
 
       const dataToSave: Prisma.CompanySettingUpdateInput = {
-        ...settingsDto,
+        ...(settingsDto.bankName !== undefined ? { bankName: settingsDto.bankName } : {}),
+        ...(settingsDto.bankAccountNumber !== undefined ? { bankAccountNumber: settingsDto.bankAccountNumber } : {}),
+        ...(settingsDto.bankAccountName !== undefined ? { bankAccountName: settingsDto.bankAccountName } : {}),
+        ...(settingsDto.bankSortCode !== undefined ? { bankSortCode: settingsDto.bankSortCode } : {}),
+        ...(settingsDto.showBankDetailsOnInvoice !== undefined ? { showBankDetailsOnInvoice: settingsDto.showBankDetailsOnInvoice } : {}),
+        ...(settingsDto.showBankDetailsOnWaybill !== undefined ? { showBankDetailsOnWaybill: settingsDto.showBankDetailsOnWaybill } : {}),
+        ...(settingsDto.showBankDetailsOnLetter !== undefined ? { showBankDetailsOnLetter: settingsDto.showBankDetailsOnLetter } : {}),
+        ...(settingsDto.defaultPaymentTermsDays !== undefined ? { defaultPaymentTermsDays: settingsDto.defaultPaymentTermsDays } : {}),
+        ...(settingsDto.allowSelfApproval !== undefined ? { allowSelfApproval: settingsDto.allowSelfApproval } : {}),
+        ...(settingsDto.logoFileId !== undefined ? { logoFileId: settingsDto.logoFileId } : {}),
+        ...(settingsDto.stampFileId !== undefined ? { stampFileId: settingsDto.stampFileId } : {}),
+        ...(settingsDto.signatureFileId !== undefined ? { signatureFileId: settingsDto.signatureFileId } : {}),
+        ...(settingsDto.metadata !== undefined ? { metadata: settingsDto.metadata as Prisma.InputJsonValue } : {}),
         defaultVatRate:
           settingsDto.defaultVatRate !== undefined
             ? new Prisma.Decimal(settingsDto.defaultVatRate)

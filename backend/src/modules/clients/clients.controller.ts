@@ -15,9 +15,9 @@ import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientsDto } from './dto/query-clients.dto';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
+import { UpdateClientStatusDto } from './dto/update-client-status.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
-import { ClientStatus } from '@prisma/client';
 
 @ApiTags('Clients & Addresses')
 @ApiBearerAuth('JWT-auth')
@@ -78,9 +78,9 @@ export class ClientsController {
   async updateStatus(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body('status') status: ClientStatus,
+    @Body() dto: UpdateClientStatusDto,
   ) {
-    return this.clientsService.updateStatus(user.companyId, id, status, user.id);
+    return this.clientsService.updateStatus(user.companyId, id, dto.status, user.id);
   }
 
   @Delete(':id')

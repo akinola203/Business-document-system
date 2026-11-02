@@ -104,7 +104,7 @@ export class LettersService {
    */
   async updateDraft(companyId: string, id: string, dto: UpdateLetterDto, actorId: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.LETTER },
+      where: { id, companyId, documentType: DocumentType.LETTER, deletedAt: null },
       include: { letter: true },
     });
 
@@ -123,6 +123,9 @@ export class LettersService {
 
     // Validate foreign keys belong to caller company if updated
     await validateTenantScope(this.prisma, companyId, {
+      clientId: dto.clientId,
+      branchId: dto.branchId,
+      departmentId: dto.departmentId,
       templateId: dto.templateId,
     });
 
@@ -154,9 +157,12 @@ export class LettersService {
       }
 
       await tx.document.update({
-        where: { id: document.id },
+        where: { id: document.id, companyId },
         data: {
           title: dto.title !== undefined ? dto.title.trim() : undefined,
+          clientId: dto.clientId,
+          branchId: dto.branchId,
+          departmentId: dto.departmentId,
           issueDate: dto.letterDate ? new Date(dto.letterDate) : undefined,
           templateId: dto.templateId,
           templateVersionId: dto.templateVersionId,
@@ -164,7 +170,7 @@ export class LettersService {
       });
 
       await tx.letter.update({
-        where: { id: document.letter!.id },
+        where: { id: document.letter!.id, documentId: document.id },
         data: {
           letterDate: dto.letterDate ? new Date(dto.letterDate) : undefined,
           recipientName: dto.recipientName !== undefined ? dto.recipientName.trim() : undefined,
@@ -251,7 +257,7 @@ export class LettersService {
       });
 
       const updated = await tx.document.update({
-        where: { id: document.id },
+        where: { id: document.id, companyId },
         data: {
           status: DocumentStatus.ISSUED,
           currentVersionId: version.id,
@@ -281,7 +287,7 @@ export class LettersService {
    */
   async findOne(companyId: string, id: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.LETTER },
+      where: { id, companyId, documentType: DocumentType.LETTER, deletedAt: null },
       include: {
         client: true,
         branch: true,

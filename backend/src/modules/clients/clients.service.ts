@@ -223,7 +223,7 @@ export class ClientsService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const result = await tx.client.update({
-        where: { id: client.id },
+        where: { id: client.id, companyId },
         data: {
           type: dto.type,
           name: dto.name?.trim(),
@@ -279,7 +279,7 @@ export class ClientsService {
     const client = await this.findOne(companyId, id);
 
     const updated = await this.prisma.client.update({
-      where: { id: client.id },
+      where: { id: client.id, companyId },
       data: { status },
       include: { addresses: true },
     });
@@ -382,7 +382,7 @@ export class ClientsService {
       }
 
       const res = await tx.clientAddress.update({
-        where: { id: addressId },
+        where: { id: addressId, clientId },
         data: {
           type: dto.type,
           addressLine1: dto.addressLine1?.trim(),
@@ -433,7 +433,7 @@ export class ClientsService {
 
     await this.prisma.$transaction(async (tx) => {
       await tx.clientAddress.delete({
-        where: { id: addressId },
+        where: { id: addressId, clientId },
       });
 
       await tx.auditLog.create({
@@ -459,7 +459,7 @@ export class ClientsService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const result = await tx.client.update({
-        where: { id: client.id },
+        where: { id: client.id, companyId },
         data: {
           deletedAt,
           status: ClientStatus.INACTIVE,

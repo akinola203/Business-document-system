@@ -170,7 +170,7 @@ export class TemplatesService {
       let nextVersionNumber = (existing.versions[0]?.versionNumber ?? 0) + 1;
 
       const template = await tx.template.update({
-        where: { id },
+        where: { id, companyId },
         data: {
           name: dto.name ?? existing.name,
           isDefault: dto.isDefault !== undefined ? dto.isDefault : existing.isDefault,

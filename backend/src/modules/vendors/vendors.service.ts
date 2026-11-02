@@ -169,7 +169,7 @@ export class VendorsService {
     }
 
     const updated = await this.prisma.vendor.update({
-      where: { id },
+      where: { id, companyId },
       data: {
         ...(dto.name ? { name: dto.name.trim() } : {}),
         ...(dto.category ? { category: dto.category } : {}),

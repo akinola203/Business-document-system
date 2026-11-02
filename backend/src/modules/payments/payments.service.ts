@@ -72,7 +72,7 @@ export class PaymentsService {
 
       // Re-read AFTER acquiring the lock so status and ledger cannot change underneath us.
       const document = await tx.document.findFirst({
-        where: { id: documentId, companyId, documentType: DocumentType.INVOICE },
+        where: { id: documentId, companyId, documentType: DocumentType.INVOICE, deletedAt: null },
         include: { invoice: true },
       });
       if (!document || !document.invoice) {
@@ -100,6 +100,7 @@ export class PaymentsService {
           companyId,
           method: dto.method,
           isReversed: false,
+          deletedAt: null,
           referenceNumber: { equals: referenceNumber, mode: 'insensitive' },
         },
         select: { paymentNumber: true },
@@ -112,7 +113,7 @@ export class PaymentsService {
       }
 
       const activePayments = await tx.payment.findMany({
-        where: { invoiceId, isReversed: false },
+        where: { invoiceId, companyId, isReversed: false, deletedAt: null },
         select: { amount: true, isReversed: true },
       });
       const before = PaymentLedgerUtil.summarize(document.totalAmount, activePayments);
@@ -145,7 +146,7 @@ export class PaymentsService {
         ...activePayments,
         { amount, isReversed: false },
       ]);
-      await this.writeLedgerCache(tx, document.id, invoiceId, after);
+      await this.writeLedgerCache(tx, companyId, document.id, invoiceId, after);
 
       await this.auditService.logAction(
         {
@@ -219,7 +220,7 @@ export class PaymentsService {
 
     const result = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.payment.findFirst({
-        where: { id: paymentId, companyId },
+        where: { id: paymentId, companyId, deletedAt: null },
         select: { id: true, invoiceId: true },
       });
       if (!existing) {
@@ -229,7 +230,7 @@ export class PaymentsService {
       await tx.$queryRaw`SELECT "id" FROM "invoices" WHERE "id" = ${existing.invoiceId} FOR UPDATE`;
 
       const payment = await tx.payment.findFirst({
-        where: { id: paymentId, companyId },
+        where: { id: paymentId, companyId, deletedAt: null },
         include: { invoice: { include: { document: true } } },
       });
       if (!payment) {
@@ -241,13 +242,13 @@ export class PaymentsService {
 
       const document = payment.invoice.document;
       const activeBefore = await tx.payment.findMany({
-        where: { invoiceId: payment.invoiceId, isReversed: false },
+        where: { invoiceId: payment.invoiceId, companyId, isReversed: false, deletedAt: null },
         select: { id: true, amount: true, isReversed: true },
       });
       const before = PaymentLedgerUtil.summarize(document.totalAmount, activeBefore);
 
       const reversed = await tx.payment.update({
-        where: { id: payment.id },
+        where: { id: payment.id, companyId },
         data: {
           isReversed: true,
           reversedAt: new Date(),
@@ -260,7 +261,7 @@ export class PaymentsService {
         document.totalAmount,
         activeBefore.filter((p) => p.id !== payment.id),
       );
-      await this.writeLedgerCache(tx, document.id, payment.invoiceId, after);
+      await this.writeLedgerCache(tx, companyId, document.id, payment.invoiceId, after);
 
       await this.auditService.logAction(
         {
@@ -305,11 +306,12 @@ export class PaymentsService {
   /** Full ledger (including reversed entries, for traceability) plus derived balance and overdue state. */
   async getInvoiceLedger(companyId: string, documentId: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id: documentId, companyId, documentType: DocumentType.INVOICE },
+      where: { id: documentId, companyId, documentType: DocumentType.INVOICE, deletedAt: null },
       include: {
         invoice: {
           include: {
             payments: {
+              where: { companyId, deletedAt: null },
               include: { recordedBy: { select: { id: true, firstName: true, lastName: true, email: true } } },
               orderBy: [{ paymentDate: 'asc' }, { createdAt: 'asc' }],
             },
@@ -446,16 +448,17 @@ export class PaymentsService {
   /** Rewrites the cached balance/status fields from the authoritative ledger summary. */
   private async writeLedgerCache(
     tx: Prisma.TransactionClient,
+    companyId: string,
     documentId: string,
     invoiceId: string,
     summary: LedgerSummary,
   ) {
     await tx.document.update({
-      where: { id: documentId },
+      where: { id: documentId, companyId },
       data: { balanceDue: summary.balanceDue.toFixed(2) },
     });
     await tx.invoice.update({
-      where: { id: invoiceId },
+      where: { id: invoiceId, documentId },
       data: { paymentStatus: summary.paymentStatus },
     });
   }

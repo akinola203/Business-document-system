@@ -96,7 +96,7 @@ export class DepartmentsService {
     const department = await this.findOne(companyId, id);
 
     const updated = await this.prisma.department.update({
-      where: { id: department.id },
+      where: { id: department.id, companyId },
       data: {
         name: dto.name?.trim(),
         description: dto.description !== undefined ? dto.description?.trim() : undefined,

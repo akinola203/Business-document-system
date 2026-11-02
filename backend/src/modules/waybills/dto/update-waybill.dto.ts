@@ -5,6 +5,8 @@ import {
   IsArray,
   ValidateNested,
   IsDateString,
+  IsInt,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { WaybillItemDto } from './waybill-item.dto';
@@ -80,5 +82,7 @@ export class UpdateWaybillDto {
   @ApiPropertyOptional({ example: 1, description: 'Expected current version counter for optimistic concurrency control (OCC)' })
   @IsOptional()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   expectedVersion?: number;
 }

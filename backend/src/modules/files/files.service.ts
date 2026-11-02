@@ -290,7 +290,7 @@ export class FilesService {
     }
 
     await this.storage.deleteFile(file.storageKey);
-    await this.prisma.file.delete({ where: { id: fileId } });
+    await this.prisma.file.delete({ where: { id: fileId, companyId } });
 
     await this.auditService.logAction({
       companyId,
