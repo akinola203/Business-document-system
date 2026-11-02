@@ -301,7 +301,7 @@ export class InvoicesService {
    */
   async findOne(companyId: string, id: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.INVOICE },
+      where: { id, companyId, documentType: DocumentType.INVOICE, deletedAt: null },
       include: {
         client: { include: { addresses: true } },
         branch: true,

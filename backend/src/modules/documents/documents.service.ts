@@ -63,6 +63,7 @@ export class DocumentsService {
     const where: Prisma.DocumentWhereInput = {
       companyId,
       isArchived,
+      deletedAt: null,
       ...(documentType
         ? { documentType }
         : allowedTypes
@@ -138,7 +139,7 @@ export class DocumentsService {
    */
   async findOne(companyId: string, id: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
       include: {
         client: {
           include: {
@@ -1186,5 +1187,60 @@ export class DocumentsService {
     });
 
     return updated;
+  }
+
+  /**
+   * Soft-deletes a document and its specialized Invoice/Waybill record without physical row deletion.
+   * Invoices with active (non-reversed) payments cannot be deleted until payments are reversed.
+   */
+  async softDelete(companyId: string, id: string, actorId: string) {
+    const document = await this.findOne(companyId, id);
+    const deletedAt = new Date();
+
+    await this.prisma.$transaction(async (tx) => {
+      if (document.documentType === DocumentType.INVOICE && document.invoice) {
+        const activePayments = await tx.payment.count({
+          where: { invoiceId: document.invoice.id, isReversed: false, deletedAt: null },
+        });
+        if (activePayments > 0) {
+          throw new BadRequestException(
+            `Invoice "${document.documentNumber}" has ${activePayments} active payment(s). Reverse them before deleting.`,
+          );
+        }
+        await tx.invoice.update({
+          where: { id: document.invoice.id },
+          data: { deletedAt },
+        });
+      } else if (document.documentType === DocumentType.WAYBILL && document.waybill) {
+        await tx.waybill.update({
+          where: { id: document.waybill.id },
+          data: { deletedAt },
+        });
+      }
+
+      await tx.document.update({
+        where: { id: document.id },
+        data: {
+          deletedAt,
+          isArchived: true,
+        },
+      });
+
+      await this.auditService.logAction(
+        {
+          companyId,
+          actorId,
+          action: `${document.documentType}_SOFT_DELETED`,
+          entityType: 'Document',
+          entityId: document.id,
+          oldValues: { deletedAt: null, isArchived: document.isArchived },
+          newValues: { deletedAt: deletedAt.toISOString(), isArchived: true },
+        },
+        tx,
+      );
+    });
+
+    this.logger.log(`Document "${document.documentNumber}" soft-deleted by user "${actorId}".`);
+    return { id: document.id, documentNumber: document.documentNumber, deletedAt };
   }
 }

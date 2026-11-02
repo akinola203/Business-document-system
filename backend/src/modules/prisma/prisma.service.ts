@@ -1,6 +1,14 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
 
+const SOFT_DELETABLE_MODELS = new Set([
+  'Client',
+  'Document',
+  'Invoice',
+  'Waybill',
+  'Payment',
+]);
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
@@ -14,6 +22,37 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         { emit: 'stdout', level: 'error' },
       ],
       errorFormat: 'minimal',
+    });
+
+    // Soft-deletion guardrail middleware: converts physical deletes on core financial models
+    // into non-destructive soft-deletes (`deletedAt: new Date()`) and filters out soft-deleted rows.
+    this.$use(async (params, next) => {
+      if (params.model && SOFT_DELETABLE_MODELS.has(params.model)) {
+        if (params.action === 'delete') {
+          params.action = 'update';
+          params.args = params.args || {};
+          params.args.data = { deletedAt: new Date() };
+        } else if (params.action === 'deleteMany') {
+          params.action = 'updateMany';
+          params.args = params.args || {};
+          if (params.args.data !== undefined) {
+            params.args.data.deletedAt = new Date();
+          } else {
+            params.args.data = { deletedAt: new Date() };
+          }
+        } else if (
+          params.action === 'findFirst' ||
+          params.action === 'findMany' ||
+          params.action === 'count'
+        ) {
+          params.args = params.args || {};
+          params.args.where = params.args.where || {};
+          if (params.args.where.deletedAt === undefined) {
+            params.args.where.deletedAt = null;
+          }
+        }
+      }
+      return next(params);
     });
 
     // Auto-reconnect middleware for Neon cloud serverless PostgreSQL idle drops

@@ -366,6 +366,7 @@ model Client {
   status       ClientStatus @default(ACTIVE)
   creditLimit  Decimal?     @db.Decimal(14, 2)
   balance      Decimal      @default(0.00) @db.Decimal(14, 2)
+  deletedAt    DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -376,6 +377,7 @@ model Client {
   @@index([companyId, status])
   @@index([companyId, name])
   @@index([companyId, createdAt])
+  @@index([companyId, deletedAt])
   @@map("clients")
 }
 
@@ -438,11 +440,12 @@ model Document {
   templateVersionId String?
   templateVersion   TemplateVersion? @relation(fields: [templateVersionId], references: [id], onDelete: SetNull)
 
-  isArchived         Boolean  @default(false)
+  isArchived         Boolean   @default(false)
   cancellationReason String?
   metadata           Json? // Flexible non-relational tags, duplicate source link, etc.
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  deletedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   // Specialized Entity Extensions (1:1 Polymorphic Specialization)
   invoice Invoice?
@@ -461,6 +464,7 @@ model Document {
   @@index([companyId, dueDate])
   @@index([companyId, clientId])
   @@index([companyId, createdAt])
+  @@index([companyId, deletedAt])
   @@index([createdById])
   @@map("documents")
 }
@@ -532,6 +536,7 @@ model Invoice {
   notes              String? // Remittance advice, payment instructions, or notes
   bankDetailsVisible Boolean              @default(true)
   paymentStatus      InvoicePaymentStatus @default(UNPAID)
+  deletedAt          DateTime?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
@@ -541,6 +546,7 @@ model Invoice {
 
   @@index([paymentStatus])
   @@index([createdAt])
+  @@index([deletedAt])
   @@map("invoices")
 }
 
@@ -589,6 +595,7 @@ model Payment {
   reversedAt     DateTime?
   reversedById   String?
   reversalReason String?
+  deletedAt      DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -599,6 +606,7 @@ model Payment {
   @@index([companyId, referenceNumber])
   @@index([companyId, isReversed, paymentDate])
   @@index([companyId, createdAt])
+  @@index([companyId, deletedAt])
   @@map("payments")
 }
 
@@ -644,6 +652,7 @@ model Waybill {
   receivedByName          String?
   receivedDate            DateTime?
   receiverSignatureFileId String?
+  deletedAt               DateTime?
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
@@ -654,6 +663,7 @@ model Waybill {
   @@index([shipmentDate])
   @@index([trackingNumber])
   @@index([createdAt])
+  @@index([deletedAt])
   @@map("waybills")
 }
 

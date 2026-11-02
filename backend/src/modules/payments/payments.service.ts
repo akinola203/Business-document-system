@@ -344,6 +344,7 @@ export class PaymentsService {
 
     const where: Prisma.PaymentWhereInput = {
       companyId,
+      deletedAt: null,
       ...(includeReversed ? {} : { isReversed: false }),
       ...(method ? { method } : {}),
       ...(documentId || clientId
@@ -388,7 +389,7 @@ export class PaymentsService {
 
   async findOne(companyId: string, paymentId: string) {
     const payment = await this.prisma.payment.findFirst({
-      where: { id: paymentId, companyId },
+      where: { id: paymentId, companyId, deletedAt: null },
       include: PAYMENT_INCLUDE,
     });
     if (!payment) {

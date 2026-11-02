@@ -58,6 +58,7 @@ export class ClientsService {
 
     const where: Prisma.ClientWhereInput = {
       companyId,
+      deletedAt: null,
       ...(status ? { status } : {}),
       ...(type ? { type } : {}),
       ...(search
@@ -114,7 +115,7 @@ export class ClientsService {
    */
   async findOne(companyId: string, id: string) {
     const client = await this.prisma.client.findFirst({
-      where: { id, companyId },
+      where: { id, companyId, deletedAt: null },
       include: {
         addresses: {
           orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
@@ -447,5 +448,40 @@ export class ClientsService {
     });
 
     return { message: 'Address successfully deleted.' };
+  }
+
+  /**
+   * Soft-deletes a client by setting deletedAt and marking status INACTIVE.
+   */
+  async softDelete(companyId: string, id: string, actorId: string) {
+    const client = await this.findOne(companyId, id);
+    const deletedAt = new Date();
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.client.update({
+        where: { id: client.id },
+        data: {
+          deletedAt,
+          status: ClientStatus.INACTIVE,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          companyId,
+          actorId,
+          action: 'CLIENT_SOFT_DELETED',
+          entityType: 'Client',
+          entityId: client.id,
+          oldValues: { status: client.status, deletedAt: null },
+          newValues: { status: ClientStatus.INACTIVE, deletedAt: deletedAt.toISOString() },
+        },
+      });
+
+      return result;
+    });
+
+    this.logger.log(`Client "${client.clientNumber}" soft-deleted by user "${actorId}".`);
+    return updated;
   }
 }

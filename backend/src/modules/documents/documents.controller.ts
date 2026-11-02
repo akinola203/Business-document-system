@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Param,
   Body,
   Query,
@@ -233,5 +234,16 @@ export class DocumentsController {
   ) {
     await this.authorize(user, id, 'archive');
     return this.documentsService.setArchived(user.companyId, id, false, user.id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Soft-delete a document (preserves audit trail and ledger history)' })
+  @ApiResponse({ status: 200, description: 'Document soft-deleted.' })
+  async remove(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ) {
+    await this.authorize(user, id, 'archive');
+    return this.documentsService.softDelete(user.companyId, id, user.id);
   }
 }

@@ -557,7 +557,7 @@ export class WaybillsService {
    */
   async findOne(companyId: string, id: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id, companyId, documentType: DocumentType.WAYBILL },
+      where: { id, companyId, documentType: DocumentType.WAYBILL, deletedAt: null },
       include: {
         client: { include: { addresses: true } },
         branch: true,

@@ -83,6 +83,18 @@ export class ClientsController {
     return this.clientsService.updateStatus(user.companyId, id, status, user.id);
   }
 
+  @Delete(':id')
+  @RequirePermissions('clients:disable')
+  @ApiOperation({ summary: 'Soft-delete a client (preserves financial ledger history)' })
+  @ApiResponse({ status: 200, description: 'Client soft-deleted.' })
+  @ApiResponse({ status: 404, description: 'Client not found.' })
+  async remove(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ) {
+    return this.clientsService.softDelete(user.companyId, id, user.id);
+  }
+
   @Post(':id/addresses')
   @RequirePermissions('clients:update')
   @ApiOperation({ summary: 'Add a new billing, shipping, or office address to a client' })
