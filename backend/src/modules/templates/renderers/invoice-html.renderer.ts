@@ -68,7 +68,7 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
 
   const formatCurrency = (val: string | number) => {
     const num = Number(val) || 0;
-    return `${ctx.currency}&nbsp;${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `${escapeHtml(ctx.currency)}&nbsp;${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const itemsRows = (inv.items || [])
@@ -510,27 +510,47 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
           <table class="totals-table">
             <tbody>
               <tr>
-                <td class="totals-label">Subtotal:</td>
-                <td class="totals-value text-right">${formatCurrency(ctx.subtotal)}</td>
+                <td colspan="2">
+                  <div class="total-line" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+                    <span class="totals-label">Subtotal: </span>
+                    <span class="totals-value text-right">${formatCurrency(ctx.subtotal)}</span>
+                  </div>
+                </td>
               </tr>
               ${Number(ctx.discountAmount) > 0 ? `
               <tr>
-                <td class="totals-label text-discount">Total Discount:</td>
-                <td class="totals-value text-discount text-right">-${formatCurrency(ctx.discountAmount)}</td>
+                <td colspan="2">
+                  <div class="total-line" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+                    <span class="totals-label text-discount">Total Discount: </span>
+                    <span class="totals-value text-discount text-right">-${formatCurrency(ctx.discountAmount)}</span>
+                  </div>
+                </td>
               </tr>` : ''}
               <tr>
-                <td class="totals-label">Value Added Tax (VAT):</td>
-                <td class="totals-value text-right">${formatCurrency(ctx.taxAmount)}</td>
+                <td colspan="2">
+                  <div class="total-line" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+                    <span class="totals-label">Value Added Tax (VAT): </span>
+                    <span class="totals-value text-right">${formatCurrency(ctx.taxAmount)}</span>
+                  </div>
+                </td>
               </tr>
               <tr class="grand-total-row">
-                <td class="totals-label-grand">Total Amount:</td>
-                <td class="totals-value-grand text-right">${formatCurrency(ctx.totalAmount)}</td>
+                <td colspan="2">
+                  <div class="total-line grand-total" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; border: none; margin: 0; padding: 0;">
+                    <span class="totals-label-grand">Total Amount: </span>
+                    <span class="totals-value-grand text-right">${formatCurrency(ctx.totalAmount)}</span>
+                  </div>
+                </td>
               </tr>
               ${Number(ctx.balanceDue) > 0 || ctx.paymentStatus === 'PARTIALLY_PAID' || ctx.paymentStatus === 'UNPAID' ? `
               <tr style="height: 6px;"><td colspan="2" style="padding: 0; height: 6px;"></td></tr>
               <tr class="balance-due-row">
-                <td class="totals-label-balance">Balance Due:</td>
-                <td class="totals-value-balance text-right">${formatCurrency(ctx.balanceDue)}</td>
+                <td colspan="2" style="border-radius: 6px; border: 1px solid #fecaca;">
+                  <div class="total-line balance-due" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; border: none; margin: 0; padding: 0; background: transparent;">
+                    <span class="totals-label-balance">Balance Due: </span>
+                    <span class="totals-value-balance text-right">${formatCurrency(ctx.balanceDue)}</span>
+                  </div>
+                </td>
               </tr>` : ''}
             </tbody>
           </table>

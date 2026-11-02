@@ -1,7 +1,17 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const rawEnvUrl = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL)?.trim();
-const API_BASE_URL = rawEnvUrl
+const DEFAULT_PROD_API_URL = 'https://business-doc-backend.onrender.com/api/v1';
+
+const isFileProtocol =
+  typeof window !== 'undefined' && window.location.protocol === 'file:';
+
+const rawEnvUrl = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD || isFileProtocol ? DEFAULT_PROD_API_URL : '')
+)?.trim();
+
+export const API_BASE_URL = rawEnvUrl
   ? (rawEnvUrl.endsWith('/api/v1') ? rawEnvUrl : `${rawEnvUrl.replace(/\/+$/, '')}/api/v1`)
   : '/api/v1';
 
@@ -75,8 +85,14 @@ apiClient.interceptors.response.use(
           })
           .catch((refreshErr) => {
             clearAuthState();
-            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-              window.location.href = '/login';
+            if (typeof window !== 'undefined') {
+              if (window.location.protocol === 'file:') {
+                if (!window.location.hash.startsWith('#/login')) {
+                  window.location.hash = '#/login';
+                }
+              } else if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+              }
             }
             throw refreshErr;
           })

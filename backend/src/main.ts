@@ -43,6 +43,8 @@ async function bootstrap() {
     : [];
 
   const nativeAppOrigins = [
+    'file://',
+    'null',
     'capacitor://localhost',
     'tauri://localhost',
     'http://tauri.localhost',
@@ -63,7 +65,7 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
+      if (!origin || origin === 'null') return callback(null, true);
 
       // Check configured origins or wildcards
       if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
@@ -72,6 +74,7 @@ async function bootstrap() {
 
       // Explicitly allow native app origins and localhost variants
       if (
+        origin.startsWith('file://') ||
         origin === 'capacitor://localhost' ||
         origin === 'tauri://localhost' ||
         origin === 'http://tauri.localhost' ||
