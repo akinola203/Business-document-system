@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layout/AppShell';
 import { ProtectedRoute } from './components/guards/ProtectedRoute';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Lazy-loaded route chunks to minimize initial bundle size and optimize native performance
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -52,9 +53,10 @@ export const App: React.FC = () => {
   const RouterComponent = typeof window !== 'undefined' && window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterComponent>
-        <Suspense fallback={<RouteLoadingFallback />}>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <RouterComponent>
+          <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             {/* Public Authentication Routes */}
             <Route path="/login" element={<LoginPage />} />
@@ -136,7 +138,8 @@ export const App: React.FC = () => {
           </Routes>
         </Suspense>
       </RouterComponent>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

@@ -86,6 +86,100 @@
   border-color: rgba(255, 255, 255, 0.25);
 }
 
+/* =========================================================================
+   GLOBAL DARK MODE OVERRIDES (Preserves crisp white A4 paper sheets)
+========================================================================= */
+html.dark body {
+  background-color: #0D0F14;
+  color: #F1F5F9;
+}
+
+html.dark * {
+  border-color: rgba(51, 65, 85, 0.65);
+}
+
+/* Surface & Container Overrides (excluding A4 paper sheets) */
+html.dark .bg-\[\#F4F5F9\] {
+  background-color: #0D0F14 !important;
+}
+
+html.dark .bg-white:not(.print-receipt-sheet):not(.print-statement-sheet):not([style*="210mm"]):not([style*="794px"]) {
+  background-color: #161923 !important;
+  color: #F1F5F9;
+}
+
+html.dark .bg-\[\#F8F9FC\],
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/80 {
+  background-color: #1D2130 !important;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-slate-100\/80 {
+  background-color: #252A3C !important;
+}
+
+/* Typography Overrides (excluding A4 paper sheets) */
+html.dark :not([style*="210mm"]):not([style*="794px"]) > .text-slate-900,
+html.dark h1.text-slate-900,
+html.dark h2.text-slate-900,
+html.dark h3.text-slate-900,
+html.dark h4.text-slate-900,
+html.dark p.text-slate-900,
+html.dark span.text-slate-900,
+html.dark div.text-slate-900,
+html.dark td.text-slate-900 {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #E2E8F0 !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500 {
+  color: #94A3B8 !important;
+}
+
+/* Borders & Dividers */
+html.dark .border-slate-200,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/70,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-100,
+html.dark .border-slate-300 {
+  border-color: rgba(51, 65, 85, 0.75) !important;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(51, 65, 85, 0.6) !important;
+}
+
+/* Inputs, Selects & Textareas */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html.dark select,
+html.dark textarea {
+  background-color: #1D2130 !important;
+  color: #F8FAFC !important;
+  border-color: rgba(71, 85, 105, 0.8) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* Hover States */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-50\/80:hover,
+html.dark .hover\:bg-slate-100:hover {
+  background-color: #252A3C !important;
+}
+
 /* Printable Document & A4 Sheet Optimization */
 @media print {
   body, html {

@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/auth.store';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useTheme } from '../../context/ThemeContext';
 import { apiClient } from '../../lib/api-client';
 import { DEMO_NOTIFICATIONS } from '../../lib/mock-data';
 import {
@@ -24,6 +25,8 @@ import {
   Package,
   Zap,
   UserCog,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ClientDemoModal } from '../demo/ClientDemoModal';
@@ -59,6 +62,7 @@ export const TopPillNavbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
   const {
     user,
     hasPermission,
@@ -185,6 +189,21 @@ export const TopPillNavbar: React.FC = () => {
           </button>
         )}
 
+        {/* Light / Dark Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white hover:bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all shadow-xs cursor-pointer"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-3.5 h-3.5 text-amber-400" />
+          ) : (
+            <Moon className="w-3.5 h-3.5 text-slate-600" />
+          )}
+        </button>
+
         {/* Notifications Dock with Unread Badge */}
         <button
           onClick={() => navigate('/notifications')}
@@ -242,10 +261,27 @@ export const TopPillNavbar: React.FC = () => {
                     setIsProfileOpen(false);
                     navigate('/settings/users?edit=me');
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#5847F6] hover:bg-indigo-50 rounded-xl transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#5847F6] hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition-colors cursor-pointer"
                 >
                   <UserCog className="w-3.5 h-3.5 text-[#5847F6]" />
                   Edit My Profile & Password
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2.5">
+                    {theme === 'dark' ? (
+                      <Sun className="w-3.5 h-3.5 text-amber-400" />
+                    ) : (
+                      <Moon className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                    <span>Appearance: {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                    Switch
+                  </span>
                 </button>
                 {canManageSettings && (
                   <button
