@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layout/AppShell';
 import { ProtectedRoute } from './components/guards/ProtectedRoute';
@@ -49,9 +49,11 @@ const queryClient = new QueryClient({
 });
 
 export const App: React.FC = () => {
+  const RouterComponent = typeof window !== 'undefined' && window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
+
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <RouterComponent>
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             {/* Public Authentication Routes */}
@@ -133,7 +135,7 @@ export const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/overview" replace />} />
           </Routes>
         </Suspense>
-      </BrowserRouter>
+      </RouterComponent>
     </QueryClientProvider>
   );
 };
