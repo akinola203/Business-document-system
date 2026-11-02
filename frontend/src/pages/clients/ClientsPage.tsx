@@ -241,10 +241,10 @@ export const ClientsPage: React.FC = () => {
             ) : (
               filteredClients.map((c) => {
                 const isSelected = selectedClient?.id === c.id;
-                const initials = (c.companyName || c.name)
+                const initials = (c.companyName || c.name || 'CL')
                   .split(' ')
                   .slice(0, 2)
-                  .map((w) => w[0])
+                  .map((w) => w?.[0] || '')
                   .join('')
                   .toUpperCase();
 

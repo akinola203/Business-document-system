@@ -266,7 +266,7 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
                 <span>Verified System Transaction</span>
               </div>
               <p className="text-[10px] font-mono text-slate-400 mt-0.5">
-                Audit Token: {payment.id.slice(0, 18)}...
+                Audit Token: {(payment?.id ?? '').slice(0, 18)}...
               </p>
             </div>
           </div>

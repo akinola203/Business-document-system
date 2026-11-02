@@ -45,7 +45,7 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
   const showStamp = templateConfig?.showStamp ?? true;
   const showQrCode = templateConfig?.showQrCode ?? true;
   const showSignature = templateConfig?.showSignature ?? true;
-  const items = formValues?.items || [];
+  const items = Array.isArray(formValues?.items) ? formValues.items : [];
 
   const totalQuantity = items.reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
   const totalPackages = items.reduce((acc, it) => acc + (Number(it.packageCount) || 0), 0);

@@ -52,7 +52,8 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   const showSignature = templateConfig?.showSignature ?? true;
 
   // Calculate precision line items and totals using decimal.js
-  const calculatedItems = (formValues?.items || []).map((item, index) => {
+  const safeItems = Array.isArray(formValues?.items) ? formValues.items : [];
+  const calculatedItems = safeItems.map((item, index) => {
     if (!item) {
       return {
         lineNumber: index + 1,
@@ -92,7 +93,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   });
 
   const totals = calcTotals(
-    (formValues?.items || []).map((item) => ({
+    safeItems.map((item) => ({
       quantity: Math.max(0, Number(item?.quantity) || 0),
       unitPrice: Math.max(0, Number(item?.unitPrice) || 0),
       discountPercent: Math.max(0, Math.min(100, Number(item?.discountPercent) || 0)),

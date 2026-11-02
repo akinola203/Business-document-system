@@ -46,9 +46,11 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
     );
   }
 
+  const safeDocuments = Array.isArray(documents) ? documents : [];
+
   return (
     <div className="space-y-2.5 max-h-[640px] overflow-y-auto pr-2 dark-scroll">
-      {documents.map((doc) => {
+      {safeDocuments.map((doc) => {
         const isSelected = selectedId === doc.id;
         const clientName =
           doc.client?.companyName ||
@@ -56,9 +58,9 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
           doc.letter?.recipientName ||
           'Walk-in Client';
 
-        const clientInitials = clientName
+        const clientInitials = (clientName || 'WC')
           .split(' ')
-          .map((n: string) => n.charAt(0))
+          .map((n: string) => (n || '').charAt(0))
           .slice(0, 2)
           .join('')
           .toUpperCase();

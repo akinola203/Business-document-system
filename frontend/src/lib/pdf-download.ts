@@ -50,7 +50,7 @@ export async function downloadDocumentPdf({
   }
 
   const rawFilename =
-    documentNumber?.trim() || `${documentType.toLowerCase()}_${documentId.slice(0, 8)}`;
+    documentNumber?.trim() || `${(documentType || 'document').toLowerCase()}_${(documentId ?? '').slice(0, 8)}`;
   const cleanFilename = rawFilename.replace(/[/\\?%*:|"<>]/g, '_');
   const filename = cleanFilename.toLowerCase().endsWith('.pdf')
     ? cleanFilename

@@ -301,19 +301,24 @@ export const UsersPage: React.FC = () => {
               <tbody className="divide-y divide-slate-100">
                 {allUsers.map((u) => {
                   const isCurrentAdmin =
-                    currentAuthUser?.email === u.user.email ||
+                    currentAuthUser?.email === u.user?.email ||
                     (u.role?.name === 'Admin' && allUsers.filter((x) => x.role?.name === 'Admin').length <= 1);
+                  const userFullName =
+                    u.user?.fullName ||
+                    [(u.user as any)?.firstName, (u.user as any)?.lastName].filter(Boolean).join(' ') ||
+                    u.user?.email ||
+                    'User';
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-[#5847F6] font-extrabold flex items-center justify-center text-xs">
-                            {u.user.fullName.slice(0, 2).toUpperCase()}
+                            {(userFullName ?? 'US').slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{u.user.fullName}</p>
-                            <p className="text-[11px] text-slate-400 font-medium">{u.user.email}</p>
+                            <p className="font-bold text-slate-900">{userFullName}</p>
+                            <p className="text-[11px] text-slate-400 font-medium">{u.user?.email || '—'}</p>
                           </div>
                         </div>
                       </td>
@@ -534,7 +539,7 @@ export const UsersPage: React.FC = () => {
                 >
                   {allRoles.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.name} — {r.description?.slice(0, 45)}...
+                      {r.name} — {(r.description ?? '').slice(0, 45)}...
                     </option>
                   ))}
                 </select>

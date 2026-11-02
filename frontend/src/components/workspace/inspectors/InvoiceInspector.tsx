@@ -286,7 +286,7 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
                     <div className="font-bold text-white text-xs flex items-center gap-1.5">
                       <span>{p.paymentNumber}</span>
                       <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-400/25 text-emerald-200 font-extrabold uppercase">
-                        {p.method.replace('_', ' ')}
+                        {(p.method || 'BANK_TRANSFER').replace('_', ' ')}
                       </span>
                     </div>
                     <div className="text-[10px] text-white/60 mt-0.5 font-mono">

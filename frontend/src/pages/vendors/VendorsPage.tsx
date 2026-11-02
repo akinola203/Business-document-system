@@ -264,10 +264,10 @@ export const VendorsPage: React.FC = () => {
             ) : (
               filteredVendors.map((v) => {
                 const isSelected = selectedVendor?.id === v.id;
-                const initials = v.name
+                const initials = (v.name || 'VN')
                   .split(' ')
                   .slice(0, 2)
-                  .map((w) => w[0])
+                  .map((w) => w?.[0] || '')
                   .join('')
                   .toUpperCase();
 
@@ -295,7 +295,7 @@ export const VendorsPage: React.FC = () => {
                       </div>
 
                       <span className="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700">
-                        {v.category.replace('_', ' ')}
+                        {(v.category || 'GENERAL').replace('_', ' ')}
                       </span>
                     </div>
 

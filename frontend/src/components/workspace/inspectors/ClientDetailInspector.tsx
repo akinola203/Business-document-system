@@ -56,10 +56,10 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
     .reduce((sum, d) => sum + (Number(d.balanceDue) || 0), 0);
   const totalPaid = Math.max(0, totalInvoiced - totalBalanceDue);
 
-  const initials = (client.companyName || client.name)
+  const initials = (client?.companyName || client?.name || 'CL')
     .split(' ')
     .slice(0, 2)
-    .map((w) => w[0])
+    .map((w) => w?.[0] || '')
     .join('')
     .toUpperCase();
 
@@ -175,7 +175,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
             {clientDocs.length === 0 ? (
               <p className="text-xs text-slate-500 text-center py-2">No documents created for this client yet.</p>
             ) : (
-              clientDocs.slice(0, 4).map((doc) => (
+              (Array.isArray(clientDocs) ? clientDocs : []).slice(0, 4).map((doc) => (
                 <div
                   key={doc.id}
                   onClick={() =>

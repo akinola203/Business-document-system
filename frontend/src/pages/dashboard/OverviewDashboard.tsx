@@ -37,11 +37,13 @@ export const OverviewDashboard: React.FC = () => {
   });
 
   const documents =
-    documentsData?.items && documentsData.items.length > 0
+    Array.isArray(documentsData?.items) && documentsData.items.length > 0
       ? documentsData.items
-      : documentsData?.data && documentsData.data.length > 0
+      : Array.isArray(documentsData?.data?.items) && documentsData.data.items.length > 0
+      ? documentsData.data.items
+      : Array.isArray(documentsData?.data) && documentsData.data.length > 0
       ? documentsData.data
-      : DEMO_INVOICES.slice(0, 5);
+      : (Array.isArray(DEMO_INVOICES) ? DEMO_INVOICES : []).slice(0, 5);
 
   return (
     <div className="space-y-6 md:space-y-8 max-w-full overflow-hidden">

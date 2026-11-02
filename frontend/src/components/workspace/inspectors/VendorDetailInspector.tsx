@@ -69,10 +69,10 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
       )
     : directOrders;
 
-  const initials = vendor.name
+  const initials = (vendor?.name || 'VN')
     .split(' ')
     .slice(0, 2)
-    .map((w) => w[0])
+    .map((w) => w?.[0] || '')
     .join('')
     .toUpperCase();
 
@@ -259,7 +259,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
             </div>
           ) : (
             <div className="space-y-2">
-              {vendorItems.slice(0, 3).map((item) => (
+              {(Array.isArray(vendorItems) ? vendorItems : []).slice(0, 3).map((item) => (
                 <div
                   key={item.id}
                   className="p-3 rounded-xl bg-[#191B22] border border-slate-800/80 flex items-center justify-between text-xs"
@@ -306,7 +306,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
             </div>
           ) : (
             <div className="space-y-2">
-              {vendorOrders.slice(0, 3).map((order) => (
+              {(Array.isArray(vendorOrders) ? vendorOrders : []).slice(0, 3).map((order) => (
                 <div
                   key={order.id}
                   className="p-3 rounded-xl bg-[#191B22] border border-slate-800/80 flex items-center justify-between text-xs"

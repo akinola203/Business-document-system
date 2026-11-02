@@ -544,7 +544,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     >
                       ⚡ Cement Demo
                     </button>
-                    {clients.map((c) => (
+                    {(Array.isArray(clients) ? clients : []).slice(0, 6).map((c) => (
                       <button
                         key={c.id}
                         type="button"
@@ -564,7 +564,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6] cursor-pointer"
                   >
                     <option value="">Select a client from directory...</option>
-                    {clients.map((c) => (
+                    {(Array.isArray(clients) ? clients : []).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''} — {c.clientNumber || 'ID'}
                       </option>
@@ -782,7 +782,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                  {catalogSupplies.slice(0, 6).map((item) => (
+                  {(Array.isArray(catalogSupplies) ? catalogSupplies : []).slice(0, 6).map((item) => (
                     <button
                       key={item.id}
                       type="button"

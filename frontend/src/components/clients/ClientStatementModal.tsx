@@ -132,25 +132,28 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
     },
   });
 
-  const company = companyData || {
-    name: 'AOA 77 COMPANY LTD',
-    taxId: '10098492-0001',
-    registrationNumber: 'RC-1849204',
-    address: 'Plot 12 Commercial Way, Victoria Island',
-    city: 'Lagos',
-    state: 'Lagos State',
-    country: 'Nigeria',
-    phone: '+234 1 892 0000',
-    email: 'finance@aoa77.com',
-    bankAccounts: [
-      {
-        bankName: 'Zenith Bank Plc',
-        accountNumber: '1012948201',
-        accountName: 'AOA 77 COMPANY LTD',
-        currency: 'NGN',
-      },
-    ],
-  };
+  const rawCompany = companyData?.data || companyData;
+  const company = rawCompany?.name
+    ? rawCompany
+    : {
+        name: 'AOA 77 COMPANY LTD',
+        taxId: '10098492-0001',
+        registrationNumber: 'RC-1849204',
+        address: 'Plot 12 Commercial Way, Victoria Island',
+        city: 'Lagos',
+        state: 'Lagos State',
+        country: 'Nigeria',
+        phone: '+234 1 892 0000',
+        email: 'finance@aoa77.com',
+        bankAccounts: [
+          {
+            bankName: 'Zenith Bank Plc',
+            accountNumber: '1012948201',
+            accountName: 'AOA 77 COMPANY LTD',
+            currency: 'NGN',
+          },
+        ],
+      };
 
   // 4. Build Chronological Ledger Entries
   const rawLedgerEntries = useMemo(() => {
@@ -358,7 +361,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
             <div className="space-y-1">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-[#5847F6] text-white font-black text-lg flex items-center justify-center shadow-md">
-                  {company.name.slice(0, 2).toUpperCase()}
+                  {(company?.name ?? 'AO').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">
@@ -673,7 +676,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
                 <span>Verified System Ledger</span>
               </div>
               <p className="text-[10px] font-mono text-slate-400 mt-0.5">
-                Audit Token: {statementNumber}-{client.id.slice(0, 8)}
+                Audit Token: {statementNumber}-{(client?.id ?? '').slice(0, 8)}
               </p>
             </div>
           </div>
