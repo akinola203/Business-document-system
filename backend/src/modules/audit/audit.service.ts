@@ -3,14 +3,16 @@ import { PrismaService } from '../prisma/prisma.service';
 import { QueryAuditLogsDto } from './dto/query-audit-logs.dto';
 import { Prisma } from '@prisma/client';
 
-export interface AuditLogOptions {
+const SENSITIVE_KEY_REGEX = /pass|token|secret|authorization|cvv|pin$|hash/i;
+
+export interface CreateAuditLogInput {
   companyId: string;
   actorId?: string | null;
   action: string;
   entityType: string;
   entityId: string;
-  oldValues?: Record<string, unknown> | null;
-  newValues?: Record<string, unknown> | null;
+  oldValues?: unknown;
+  newValues?: unknown;
   ipAddress?: string | null;
   userAgent?: string | null;
 }
@@ -19,115 +21,106 @@ export interface AuditLogOptions {
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
 
-  private readonly SENSITIVE_KEYS = new Set([
-    'password',
-    'passwordhash',
-    'token',
-    'refreshtoken',
-    'accesstoken',
-    'secret',
-    'authorization',
-    'creditcard',
-    'cvv',
-    'pin',
-  ]);
-
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
-   * Recursively sanitizes payloads to ensure sensitive credentials and secrets are never persisted in audit trails.
+   * Deeply sanitizes an object to redact passwords, tokens, and sensitive keys
+   * before persisting to the immutable audit trail.
    */
-  sanitize(data: unknown): unknown {
-    if (!data || typeof data !== 'object') {
-      return data;
+  sanitize(value: unknown): unknown {
+    if (value === null || value === undefined) {
+      return null;
     }
 
-    if (Array.isArray(data)) {
-      return data.map((item) => this.sanitize(item));
+    if (Array.isArray(value)) {
+      return value.map((item) => this.sanitize(item));
     }
 
-    const sanitizedObj: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      if (this.SENSITIVE_KEYS.has(key.toLowerCase())) {
-        sanitizedObj[key] = '[REDACTED]';
-      } else if (value && typeof value === 'object') {
-        sanitizedObj[key] = this.sanitize(value);
-      } else {
-        sanitizedObj[key] = value;
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+
+    if (typeof value === 'object') {
+      const result: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+        if (SENSITIVE_KEY_REGEX.test(key)) {
+          result[key] = '[REDACTED]';
+        } else {
+          result[key] = this.sanitize(val);
+        }
       }
+      return result;
     }
 
-    return sanitizedObj;
+    return value;
   }
 
   /**
-   * Persists an audit log entry. Supports optional external transaction context.
+   * Records an immutable audit entry. Can be invoked either standalone or inside a Prisma transaction.
    */
-  async logAction(options: AuditLogOptions, tx?: Prisma.TransactionClient) {
-    const db = tx || this.prisma;
-    const sanitizedOld = options.oldValues ? (this.sanitize(options.oldValues) as Prisma.InputJsonValue) : undefined;
-    const sanitizedNew = options.newValues ? (this.sanitize(options.newValues) as Prisma.InputJsonValue) : undefined;
+  async logAction(
+    input: CreateAuditLogInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || this.prisma;
+    const oldSanitized = input.oldValues ? (this.sanitize(input.oldValues) as Prisma.InputJsonValue) : Prisma.DbNull;
+    const newSanitized = input.newValues ? (this.sanitize(input.newValues) as Prisma.InputJsonValue) : Prisma.DbNull;
 
     try {
-      const record = await db.auditLog.create({
+      return await client.auditLog.create({
         data: {
-          companyId: options.companyId,
-          actorId: options.actorId || null,
-          action: options.action,
-          entityType: options.entityType,
-          entityId: options.entityId,
-          oldValues: sanitizedOld,
-          newValues: sanitizedNew,
-          ipAddress: options.ipAddress || null,
-          userAgent: options.userAgent || null,
+          companyId: input.companyId,
+          actorId: input.actorId || null,
+          action: input.action,
+          entityType: input.entityType,
+          entityId: input.entityId,
+          oldValues: oldSanitized,
+          newValues: newSanitized,
+          ipAddress: input.ipAddress || null,
+          userAgent: input.userAgent || null,
         },
       });
-
-      return record;
     } catch (error) {
-      this.logger.error(`Failed to record audit log for action "${options.action}": ${(error as Error).message}`);
-      // Audit failures in background shouldn't silently swallow if tx fails, but if outside tx, avoid crashing caller
-      if (tx) throw error;
+      this.logger.error(`Failed to write audit log for ${input.action} on ${input.entityType}:${input.entityId}`, error);
+      // Do not crash the business operation if standalone audit logging fails unless inside tx
+      if (tx) {
+        throw error;
+      }
       return null;
     }
   }
 
   /**
-   * Retrieves paginated audit logs for a company with optional filters.
+   * Lists paginated and filtered audit logs for a company.
    */
   async findAll(companyId: string, query: QueryAuditLogsDto) {
-    const {
-      page = 1,
-      limit = 20,
-      entityType,
-      entityId,
-      action,
-      actorId,
-      startDate,
-      endDate,
-    } = query;
-
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
 
     const where: Prisma.AuditLogWhereInput = {
       companyId,
-      ...(entityType ? { entityType } : {}),
-      ...(entityId ? { entityId } : {}),
-      ...(action ? { action } : {}),
-      ...(actorId ? { actorId } : {}),
-      ...(startDate || endDate
-        ? {
-            createdAt: {
-              ...(startDate ? { gte: new Date(startDate) } : {}),
-              ...(endDate ? { lte: new Date(endDate) } : {}),
-            },
-          }
-        : {}),
+      ...(query.entityType ? { entityType: query.entityType } : {}),
+      ...(query.entityId ? { entityId: query.entityId } : {}),
+      ...(query.actorId ? { actorId: query.actorId } : {}),
+      ...(query.action ? { action: { contains: query.action, mode: 'insensitive' } } : {}),
     };
+
+    const from = query.startDate || query.dateFrom;
+    const to = query.endDate || query.dateTo;
+    if (from || to) {
+      where.createdAt = {
+        ...(from ? { gte: new Date(from) } : {}),
+        ...(to ? { lte: new Date(to) } : {}),
+      };
+    }
 
     const [items, total] = await Promise.all([
       this.prisma.auditLog.findMany({
         where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
         include: {
           actor: {
             select: {
@@ -138,9 +131,6 @@ export class AuditService {
             },
           },
         },
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
       }),
       this.prisma.auditLog.count({ where }),
     ]);
@@ -157,15 +147,16 @@ export class AuditService {
   }
 
   /**
-   * Retrieves chronological audit history for a specific entity.
+   * Retrieves chronological audit history for a specific entity (e.g., Document ID).
    */
   async getEntityHistory(companyId: string, entityType: string, entityId: string) {
     return this.prisma.auditLog.findMany({
       where: {
         companyId,
-        entityType,
+        entityType: { equals: entityType, mode: 'insensitive' },
         entityId,
       },
+      orderBy: { createdAt: 'desc' },
       include: {
         actor: {
           select: {
@@ -176,7 +167,6 @@ export class AuditService {
           },
         },
       },
-      orderBy: { createdAt: 'asc' },
     });
   }
 }

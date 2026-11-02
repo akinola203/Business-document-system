@@ -20,7 +20,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
   private browserInstance: Browser | null = null;
   private isLaunching = false;
   private activePageCount = 0;
-  private readonly maxConcurrentPages = 2;
+  private readonly maxConcurrentPages = 3;
   private readonly waitingQueue: Array<() => void> = [];
   private readonly generatingPdfs = new Map<
     string,
@@ -64,6 +64,16 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
     await this.closeBrowser();
   }
 
+  static shouldDisableSandbox(env: NodeJS.ProcessEnv = process.env): boolean {
+    return (
+      env.PUPPETEER_NO_SANDBOX === 'true' ||
+      env.PUPPETEER_DISABLE_SANDBOX === 'true' ||
+      (env.PUPPETEER_NO_SANDBOX !== 'false' &&
+        env.PUPPETEER_DISABLE_SANDBOX !== 'false' &&
+        (env.NODE_ENV === 'production' || Boolean(env.PUPPETEER_EXECUTABLE_PATH)))
+    );
+  }
+
   /**
    * Lazily initializes and reuses a shared Chromium browser instance with crash recovery.
    */
@@ -85,9 +95,10 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
     this.isLaunching = true;
     try {
       this.logger.log('Initializing shared Puppeteer headless browser instance (Render low-memory tuned)...');
+      const disableSandbox = PdfService.shouldDisableSandbox(process.env);
+
       const args = [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
+        ...(disableSandbox ? ['--no-sandbox', '--disable-setuid-sandbox'] : []),
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--no-first-run',

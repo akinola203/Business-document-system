@@ -12,7 +12,16 @@ import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
+export function assertSeedAllowed(env: NodeJS.ProcessEnv = process.env): void {
+  if (env.NODE_ENV === 'production' && env.ALLOW_PRODUCTION_SEED !== 'true') {
+    throw new Error(
+      'Refusing to run database seed in production without ALLOW_PRODUCTION_SEED=true.',
+    );
+  }
+}
+
 async function main() {
+  assertSeedAllowed(process.env);
   console.log('--- STARTING DATABASE SEEDING ---');
 
   // 1. Create or Update Company Profile (AOA 77 COMPANY LTD)
@@ -842,11 +851,13 @@ async function main() {
   console.log(`Manager User: manager@aoa77.com (Password: Aoa77@Password2026!)`);
 }
 
-main()
-  .catch((e) => {
-    console.error('Error during database seed execution:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (require.main === module) {
+  main()
+    .catch((e) => {
+      console.error('Error during database seed execution:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

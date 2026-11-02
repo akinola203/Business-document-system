@@ -11,6 +11,7 @@ import { CreateLetterDto } from './dto/create-letter.dto';
 import { UpdateLetterDto } from './dto/update-letter.dto';
 import { DocumentStatus, DocumentType, Prisma } from '@prisma/client';
 import { sanitizeRichHtml } from '../templates/renderers/letter-html.renderer';
+import { escapeHtml } from '../../common/utils/html-escape.util';
 import { validateTenantScope } from '../../common/utils/tenant-validation.util';
 
 @Injectable()
@@ -58,7 +59,14 @@ export class LettersService {
       });
 
       const bodyText = dto.bodyText?.trim() || dto.bodyHtml?.replace(/<[^>]+>/g, ' ').trim() || '';
-      const bodyHtml = dto.bodyHtml ? sanitizeRichHtml(dto.bodyHtml.trim()) : `<p>${bodyText}</p>`;
+      const bodyHtml = dto.bodyHtml
+        ? sanitizeRichHtml(dto.bodyHtml.trim())
+        : sanitizeRichHtml(
+            bodyText
+              .split(/\n{2,}/)
+              .map((p) => `<p>${escapeHtml(p.trim())}</p>`)
+              .join(''),
+          );
 
       await tx.letter.create({
         data: {
@@ -181,7 +189,13 @@ export class LettersService {
           bodyHtml: dto.bodyHtml !== undefined
             ? sanitizeRichHtml(dto.bodyHtml.trim())
             : dto.bodyText !== undefined
-              ? `<p>${dto.bodyText.trim()}</p>`
+              ? sanitizeRichHtml(
+                  dto.bodyText
+                    .trim()
+                    .split(/\n{2,}/)
+                    .map((p) => `<p>${escapeHtml(p.trim())}</p>`)
+                    .join(''),
+                )
               : undefined,
           bodyText: dto.bodyText !== undefined
             ? dto.bodyText.trim()

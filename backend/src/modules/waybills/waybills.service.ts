@@ -315,12 +315,21 @@ export class WaybillsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.waybill.update({
-        where: { id: document.waybill!.id, documentId: document.id },
+      const wbClaim = await tx.waybill.updateMany({
+        where: {
+          id: document.waybill!.id,
+          deliveryStatus: { in: [WaybillDeliveryStatus.PREPARING, WaybillDeliveryStatus.FAILED] },
+        },
         data: {
           deliveryStatus: WaybillDeliveryStatus.READY,
         },
       });
+
+      if (wbClaim.count !== 1) {
+        throw new ConflictException(
+          'Waybill delivery status was concurrently modified or is no longer eligible for READY staging.',
+        );
+      }
 
       await this.auditService.logAction(
         {
@@ -395,8 +404,11 @@ export class WaybillsService {
 
     // If document is already ISSUED (e.g. re-dispatching after a previous failure), update delivery status in tx
     const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.waybill.update({
-        where: { id: document.waybill!.id, documentId: document.id },
+      const wbClaim = await tx.waybill.updateMany({
+        where: {
+          id: document.waybill!.id,
+          deliveryStatus: { in: [WaybillDeliveryStatus.PREPARING, WaybillDeliveryStatus.READY] },
+        },
         data: {
           deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT,
           vehicleNumber: dto.vehicleNumber.trim(),
@@ -405,6 +417,13 @@ export class WaybillsService {
           trackingNumber: dto.trackingNumber?.trim(),
         },
       });
+
+      
+      if (wbClaim.count !== 1) {
+        throw new ConflictException(
+          'Waybill delivery status was concurrently modified or is no longer eligible for dispatch.',
+        );
+      }
 
       await this.auditService.logAction(
         {
@@ -450,12 +469,21 @@ export class WaybillsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.waybill.update({
-        where: { id: document.waybill!.id, documentId: document.id },
+      const wbClaim = await tx.waybill.updateMany({
+        where: {
+          id: document.waybill!.id,
+          deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT,
+        },
         data: {
           deliveryStatus: WaybillDeliveryStatus.FAILED,
         },
       });
+
+      if (wbClaim.count !== 1) {
+        throw new ConflictException(
+          'Waybill delivery status was concurrently modified or is no longer IN_TRANSIT.',
+        );
+      }
 
       await this.auditService.logAction(
         {
@@ -516,13 +544,22 @@ export class WaybillsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      const doc = await tx.document.update({
-        where: { id: document.id, companyId },
+      const docClaim = await tx.document.updateMany({
+        where: { id: document.id, companyId, status: DocumentStatus.ISSUED },
         data: { status: DocumentStatus.COMPLETED },
       });
 
-      await tx.waybill.update({
-        where: { id: document.waybill!.id, documentId: document.id },
+      if (docClaim.count !== 1) {
+        throw new ConflictException(
+          'Waybill parent document was concurrently modified or is no longer in ISSUED status.',
+        );
+      }
+
+      const wbClaim = await tx.waybill.updateMany({
+        where: {
+          id: document.waybill!.id,
+          deliveryStatus: WaybillDeliveryStatus.IN_TRANSIT,
+        },
         data: {
           deliveryStatus: WaybillDeliveryStatus.DELIVERED,
           receivedByName: dto.receivedByName.trim(),
@@ -530,6 +567,12 @@ export class WaybillsService {
           receiverSignatureFileId: dto.receiverSignatureFileId,
         },
       });
+
+      if (wbClaim.count !== 1) {
+        throw new ConflictException(
+          'Waybill delivery status was concurrently modified or is no longer IN_TRANSIT.',
+        );
+      }
 
       await this.auditService.logAction(
         {
@@ -547,7 +590,7 @@ export class WaybillsService {
         tx,
       );
 
-      return doc;
+      return document;
     });
 
     await this.notificationsService.createNotification(

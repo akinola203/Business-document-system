@@ -31,6 +31,20 @@ export class TemplatesService {
   ) {}
 
   /**
+   * Resolves a document's DocumentType within the tenant company for authorization checks.
+   */
+  async getDocumentType(companyId: string, documentId: string): Promise<DocumentType> {
+    const doc = await this.prisma.document.findFirst({
+      where: { id: documentId, companyId },
+      select: { documentType: true },
+    });
+    if (!doc) {
+      throw new NotFoundException(`Document with ID "${documentId}" not found.`);
+    }
+    return doc.documentType;
+  }
+
+  /**
    * Retrieves all templates for a tenant company, optionally filtered by document type.
    */
   async findAll(companyId: string, documentType?: DocumentType) {

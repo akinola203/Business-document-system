@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { buildAllowedCorsOrigins, isOriginAllowed } from './common/utils/cors.util';
 
 // Safe BigInt JSON serialization for Prisma BigInt fields (e.g. File.sizeBytes)
 (BigInt.prototype as any).toJSON = function () {
@@ -35,63 +36,24 @@ async function bootstrap() {
   // Cookie Parser for secure httpOnly refresh tokens
   app.use(cookieParser());
 
-  // CORS Configuration
+  // Strict CORS Allowlist Configuration (no wildcards or open reflection)
   const frontendUrlEnv = configService.get<string>('FRONTEND_URL');
   const corsOriginEnv = configService.get<string>('CORS_ORIGIN');
-  const configuredOrigins = corsOriginEnv
-    ? corsOriginEnv.split(',').map((o) => o.trim()).filter(Boolean)
-    : [];
-
-  const nativeAppOrigins = [
-    'file://',
-    'null',
-    'capacitor://localhost',
-    'tauri://localhost',
-    'http://tauri.localhost',
-    'http://localhost',
-  ];
-
-  const allowedOrigins = [
+  const allowedOrigins = buildAllowedCorsOrigins({
+    corsOrigin: corsOriginEnv,
+    frontendUrl: frontendUrlEnv,
     appUrl,
-    ...(frontendUrlEnv ? [frontendUrlEnv] : []),
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:3000',
-    ...nativeAppOrigins,
-    ...configuredOrigins,
-  ];
+    nodeEnv,
+  });
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin || origin === 'null') return callback(null, true);
-
-      // Check configured origins or wildcards
-      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin, allowedOrigins, isProduction)) {
         return callback(null, true);
       }
 
-      // Explicitly allow native app origins and localhost variants
-      if (
-        origin.startsWith('file://') ||
-        origin === 'capacitor://localhost' ||
-        origin === 'tauri://localhost' ||
-        origin === 'http://tauri.localhost' ||
-        origin.startsWith('http://localhost') ||
-        origin.startsWith('http://127.0.0.1')
-      ) {
-        return callback(null, true);
-      }
-
-      // Automatically support Vercel preview and production deployments (*.vercel.app)
-      if (origin.endsWith('.vercel.app')) {
-        return callback(null, true);
-      }
-
-      // In production, log origin and permit for live client demos
-      logger.log(`Permitted CORS request from origin: ${origin}`);
-      return callback(null, true);
+      logger.warn(`Blocked CORS request from unauthorized origin: ${origin}`);
+      return callback(new ForbiddenException(`Origin "${origin}" is not permitted by CORS policy.`), false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

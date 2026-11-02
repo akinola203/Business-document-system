@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { WaybillsService } from '../../src/modules/waybills/waybills.service';
 import { DocumentStatus, DocumentType, WaybillDeliveryStatus } from '@prisma/client';
 
@@ -68,6 +68,21 @@ test('WaybillsService Unit Tests', async (t) => {
         documentsDb[idx] = { ...documentsDb[idx], ...data };
         return documentsDb[idx];
       },
+      updateMany: async ({ where, data }: any) => {
+        const idx = documentsDb.findIndex(
+          (d) =>
+            d.id === where.id &&
+            (!where.companyId || d.companyId === where.companyId) &&
+            (!where.status || d.status === where.status),
+        );
+        if (idx === -1) return { count: 0 };
+        const nextData = { ...data };
+        if (nextData.versionCounter && typeof nextData.versionCounter === 'object' && 'increment' in nextData.versionCounter) {
+          nextData.versionCounter = (documentsDb[idx].versionCounter || 1) + nextData.versionCounter.increment;
+        }
+        documentsDb[idx] = { ...documentsDb[idx], ...nextData };
+        return { count: 1 };
+      },
     },
     waybill: {
       create: async ({ data }: any) => {
@@ -85,6 +100,21 @@ test('WaybillsService Unit Tests', async (t) => {
         const idx = waybillsDb.findIndex((w) => w.id === where.id);
         waybillsDb[idx] = { ...waybillsDb[idx], ...data };
         return waybillsDb[idx];
+      },
+      updateMany: async ({ where, data }: any) => {
+        const idx = waybillsDb.findIndex((w) => {
+          if (w.id !== where.id) return false;
+          if (where.deliveryStatus?.in) {
+            return where.deliveryStatus.in.includes(w.deliveryStatus);
+          }
+          if (where.deliveryStatus) {
+            return w.deliveryStatus === where.deliveryStatus;
+          }
+          return true;
+        });
+        if (idx === -1) return { count: 0 };
+        waybillsDb[idx] = { ...waybillsDb[idx], ...data };
+        return { count: 1 };
       },
     },
     documentVersion: {
@@ -272,5 +302,28 @@ test('WaybillsService Unit Tests', async (t) => {
     assert.equal(completed.status, DocumentStatus.COMPLETED);
     assert.equal(completed.waybill?.deliveryStatus, WaybillDeliveryStatus.DELIVERED);
     assert.equal(completed.waybill?.receivedByName, 'Alhaji Musa Ibrahim');
+  });
+
+  await t.test('atomic row claim throws ConflictException when concurrent request modifies waybill status first', async () => {
+    const docId = documentsDb[0].id;
+    // Put document back to ISSUED / IN_TRANSIT for test, but simulate concurrent modification during transaction
+    documentsDb[0].status = DocumentStatus.ISSUED;
+    waybillsDb[0].deliveryStatus = WaybillDeliveryStatus.IN_TRANSIT;
+
+    const origUpdateMany = mockPrisma.waybill.updateMany;
+    mockPrisma.waybill.updateMany = async () => ({ count: 0 });
+
+    await assert.rejects(
+      () =>
+        service.complete(
+          'comp-1',
+          docId,
+          { receivedByName: 'Concurrent Receiver' },
+          'usr-ops-1',
+        ),
+      ConflictException,
+    );
+
+    mockPrisma.waybill.updateMany = origUpdateMany;
   });
 });

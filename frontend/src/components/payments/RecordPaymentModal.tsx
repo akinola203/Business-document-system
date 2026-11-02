@@ -93,50 +93,12 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
         acknowledgeOverpayment,
       };
 
-      try {
-        const res = await apiClient.post(`/invoices/${selectedInvoiceId}/payments`, payload, {
-          headers: {
-            'Idempotency-Key': idempotencyKey,
-          },
-        });
-        return res.data;
-      } catch (err: any) {
-        // Standalone offline demo preview fallback
-        if (!err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-          const fakePayment: PaymentRecord = {
-            id: `pay-local-${Date.now()}`,
-            companyId: activeInvoice?.companyId || 'c0000000-0000-0000-0000-000000000001',
-            invoiceId: selectedInvoiceId,
-            paymentNumber: `PAY-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-            amount: parsedAmount.toFixed(2),
-            currency,
-            paymentDate,
-            method,
-            referenceNumber: referenceNumber.trim(),
-            notes: notes.trim() || null,
-            recordedById: 'usr-admin-1',
-            recordedBy: {
-              id: 'usr-admin-1',
-              fullName: 'Alade Adebayo (Admin)',
-            },
-            isReversed: false,
-            createdAt: new Date().toISOString(),
-            invoice: {
-              id: selectedInvoiceId,
-              documentNumber: activeInvoice?.documentNumber || 'INV-LOCAL',
-              document: {
-                documentNumber: activeInvoice?.documentNumber || 'INV-LOCAL',
-                title: activeInvoice?.title || 'Commercial Invoice',
-                client: {
-                  name: activeInvoice?.client?.companyName || activeInvoice?.client?.name || 'Customer',
-                },
-              },
-            },
-          };
-          return fakePayment;
-        }
-        throw err;
-      }
+      const res = await apiClient.post(`/invoices/${selectedInvoiceId}/payments`, payload, {
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
+      });
+      return res.data;
     },
     onSuccess: (savedResult) => {
       const paymentRecord = savedResult?.payment || savedResult;

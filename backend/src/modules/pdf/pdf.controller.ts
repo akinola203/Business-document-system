@@ -5,6 +5,7 @@ import {
   Param,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -13,9 +14,13 @@ import { PdfService } from './pdf.service';
 import { FilesService } from '../files/files.service';
 import { TemplatesService } from '../templates/templates.service';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
+import { CompanyScopeGuard } from '../../common/guards/company-scope.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { assertDocumentPermission } from '../documents/utils/document-permissions.util';
 
 @ApiTags('Document PDF Engine')
 @ApiBearerAuth('JWT-auth')
+@UseGuards(CompanyScopeGuard, PermissionsGuard)
 @Throttle({ default: { limit: 20, ttl: 60000 } })
 @Controller('documents')
 export class PdfController {
@@ -24,6 +29,11 @@ export class PdfController {
     private readonly filesService: FilesService,
     private readonly templatesService: TemplatesService,
   ) {}
+
+  private async authorizeDocumentView(user: AuthenticatedUser, documentId: string): Promise<void> {
+    const documentType = await this.templatesService.getDocumentType(user.companyId, documentId);
+    assertDocumentPermission(user, documentType, 'view');
+  }
 
   @Get(':id/pdf')
   @ApiOperation({ summary: 'Stream or generate the authoritative PDF for the document (latest version)' })
@@ -58,6 +68,7 @@ export class PdfController {
     download: string | undefined,
     res: Response,
   ) {
+    await this.authorizeDocumentView(user, id);
     const result = await this.pdfService.getOrGenerateDocumentPdf(
       user.companyId,
       id,
@@ -96,6 +107,7 @@ export class PdfController {
     @Param('version') version: string,
     @Res() res: Response,
   ) {
+    await this.authorizeDocumentView(user, id);
     const versionNumber = parseInt(version, 10);
     const result = await this.pdfService.getOrGenerateDocumentPdf(
       user.companyId,
@@ -129,6 +141,7 @@ export class PdfController {
     @Param('id') id: string,
     @Res() res: Response,
   ) {
+    await this.authorizeDocumentView(user, id);
     const { buffer, filename } = await this.pdfService.previewDocumentPdf(user.companyId, id);
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -150,6 +163,7 @@ export class PdfController {
     @Param('id') id: string,
     @Query('version') version?: string,
   ) {
+    await this.authorizeDocumentView(user, id);
     const versionNumber = version ? parseInt(version, 10) : undefined;
     return this.templatesService.renderDocumentHtml(user.companyId, id, versionNumber);
   }

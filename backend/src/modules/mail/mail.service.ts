@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import { escapeHtml } from '../../common/utils/html-escape.util';
 
 @Injectable()
 export class MailService implements OnModuleInit {
@@ -60,14 +61,16 @@ export class MailService implements OnModuleInit {
 
   /**
    * Terminal fallback logger for development, local testing, and offline modes.
+   * Redacts raw reset tokens from logs.
    */
   private logSimulatedEmail(to: string, resetUrl: string, userName?: string) {
+    const redactedUrl = resetUrl.replace(/([?&]token=)[^&]+/i, '$1[REDACTED]');
     this.logger.log(
       `\n======================================================\n` +
       `[PASSWORD RESET EMAIL DISPATCH (TERMINAL FALLBACK)]\n` +
       `To: ${to}${userName ? ` (${userName})` : ''}\n` +
       `From: ${this.fromAddress}\n` +
-      `Reset URL: ${resetUrl}\n` +
+      `Reset URL: ${redactedUrl}\n` +
       `Expires In: 20 minutes\n` +
       `======================================================\n`,
     );
@@ -83,6 +86,9 @@ export class MailService implements OnModuleInit {
     userName?: string,
   ): Promise<{ delivered: boolean; simulated: boolean; messageId?: string; error?: string; resetUrl?: string }> {
     const displayName = userName?.trim() || 'Corporate User';
+    const safeDisplayName = escapeHtml(displayName);
+    const safeTo = escapeHtml(to);
+    const safeResetUrl = escapeHtml(resetUrl);
 
     const plainText =
       `Hello ${displayName},\n\n` +
@@ -134,10 +140,10 @@ export class MailService implements OnModuleInit {
           <tr>
             <td style="padding: 36px 36px 28px 36px;">
               <p style="margin: 0 0 16px 0; font-size: 15px; color: #0f172a; font-weight: 600;">
-                Hello ${displayName},
+                Hello ${safeDisplayName},
               </p>
               <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 22px; color: #475569;">
-                A request was received to reset the authentication credentials for your corporate account associated with <strong style="color: #0f172a;">${to}</strong>.
+                A request was received to reset the authentication credentials for your corporate account associated with <strong style="color: #0f172a;">${safeTo}</strong>.
               </p>
               <p style="margin: 0 0 28px 0; font-size: 14px; line-height: 22px; color: #475569;">
                 Click the button below to establish a new password. This link is valid for <strong style="color: #0f172a;">20 minutes</strong>.
@@ -147,7 +153,7 @@ export class MailService implements OnModuleInit {
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 28px;">
                 <tr>
                   <td align="center">
-                    <a href="${resetUrl}" target="_blank" style="display: inline-block; background-color: #5847F6; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; padding: 14px 34px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(88, 71, 246, 0.4); text-align: center; mso-padding-alt: 0;">
+                    <a href="${safeResetUrl}" target="_blank" style="display: inline-block; background-color: #5847F6; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; padding: 14px 34px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(88, 71, 246, 0.4); text-align: center; mso-padding-alt: 0;">
                       <!--[if mso]><i style="letter-spacing: 25px; mso-font-width: -100%;" hidden>&nbsp;</i><![endif]-->
                       <span style="mso-text-raise: 10pt;">Reset My Password &rarr;</span>
                       <!--[if mso]><i style="letter-spacing: 25px; mso-font-width: -100%;" hidden>&nbsp;</i><![endif]-->
@@ -164,7 +170,7 @@ export class MailService implements OnModuleInit {
                       Alternative Direct Link:
                     </p>
                     <p style="margin: 0; font-size: 12px; line-height: 18px; word-break: break-all;">
-                      <a href="${resetUrl}" style="color: #5847F6; text-decoration: underline;">${resetUrl}</a>
+                      <a href="${safeResetUrl}" style="color: #5847F6; text-decoration: underline;">${safeResetUrl}</a>
                     </p>
                   </td>
                 </tr>

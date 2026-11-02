@@ -7,6 +7,7 @@ export interface AuthenticatedUser {
   branchId?: string | null;
   departmentId?: string | null;
   role: string;
+  isSystemAdmin?: boolean;
   permissions: string[];
 }
 

@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
+import { ForbiddenException } from '@nestjs/common';
 import { PdfService } from '../../src/modules/pdf/pdf.service';
+import { PdfController } from '../../src/modules/pdf/pdf.controller';
 import { FileCategory, DocumentType } from '@prisma/client';
 
 test('PDF Engine & Version-Linked Storage Unit Tests', async (t) => {
@@ -100,6 +102,12 @@ test('PDF Engine & Version-Linked Storage Unit Tests', async (t) => {
   };
 
   const mockTemplatesService: any = {
+    getDocumentType: async (companyId: string, documentId: string) => {
+      if (companyId === 'comp-1' && documentId === 'doc-inv-1') {
+        return DocumentType.INVOICE;
+      }
+      throw new Error('Not found');
+    },
     renderDocumentHtml: async () => {
       return '<!DOCTYPE html><html><body><h1>Printable Invoice</h1></body></html>';
     },
@@ -197,5 +205,47 @@ test('PDF Engine & Version-Linked Storage Unit Tests', async (t) => {
     assert.strictEqual(generateCount, 1, 'generatePdfFromHtml was only executed once across concurrent calls');
     assert.strictEqual(res1.fileId, res2.fileId);
     assert.strictEqual(res2.fileId, res3.fileId);
+  });
+
+  await t.test('6. PdfController enforces document view permission before serving PDF or HTML preview', async () => {
+    const controller = new PdfController(pdfService, mockFilesService, mockTemplatesService);
+    const unauthorizedUser: any = {
+      id: 'usr-no-invoice',
+      companyId: 'comp-1',
+      role: 'Staff',
+      permissions: ['letter:view'],
+    };
+
+    await assert.rejects(
+      async () => {
+        await controller.previewDocumentHtml(unauthorizedUser, 'doc-inv-1');
+      },
+      ForbiddenException,
+    );
+
+    const authorizedUser: any = {
+      id: 'usr-invoice',
+      companyId: 'comp-1',
+      role: 'Staff',
+      permissions: ['invoice:view'],
+    };
+    const html = await controller.previewDocumentHtml(authorizedUser, 'doc-inv-1');
+    assert.ok(html.includes('Printable Invoice'));
+  });
+
+  await t.test('7. PdfService enforces maxConcurrentPages = 3 and conditional --no-sandbox flag', () => {
+    assert.strictEqual((pdfService as any).maxConcurrentPages, 3);
+    assert.strictEqual(
+      PdfService.shouldDisableSandbox({ NODE_ENV: 'development' } as any),
+      false,
+    );
+    assert.strictEqual(
+      PdfService.shouldDisableSandbox({ NODE_ENV: 'development', PUPPETEER_NO_SANDBOX: 'true' } as any),
+      true,
+    );
+    assert.strictEqual(
+      PdfService.shouldDisableSandbox({ NODE_ENV: 'production' } as any),
+      true,
+    );
   });
 });

@@ -102,7 +102,16 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
     try {
       if (serverPreviewType === 'HTML') {
         const res = await apiClient.get(`/documents/${documentId}/preview`);
-        setHtmlContent(res.data);
+        const raw = res.data;
+        const unwrappedHtml =
+          typeof raw === 'string'
+            ? raw
+            : typeof raw?.data === 'string'
+            ? raw.data
+            : typeof raw?.html === 'string'
+            ? raw.html
+            : '';
+        setHtmlContent(unwrappedHtml);
       } else {
         const res = await apiClient.get(`/documents/${documentId}/preview-pdf`, {
           responseType: 'blob',
@@ -125,6 +134,11 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
   useEffect(() => {
     if (previewMode === 'SERVER' && documentId) {
       fetchServerPreview();
+    } else if (previewMode !== 'SERVER') {
+      setPdfBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
     }
   }, [previewMode, documentId, serverPreviewType]);
 

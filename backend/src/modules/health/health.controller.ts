@@ -1,103 +1,146 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Req,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+  ForbiddenException,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Request } from 'express';
+import { PrismaService } from '../prisma/prisma.service';
+import { Public } from '../../common/decorators/public.decorator';
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ConfigService } from '@nestjs/config';
-import { Public } from '../../common/decorators/public.decorator';
-import { PrismaService } from '../prisma/prisma.service';
+import * as crypto from 'crypto';
 
-@ApiTags('Health')
-@Controller(['health', 'api/health', 'api/v1/health'])
+@ApiTags('Health & Diagnostics')
+@Controller('health')
 export class HealthController {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  private hasValidInternalToken(req?: Request): boolean {
+    const expectedToken = process.env.HEALTH_CHECK_TOKEN?.trim();
+    if (!expectedToken || !req?.headers) {
+      return false;
+    }
+    const headerVal = req.headers['x-health-token'];
+    const rawHeader = Array.isArray(headerVal) ? headerVal[0] : headerVal;
+    if (!rawHeader || typeof rawHeader !== 'string') {
+      return false;
+    }
+    const a = Buffer.from(rawHeader.trim());
+    const b = Buffer.from(expectedToken);
+    if (a.length !== b.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(a, b);
+  }
+
+  private assertAuthorizedHealthAccess(req?: Request, user?: AuthenticatedUser): void {
+    if (this.hasValidInternalToken(req)) {
+      return;
+    }
+    if (!user) {
+      throw new UnauthorizedException('Authentication or internal health token required.');
+    }
+    const isAllowed =
+      user.role === 'Admin' ||
+      user.permissions?.includes('*') ||
+      user.permissions?.includes('*:*') ||
+      user.permissions?.includes('audit:view');
+
+    if (!isAllowed) {
+      throw new ForbiddenException('Access denied. Requires audit:view permission or internal health token.');
+    }
+  }
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'General application health check' })
-  @ApiResponse({ status: 200, description: 'Application is running' })
-  getHealth() {
+  @ApiOperation({ summary: 'Check API service liveness and uptime' })
+  @ApiResponse({ status: 200, description: 'API is healthy and running' })
+  checkHealth() {
     return {
       status: 'ok',
       service: 'business-doc-backend',
       timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      nodeVersion: process.version,
-      memoryUsage: process.memoryUsage(),
     };
   }
 
-  @Public()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(PermissionsGuard)
+  @RequirePermissions('audit:view')
   @Get('database')
-  @ApiOperation({ summary: 'PostgreSQL database connectivity check' })
-  @ApiResponse({ status: 200, description: 'Database is reachable and responding' })
-  async getDatabaseHealth() {
-    const startTime = Date.now();
+  @ApiOperation({ summary: 'Check PostgreSQL database connection via Prisma' })
+  @ApiResponse({ status: 200, description: 'Database connection is active' })
+  @ApiResponse({ status: 503, description: 'Database connection failed' })
+  async checkDatabase(
+    @Req() req?: Request,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    this.assertAuthorizedHealthAccess(req, user);
     try {
-      await this.prisma.$queryRaw`SELECT 1 as ping`;
-      const responseTimeMs = Date.now() - startTime;
+      await this.prisma.$queryRaw`SELECT 1`;
       return {
         status: 'ok',
-        database: 'postgresql',
-        connected: true,
-        responseTimeMs,
+        database: 'connected',
         timestamp: new Date().toISOString(),
       };
-    } catch (error: any) {
-      return {
-        status: 'error',
-        database: 'postgresql',
-        connected: false,
-        error: error.message,
-        timestamp: new Date().toISOString(),
-      };
+    } catch {
+      throw new HttpException(
+        {
+          status: 'error',
+          database: 'disconnected',
+          timestamp: new Date().toISOString(),
+        },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
     }
   }
 
-  @Public()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(PermissionsGuard)
+  @RequirePermissions('audit:view')
   @Get('storage')
-  @ApiOperation({ summary: 'Storage subsystem readiness check' })
-  @ApiResponse({ status: 200, description: 'Storage directory or bucket is ready' })
-  getStorageHealth() {
-    const storageType = this.configService.get<string>('STORAGE_TYPE', 'local');
-    const storageRoot = this.configService.get<string>('STORAGE_LOCAL_ROOT', './storage/secure-uploads');
+  @ApiOperation({ summary: 'Check local volume write/read health for document storage' })
+  @ApiResponse({ status: 200, description: 'Storage volume is mounted and writable' })
+  @ApiResponse({ status: 503, description: 'Storage volume is inaccessible or read-only' })
+  async checkStorage(
+    @Req() req?: Request,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    this.assertAuthorizedHealthAccess(req, user);
+    const rawStorageDir = process.env.STORAGE_LOCAL_DIR || './storage/secure-uploads';
+    const storagePath = path.isAbsolute(rawStorageDir)
+      ? rawStorageDir
+      : path.resolve(process.cwd(), rawStorageDir);
 
-    if (storageType === 'local') {
-      try {
-        const resolvedPath = path.resolve(storageRoot);
-        if (!fs.existsSync(resolvedPath)) {
-          fs.mkdirSync(resolvedPath, { recursive: true });
-        }
-        // Test write and delete
-        const testFile = path.join(resolvedPath, `.health-check-${Date.now()}`);
-        fs.writeFileSync(testFile, 'health-check');
-        fs.unlinkSync(testFile);
+    const probeFile = path.join(storagePath, `.health-probe-${Date.now()}.tmp`);
 
-        return {
-          status: 'ok',
-          storageType: 'local',
-          storagePath: resolvedPath,
-          writable: true,
-          timestamp: new Date().toISOString(),
-        };
-      } catch (error: any) {
-        return {
+    try {
+      await fs.promises.mkdir(storagePath, { recursive: true });
+      await fs.promises.writeFile(probeFile, 'ok', 'utf-8');
+      await fs.promises.unlink(probeFile);
+
+      return {
+        status: 'ok',
+        storage: 'writable',
+        timestamp: new Date().toISOString(),
+      };
+    } catch {
+      throw new HttpException(
+        {
           status: 'error',
-          storageType: 'local',
-          writable: false,
-          error: error.message,
+          storage: 'unwritable',
           timestamp: new Date().toISOString(),
-        };
-      }
+        },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
     }
-
-    return {
-      status: 'ok',
-      storageType,
-      message: 'Cloud storage driver configured',
-      timestamp: new Date().toISOString(),
-    };
   }
 }

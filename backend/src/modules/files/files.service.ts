@@ -9,8 +9,10 @@ import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { LocalStorageService } from './storage/local-storage.service';
-import { FileCategory } from '@prisma/client';
+import { FileCategory, DocumentType } from '@prisma/client';
 import { UploadFileDto } from './dto/upload-file.dto';
+
+export const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 Megabytes
 
 // Permitted MIME types and their canonical extensions
 const ALLOWED_MIME_TYPES: Record<string, string[]> = {
@@ -27,8 +29,6 @@ const ALLOWED_MIME_TYPES: Record<string, string[]> = {
   'text/csv': ['.csv'],
 };
 
-const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 Megabytes
-
 @Injectable()
 export class FilesService {
   private readonly logger = new Logger(FilesService.name);
@@ -38,6 +38,49 @@ export class FilesService {
     private readonly storage: LocalStorageService,
     private readonly auditService: AuditService,
   ) {}
+
+  /**
+   * Resolves a document's DocumentType within the tenant company for authorization checks.
+   */
+  async getDocumentType(companyId: string, documentId: string): Promise<DocumentType> {
+    const doc = await this.prisma.document.findFirst({
+      where: { id: documentId, companyId },
+      select: { documentType: true },
+    });
+    if (!doc) {
+      throw new NotFoundException(`Document with ID "${documentId}" not found in company.`);
+    }
+    return doc.documentType;
+  }
+
+  /**
+   * Resolves a file's metadata and linked documentType within the tenant company for authorization checks.
+   */
+  async getFileAuthorizationMeta(
+    companyId: string,
+    fileId: string,
+  ): Promise<{ id: string; documentId?: string | null; documentType?: DocumentType | null; createdById?: string }> {
+    const file = await this.prisma.file.findFirst({
+      where: { id: fileId, companyId },
+    });
+    if (!file) {
+      throw new NotFoundException(`File with ID "${fileId}" not found.`);
+    }
+    let documentType: DocumentType | null = null;
+    if (file.documentId) {
+      const doc = await this.prisma.document.findFirst({
+        where: { id: file.documentId, companyId },
+        select: { documentType: true },
+      });
+      documentType = doc?.documentType ?? null;
+    }
+    return {
+      id: file.id,
+      documentId: file.documentId,
+      documentType,
+      createdById: file.createdById,
+    };
+  }
 
   /**
    * Validates file binary signature (magic bytes) against declared MIME type.

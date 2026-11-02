@@ -5,7 +5,6 @@ import { useAuthStore } from '../../store/auth.store';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useTheme } from '../../context/ThemeContext';
 import { apiClient } from '../../lib/api-client';
-import { DEMO_NOTIFICATIONS } from '../../lib/mock-data';
 import {
   FileText,
   Truck,
@@ -84,14 +83,14 @@ export const TopPillNavbar: React.FC = () => {
     queryFn: async () => {
       try {
         const res = await apiClient.get('/notifications', { params: { limit: 1 } });
-        const unread = res.data?.unreadCount ?? res.data?.data?.unreadCount ?? DEMO_NOTIFICATIONS.filter((n) => !n.isRead).length;
+        const unread = res.data?.unreadCount ?? res.data?.data?.unreadCount ?? 0;
         return { unreadCount: unread };
       } catch {
-        return { unreadCount: DEMO_NOTIFICATIONS.filter((n) => !n.isRead).length };
+        return { unreadCount: 0 };
       }
     },
     refetchInterval: 15000,
-    initialData: { unreadCount: DEMO_NOTIFICATIONS.filter((n) => !n.isRead).length },
+    initialData: { unreadCount: 0 },
   });
 
   const unreadCount = countData?.unreadCount ?? 0;

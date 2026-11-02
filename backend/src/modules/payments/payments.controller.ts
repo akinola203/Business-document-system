@@ -7,7 +7,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Post,
   Query,
 } from '@nestjs/common';
@@ -38,7 +37,7 @@ export class PaymentsController {
   @ApiResponse({ status: 409, description: 'Duplicate bank reference, or same Idempotency-Key still in progress.' })
   async recordPayment(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id', ParseUUIDPipe) documentId: string,
+    @Param('id') documentId: string,
     @Body() dto: RecordPaymentDto,
     @Headers('idempotency-key') idempotencyKey?: string,
     @Headers('x-idempotency-key') legacyIdempotencyKey?: string,
@@ -57,7 +56,7 @@ export class PaymentsController {
   @ApiResponse({ status: 200, description: 'Ledger retrieved (includes reversed entries for traceability).' })
   async getInvoiceLedger(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id', ParseUUIDPipe) documentId: string,
+    @Param('id') documentId: string,
   ) {
     return this.paymentsService.getInvoiceLedger(user.companyId, documentId);
   }
@@ -75,7 +74,7 @@ export class PaymentsController {
   @ApiResponse({ status: 404, description: 'Payment not found.' })
   async findOne(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('paymentId', ParseUUIDPipe) paymentId: string,
+    @Param('paymentId') paymentId: string,
   ) {
     return this.paymentsService.findOne(user.companyId, paymentId);
   }
@@ -88,7 +87,7 @@ export class PaymentsController {
   @ApiResponse({ status: 400, description: 'Payment already reversed.' })
   async reversePayment(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('paymentId', ParseUUIDPipe) paymentId: string,
+    @Param('paymentId') paymentId: string,
     @Body() dto: ReversePaymentDto,
   ) {
     return this.paymentsService.reversePayment(user.companyId, paymentId, dto, user.id);

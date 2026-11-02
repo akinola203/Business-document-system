@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { Client, DocumentRecord, PaymentRecord } from '../../types';
-import { DEMO_INVOICES } from '../../lib/mock-data';
 import { formatCurrency, formatDate, extractArray } from '../../lib/utils';
 import {
   X,
@@ -60,16 +59,14 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
         });
         return res.data;
       } catch {
-        return { items: DEMO_INVOICES.filter((i) => i.clientId === client?.id) };
+        return { items: [] };
       }
     },
   });
 
   const clientInvoices: DocumentRecord[] = useMemo(() => {
-    const raw = extractArray<DocumentRecord>(invoicesData, []);
-    if (raw.length > 0) return raw;
-    return DEMO_INVOICES.filter((i) => i.clientId === client?.id || !i.clientId);
-  }, [invoicesData, client]);
+    return extractArray<DocumentRecord>(invoicesData, []);
+  }, [invoicesData]);
 
   // 2. Fetch Client's Payments
   const { data: paymentsData } = useQuery<any>({

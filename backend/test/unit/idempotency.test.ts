@@ -109,6 +109,32 @@ test('IdempotencyService Unit Tests', async (t) => {
     assert.equal((result.body as any).documentNumber, 'INV-2026-000001');
   });
 
+  await t.test('lockKey rejects reuse when userId, endpoint, or requestHash mismatches', async () => {
+    // 1. Different userId
+    await assert.rejects(
+      async () => {
+        await service.lockKey('comp-1', 'usr-2', '/invoices', 'req-key-001', { title: 'New Invoice' });
+      },
+      /different user session/,
+    );
+
+    // 2. Different endpoint
+    await assert.rejects(
+      async () => {
+        await service.lockKey('comp-1', 'usr-1', '/waybills', 'req-key-001', { title: 'New Invoice' });
+      },
+      /different endpoint/,
+    );
+
+    // 3. Different request payload hash
+    await assert.rejects(
+      async () => {
+        await service.lockKey('comp-1', 'usr-1', '/invoices', 'req-key-001', { title: 'Tampered Payload' });
+      },
+      /different request payload/,
+    );
+  });
+
   await t.test('releaseKey clears pending key on handler failure so client can retry', async () => {
     await service.lockKey('comp-1', 'usr-1', '/invoices', 'retry-key-002', { title: 'Fail' });
     await service.releaseKey('comp-1', 'retry-key-002');

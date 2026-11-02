@@ -40,14 +40,11 @@ export const AdjustStockModal: React.FC<AdjustStockModalProps> = ({
       }
       onClose();
     },
-    onError: () => {
-      if (item && onStockAdjusted) {
-        onStockAdjusted({
-          ...item,
-          currentStock: Number(newStock) || 0,
-        });
-      }
-      onClose();
+    onError: (err: any) => {
+      const serverMessage = Array.isArray(err?.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : err?.response?.data?.message;
+      setErrorMessage(serverMessage || err?.message || 'Failed to adjust inventory stock.');
     },
   });
 

@@ -41,7 +41,7 @@ export const LoginPage: React.FC = () => {
         fullName: rawUser.fullName || `${rawUser.firstName || ''} ${rawUser.lastName || ''}`.trim() || 'Workspace User',
         role: rawUser.role,
         roleName: rawUser.role,
-        permissions: rawUser.permissions || ['*'],
+        permissions: Array.isArray(rawUser.permissions) ? rawUser.permissions : [],
         companyId: rawUser.company?.id || rawUser.companyId || 'c0000000-0000-0000-0000-000000000001',
         companyName: rawUser.company?.name || rawUser.companyName || 'AOA 77 COMPANY LTD',
       };

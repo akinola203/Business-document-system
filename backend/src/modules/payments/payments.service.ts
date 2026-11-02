@@ -72,11 +72,16 @@ export class PaymentsService {
 
       // Re-read AFTER acquiring the lock so status and ledger cannot change underneath us.
       const document = await tx.document.findFirst({
-        where: { id: documentId, companyId, documentType: DocumentType.INVOICE, deletedAt: null },
+        where: {
+          companyId,
+          documentType: DocumentType.INVOICE,
+          deletedAt: null,
+          OR: [{ id: documentId }, { documentNumber: documentId }],
+        },
         include: { invoice: true },
       });
       if (!document || !document.invoice) {
-        throw new NotFoundException(`Invoice with ID "${documentId}" not found.`);
+        throw new NotFoundException(`Invoice with ID or number "${documentId}" not found.`);
       }
 
       if (!PAYABLE_STATUSES.includes(document.status)) {
@@ -220,21 +225,25 @@ export class PaymentsService {
 
     const result = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.payment.findFirst({
-        where: { id: paymentId, companyId, deletedAt: null },
-        select: { id: true, invoiceId: true },
+        where: {
+          companyId,
+          deletedAt: null,
+          OR: [{ id: paymentId }, { paymentNumber: paymentId }],
+        },
+        select: { id: true, invoiceId: true, paymentNumber: true },
       });
       if (!existing) {
-        throw new NotFoundException(`Payment with ID "${paymentId}" not found.`);
+        throw new NotFoundException(`Payment with ID or number "${paymentId}" not found.`);
       }
 
       await tx.$queryRaw`SELECT "id" FROM "invoices" WHERE "id" = ${existing.invoiceId} FOR UPDATE`;
 
       const payment = await tx.payment.findFirst({
-        where: { id: paymentId, companyId, deletedAt: null },
+        where: { id: existing.id, companyId, deletedAt: null },
         include: { invoice: { include: { document: true } } },
       });
       if (!payment) {
-        throw new NotFoundException(`Payment with ID "${paymentId}" not found.`);
+        throw new NotFoundException(`Payment with ID or number "${paymentId}" not found.`);
       }
       if (payment.isReversed) {
         throw new BadRequestException(`Payment "${payment.paymentNumber}" has already been reversed.`);
@@ -306,7 +315,12 @@ export class PaymentsService {
   /** Full ledger (including reversed entries, for traceability) plus derived balance and overdue state. */
   async getInvoiceLedger(companyId: string, documentId: string) {
     const document = await this.prisma.document.findFirst({
-      where: { id: documentId, companyId, documentType: DocumentType.INVOICE, deletedAt: null },
+      where: {
+        companyId,
+        documentType: DocumentType.INVOICE,
+        deletedAt: null,
+        OR: [{ id: documentId }, { documentNumber: documentId }],
+      },
       include: {
         invoice: {
           include: {
@@ -320,7 +334,7 @@ export class PaymentsService {
       },
     });
     if (!document || !document.invoice) {
-      throw new NotFoundException(`Invoice with ID "${documentId}" not found.`);
+      throw new NotFoundException(`Invoice with ID or number "${documentId}" not found.`);
     }
 
     const summary = PaymentLedgerUtil.summarize(document.totalAmount, document.invoice.payments);
@@ -391,11 +405,15 @@ export class PaymentsService {
 
   async findOne(companyId: string, paymentId: string) {
     const payment = await this.prisma.payment.findFirst({
-      where: { id: paymentId, companyId, deletedAt: null },
+      where: {
+        companyId,
+        deletedAt: null,
+        OR: [{ id: paymentId }, { paymentNumber: paymentId }],
+      },
       include: PAYMENT_INCLUDE,
     });
     if (!payment) {
-      throw new NotFoundException(`Payment with ID "${paymentId}" not found.`);
+      throw new NotFoundException(`Payment with ID or number "${paymentId}" not found.`);
     }
     return payment;
   }
@@ -415,11 +433,17 @@ export class PaymentsService {
     documentId: string,
   ): Promise<string> {
     const invoice = await tx.invoice.findFirst({
-      where: { documentId, document: { companyId, documentType: DocumentType.INVOICE } },
+      where: {
+        document: {
+          companyId,
+          documentType: DocumentType.INVOICE,
+          OR: [{ id: documentId }, { documentNumber: documentId }],
+        },
+      },
       select: { id: true },
     });
     if (!invoice) {
-      throw new NotFoundException(`Invoice with ID "${documentId}" not found.`);
+      throw new NotFoundException(`Invoice with ID or number "${documentId}" not found.`);
     }
     await tx.$queryRaw`SELECT "id" FROM "invoices" WHERE "id" = ${invoice.id} FOR UPDATE`;
     return invoice.id;

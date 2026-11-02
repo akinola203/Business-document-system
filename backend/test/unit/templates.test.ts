@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
+import { ForbiddenException } from '@nestjs/common';
 import { TemplatesService } from '../../src/modules/templates/templates.service';
+import { TemplatesController } from '../../src/modules/templates/templates.controller';
 import {
   renderInvoiceHtml,
   renderWaybillHtml,
@@ -432,5 +434,38 @@ test('Templates & HTML Renderers Unit Tests', async (t) => {
     assert.ok(renderedHtml.includes('Original Snapshot v1'));
     assert.ok(!renderedHtml.includes('Live Mutated'));
     assert.ok(renderedHtml.includes('215,000.00'));
+  });
+
+  await t.test('8. TemplatesController enforces document view permissions on render and findAll', async () => {
+    const controller = new TemplatesController(templatesService);
+    const noPermsUser: any = {
+      id: 'usr-none',
+      companyId: 'comp-1',
+      role: 'Staff',
+      permissions: [],
+    };
+
+    await assert.rejects(
+      async () => {
+        await controller.findAll(noPermsUser);
+      },
+      ForbiddenException,
+    );
+
+    await assert.rejects(
+      async () => {
+        await controller.renderDocumentHtml(noPermsUser, 'doc-inv-1');
+      },
+      ForbiddenException,
+    );
+
+    const invoiceViewer: any = {
+      id: 'usr-inv',
+      companyId: 'comp-1',
+      role: 'Staff',
+      permissions: ['invoice:view'],
+    };
+    const html = await controller.renderDocumentHtml(invoiceViewer, 'doc-inv-1');
+    assert.ok(html.includes('Original Snapshot v1'));
   });
 });

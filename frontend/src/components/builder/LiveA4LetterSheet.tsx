@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { Company, TemplateLayoutConfig } from '../../types';
 import { formatDate } from '../../lib/utils';
 import { Shield, Award, CheckCircle, ShieldCheck, QrCode } from 'lucide-react';
@@ -44,6 +45,10 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
     .split('\n\n')
     .map((p) => p.trim())
     .filter(Boolean);
+
+  const sanitizedBodyHtml = formValues?.bodyHtml
+    ? DOMPurify.sanitize(formValues.bodyHtml)
+    : '';
 
   const headerAlignClass =
     logoPosition === 'left'
@@ -141,7 +146,12 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
 
         {/* 5. Letter Body Content */}
         <div className="space-y-3.5 text-xs text-slate-800 leading-relaxed text-justify">
-          {paragraphs.length === 0 ? (
+          {sanitizedBodyHtml ? (
+            <div
+              className="space-y-3.5 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: sanitizedBodyHtml }}
+            />
+          ) : paragraphs.length === 0 ? (
             <p className="text-slate-400 italic">
               Draft your corporate correspondence in the editor on the left to see live typeset rendering.
             </p>

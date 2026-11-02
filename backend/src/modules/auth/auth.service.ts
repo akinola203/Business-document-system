@@ -399,12 +399,14 @@ export class AuthService {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = this.hashToken(resetToken);
     const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // 20 minutes expiration
 
+    // Store only SHA-256 hash of reset token; atomically invalidates any previously issued unexpired token
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        passwordResetToken: resetToken,
+        passwordResetToken: resetTokenHash,
         passwordResetExpiresAt: expiresAt,
       },
     });
@@ -419,20 +421,14 @@ export class AuthService {
 
     if (this.mailService) {
       await this.mailService.sendPasswordResetEmail(user.email, resetLink, user.firstName);
-    } else {
+    } else if (process.env.NODE_ENV !== 'production') {
       this.logger.log(
-        `\n======================================================\n` +
-        `[PASSWORD RESET EMAIL DISPATCH SIMULATION]\n` +
-        `To: ${user.email} (${user.firstName} ${user.lastName})\n` +
-        `Reset URL: ${resetLink}\n` +
-        `Expires At: ${expiresAt.toISOString()} (20 minutes)\n` +
-        `======================================================\n`,
+        `[PASSWORD RESET EMAIL DISPATCH SIMULATION] Dispatched reset link for ${user.email} (expires at ${expiresAt.toISOString()})`,
       );
     }
 
     return {
       message: 'If an account exists with this email address, a password reset link has been sent.',
-      ...(process.env.NODE_ENV !== 'production' ? { debugResetLink: resetLink, token: resetToken } : {}),
     };
   }
 
@@ -464,9 +460,10 @@ export class AuthService {
       throw new BadRequestException('Password must be at least 8 characters long.');
     }
 
+    const tokenHash = this.hashToken(rawToken);
     const user = await this.prisma.user.findFirst({
       where: {
-        passwordResetToken: rawToken,
+        passwordResetToken: tokenHash,
       },
     });
 

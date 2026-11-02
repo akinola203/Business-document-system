@@ -160,12 +160,18 @@ test('PaymentsService Unit Tests', async (t) => {
   const mockPrisma: any = {
     document: {
       findFirst: async ({ where }: any) => {
-        const doc = documentsDb.find(
-          (d) =>
-            d.id === where.id &&
-            d.companyId === where.companyId &&
-            (!where.documentType || d.documentType === where.documentType),
-        );
+        const doc = documentsDb.find((d) => {
+          if (where.id && d.id !== where.id) return false;
+          if (where.companyId && d.companyId !== where.companyId) return false;
+          if (where.documentType && d.documentType !== where.documentType) return false;
+          if (where.OR) {
+            const matchesOr = where.OR.some(
+              (c: any) => (c.id && d.id === c.id) || (c.documentNumber && d.documentNumber === c.documentNumber),
+            );
+            if (!matchesOr) return false;
+          }
+          return true;
+        });
         if (!doc) return null;
         const inv = invoicesDb.find((i) => i.documentId === doc.id);
         return {
@@ -186,7 +192,17 @@ test('PaymentsService Unit Tests', async (t) => {
     },
     invoice: {
       findFirst: async ({ where }: any) => {
-        const doc = documentsDb.find((d) => d.id === where.documentId && d.companyId === where.document?.companyId);
+        const doc = documentsDb.find((d) => {
+          if (where.documentId && d.id !== where.documentId) return false;
+          if (where.document?.companyId && d.companyId !== where.document.companyId) return false;
+          if (where.document?.OR) {
+            const matchesOr = where.document.OR.some(
+              (c: any) => (c.id && d.id === c.id) || (c.documentNumber && d.documentNumber === c.documentNumber),
+            );
+            if (!matchesOr) return false;
+          }
+          return true;
+        });
         if (!doc) return null;
         const inv = invoicesDb.find((i) => i.documentId === doc.id);
         return inv ? { id: inv.id } : null;
@@ -207,6 +223,12 @@ test('PaymentsService Unit Tests', async (t) => {
           if (where.referenceNumber) {
             const searchRef = where.referenceNumber.equals || where.referenceNumber;
             if (p.referenceNumber.toLowerCase() !== searchRef.toLowerCase()) return false;
+          }
+          if (where.OR) {
+            const matchesOr = where.OR.some(
+              (c: any) => (c.id && p.id === c.id) || (c.paymentNumber && p.paymentNumber === c.paymentNumber),
+            );
+            if (!matchesOr) return false;
           }
           return true;
         });
@@ -542,5 +564,28 @@ test('PaymentsService Unit Tests', async (t) => {
     assert.equal(ledger.payments.length, 3); // 2 active, 1 reversed
     assert.equal(ledger.summary.paymentStatus, InvoicePaymentStatus.PAID);
     assert.equal(ledger.summary.isOverdue, false);
+  });
+
+  await t.test('finds and reverses a payment using human-readable paymentNumber (e.g. PAY-2026-000002)', async () => {
+    // Locate active payment #2 in paymentsDb
+    const activePayment = paymentsDb.find((p) => !p.isReversed);
+    assert.ok(activePayment);
+    assert.ok(activePayment.paymentNumber);
+
+    // 1. findOne by paymentNumber
+    const found = await service.findOne('comp-1', activePayment.paymentNumber);
+    assert.equal(found.id, activePayment.id);
+    assert.equal(found.paymentNumber, activePayment.paymentNumber);
+
+    // 2. reversePayment by paymentNumber
+    const reversed = await service.reversePayment(
+      'comp-1',
+      activePayment.paymentNumber,
+      { reason: 'Reversed using human-readable paymentNumber instead of UUID' },
+      'usr-manager',
+    );
+    assert.equal(reversed.payment.id, activePayment.id);
+    assert.equal(reversed.payment.isReversed, true);
+    assert.equal(reversed.payment.reversalReason, 'Reversed using human-readable paymentNumber instead of UUID');
   });
 });

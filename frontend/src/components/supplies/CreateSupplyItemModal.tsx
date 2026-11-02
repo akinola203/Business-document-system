@@ -52,38 +52,11 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
       }
       handleClose();
     },
-    onError: () => {
-      // Offline / fallback mock item
-      const chosenVendor = vendors.find((v) => v.id === preferredVendorId);
-      const fallbackItem: SupplyItem = {
-        id: `sup-local-${Date.now()}`,
-        companyId: 'c0000000-0000-0000-0000-000000000001',
-        preferredVendorId: preferredVendorId || null,
-        sku: sku.trim().toUpperCase(),
-        name: name.trim(),
-        category,
-        description: description.trim() || null,
-        unit,
-        unitCost: Number(unitCost) || 0,
-        sellingPrice: Number(sellingPrice) || 0,
-        taxRate: Number(taxRate) || 7.5,
-        currentStock: Number(currentStock) || 0,
-        reorderLevel: Number(reorderLevel) || 10,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        preferredVendor: chosenVendor
-          ? {
-              id: chosenVendor.id,
-              name: chosenVendor.name,
-              vendorCode: chosenVendor.vendorCode,
-            }
-          : null,
-      };
-
-      if (onItemCreated) {
-        onItemCreated(fallbackItem);
-      }
-      handleClose();
+    onError: (err: any) => {
+      const serverMessage = Array.isArray(err?.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : err?.response?.data?.message;
+      setErrorMessage(serverMessage || err?.message || 'Failed to add supply item.');
     },
   });
 

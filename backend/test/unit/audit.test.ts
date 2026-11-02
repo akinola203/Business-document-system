@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
+import { ForbiddenException } from '@nestjs/common';
 import { AuditService } from '../../src/modules/audit/audit.service';
+import { applySoftDeleteMiddlewareParams } from '../../src/modules/prisma/prisma.service';
+import { HealthController } from '../../src/modules/health/health.controller';
 
 test('AuditService Unit Tests', async (t) => {
   const auditLogsStore: any[] = [];
@@ -15,7 +18,10 @@ test('AuditService Unit Tests', async (t) => {
       findMany: async ({ where, skip = 0, take = 20 }: any) => {
         let filtered = [...auditLogsStore];
         if (where?.companyId) filtered = filtered.filter((l) => l.companyId === where.companyId);
-        if (where?.entityType) filtered = filtered.filter((l) => l.entityType === where.entityType);
+        if (where?.entityType) {
+          const expected = typeof where.entityType === 'object' && 'equals' in where.entityType ? where.entityType.equals : where.entityType;
+          filtered = filtered.filter((l) => l.entityType?.toLowerCase() === String(expected)?.toLowerCase());
+        }
         if (where?.entityId) filtered = filtered.filter((l) => l.entityId === where.entityId);
         if (where?.action) filtered = filtered.filter((l) => l.action === where.action);
         return filtered.slice(skip, skip + take);
@@ -23,7 +29,10 @@ test('AuditService Unit Tests', async (t) => {
       count: async ({ where }: any) => {
         let filtered = [...auditLogsStore];
         if (where?.companyId) filtered = filtered.filter((l) => l.companyId === where.companyId);
-        if (where?.entityType) filtered = filtered.filter((l) => l.entityType === where.entityType);
+        if (where?.entityType) {
+          const expected = typeof where.entityType === 'object' && 'equals' in where.entityType ? where.entityType.equals : where.entityType;
+          filtered = filtered.filter((l) => l.entityType?.toLowerCase() === String(expected)?.toLowerCase());
+        }
         return filtered.length;
       },
     },
@@ -99,5 +108,73 @@ test('AuditService Unit Tests', async (t) => {
     const history = await auditService.getEntityHistory('comp-1', 'Document', 'doc-100');
     assert.equal(history.length, 1);
     assert.equal(history[0].entityId, 'doc-100');
+  });
+
+  await t.test('sanitize redacts substring-matched keys (/pass|token|secret|authorization|cvv|pin$|hash/i)', () => {
+    const payload = {
+      authorizationHeader: 'Bearer eyJhbGci...',
+      userPin: '1234',
+      pinNumber: 'not-ending-in-pin',
+      apiSecretKey: 'sk_live_123',
+      resetTokenHash: 'sha256-digest',
+      adminPasscode: 'pass-999',
+    };
+
+    const sanitized = auditService.sanitize(payload) as any;
+    assert.equal(sanitized.authorizationHeader, '[REDACTED]');
+    assert.equal(sanitized.userPin, '[REDACTED]');
+    assert.equal(sanitized.pinNumber, 'not-ending-in-pin');
+    assert.equal(sanitized.apiSecretKey, '[REDACTED]');
+    assert.equal(sanitized.resetTokenHash, '[REDACTED]');
+    assert.equal(sanitized.adminPasscode, '[REDACTED]');
+  });
+
+  await t.test('Prisma soft-delete middleware injects deletedAt: null on aggregate and groupBy queries', () => {
+    const aggParams: any = { model: 'Document', action: 'aggregate', args: { where: { companyId: 'comp-1' } } };
+    applySoftDeleteMiddlewareParams(aggParams);
+    assert.strictEqual(aggParams.args.where.deletedAt, null);
+
+    const groupByParams: any = { model: 'Client', action: 'groupBy', args: {} };
+    applySoftDeleteMiddlewareParams(groupByParams);
+    assert.strictEqual(groupByParams.args.where.deletedAt, null);
+  });
+
+  await t.test('HealthController requires internal health token or audit:view permission on /health/database and /health/storage', async () => {
+    const prevToken = process.env.HEALTH_CHECK_TOKEN;
+    process.env.HEALTH_CHECK_TOKEN = 'internal-health-secret-token';
+
+    const healthController = new HealthController({
+      $queryRaw: async () => [{ '?column?': 1 }],
+    } as any);
+
+    // Rejects when neither valid token nor audit:view user is provided
+    await assert.rejects(
+      async () => {
+        await healthController.checkDatabase(
+          { headers: { 'x-health-token': 'wrong-token' } } as any,
+          { permissions: [] } as any,
+        );
+      },
+      ForbiddenException,
+    );
+
+    // Succeeds with valid x-health-token
+    const dbHealth = await healthController.checkDatabase(
+      { headers: { 'x-health-token': 'internal-health-secret-token' } } as any,
+      undefined,
+    );
+    assert.strictEqual(dbHealth.database, 'connected');
+    assert.strictEqual((dbHealth as any).nodeVersion, undefined);
+
+    // Succeeds with audit:view user even without token
+    const storageHealth = await healthController.checkStorage(undefined, {
+      role: 'Staff',
+      permissions: ['audit:view'],
+    } as any);
+    assert.strictEqual(storageHealth.storage, 'writable');
+    assert.strictEqual((storageHealth as any).storagePath, undefined);
+
+    if (prevToken === undefined) delete process.env.HEALTH_CHECK_TOKEN;
+    else process.env.HEALTH_CHECK_TOKEN = prevToken;
   });
 });

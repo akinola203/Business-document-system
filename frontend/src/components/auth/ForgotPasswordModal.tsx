@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { apiClient } from '../../lib/api-client';
-import { X, Mail, KeyRound, ArrowRight, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
+import { X, Mail, KeyRound, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -17,14 +17,12 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [debugLink, setDebugLink] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (isOpen) {
       setEmail(initialEmail);
       setIsSuccess(false);
       setErrorMessage(null);
-      setDebugLink(null);
     }
   }, [isOpen, initialEmail]);
 
@@ -38,15 +36,10 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     setErrorMessage(null);
 
     try {
-      const response = await apiClient.post('/auth/forgot-password', {
+      await apiClient.post('/auth/forgot-password', {
         email: email.trim().toLowerCase(),
       });
-
-      const data = response.data?.data || response.data;
       setIsSuccess(true);
-      if (data?.debugResetLink) {
-        setDebugLink(data.debugResetLink);
-      }
     } catch (err: any) {
       const msg =
         err.response?.data?.message ||
@@ -155,26 +148,6 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             <p className="text-[11px] text-slate-400 mt-2">
               Please check your inbox and spam folder. The link is valid for 20 minutes.
             </p>
-
-            {/* Local / Development Quick-Access Callout */}
-            {debugLink && (
-              <div className="mt-4 p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-left">
-                <div className="text-[11px] font-bold text-indigo-900 flex items-center gap-1.5 mb-1">
-                  <span>⚡ Development Reset Link</span>
-                </div>
-                <p className="text-[11px] text-indigo-700 mb-2">
-                  In local testing mode, you can open the reset page directly:
-                </p>
-                <a
-                  href={debugLink}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5847F6] hover:underline break-all"
-                  onClick={onClose}
-                >
-                  <span>Open Password Reset View</span>
-                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                </a>
-              </div>
-            )}
 
             <button
               type="button"

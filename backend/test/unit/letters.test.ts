@@ -31,6 +31,7 @@ test('LettersService Unit Tests', async (t) => {
         documentsDb[idx] = { ...documentsDb[idx], ...data };
         return documentsDb[idx];
       },
+      updateMany: async () => ({ count: 1 }),
     },
     letter: {
       create: async ({ data }: any) => {
@@ -119,6 +120,35 @@ test('LettersService Unit Tests', async (t) => {
     // Script tag and javascript link must be stripped
     assert.ok(!letter.letter?.bodyHtml.includes('<script>'));
     assert.ok(!letter.letter?.bodyHtml.includes('javascript:'));
+  });
+
+  await t.test('createDraft and updateDraft escape plain bodyText fallback when bodyHtml is omitted', async () => {
+    const draft = await service.createDraft(
+      'comp-1',
+      {
+        title: 'Fallback HTML Escaping Test',
+        recipientName: 'Dr. Babatunde Raji',
+        subject: 'Escaping Check',
+        bodyText: 'Hello <img src=x onerror=alert(1)>\n\nSecond paragraph & <script>evil()</script>',
+        signatoryName: 'Alade Adebayo',
+      },
+      'usr-1',
+    );
+
+    assert.ok(!draft.letter?.bodyHtml.includes('<script>'));
+    assert.ok(!draft.letter?.bodyHtml.includes('<img'));
+    assert.ok(draft.letter?.bodyHtml.includes('&lt;img'));
+
+    const updated = await service.updateDraft(
+      'comp-1',
+      draft.id,
+      {
+        bodyText: 'Updated <script>alert(2)</script> text',
+      },
+      'usr-1',
+    );
+    assert.ok(!updated.letter?.bodyHtml.includes('<script>'));
+    assert.ok(updated.letter?.bodyHtml.includes('&lt;script&gt;'));
   });
 
   await t.test('createDraft rejects cross-tenant foreign key', async () => {

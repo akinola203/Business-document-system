@@ -1,7 +1,10 @@
+import { BadRequestException } from '@nestjs/common';
 import Decimal from 'decimal.js';
 
 // Configure Decimal.js with 20 decimal places and standard half-up commercial rounding
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
+
+export const MAX_FINANCIAL_AMOUNT = new Decimal('999999999999.99');
 
 export interface RawLineItem {
   quantity: number | string | Decimal;
@@ -94,14 +97,29 @@ export class FinancialMathUtil {
     }
 
     const netSubtotal = grossSubtotal.minus(totalDiscount).toDecimalPlaces(2);
+    const roundedDiscount = totalDiscount.toDecimalPlaces(2);
+    const roundedTax = totalTax.toDecimalPlaces(2);
+    const roundedTotal = totalAmount.toDecimalPlaces(2);
+
+    if (
+      netSubtotal.greaterThan(MAX_FINANCIAL_AMOUNT) ||
+      roundedDiscount.greaterThan(MAX_FINANCIAL_AMOUNT) ||
+      roundedTax.greaterThan(MAX_FINANCIAL_AMOUNT) ||
+      roundedTotal.greaterThan(MAX_FINANCIAL_AMOUNT)
+    ) {
+      throw new BadRequestException(
+        'Financial amount overflow: subtotal, discount, tax, or total exceeds maximum supported limit (999,999,999,999.99).',
+      );
+    }
+
     const paid = toSafeDecimal(totalPaid, 0).toDecimalPlaces(2);
-    const balance = totalAmount.minus(paid).toDecimalPlaces(2);
+    const balance = roundedTotal.minus(paid).toDecimalPlaces(2);
 
     return {
       subtotal: netSubtotal,
-      discountAmount: totalDiscount.toDecimalPlaces(2),
-      taxAmount: totalTax.toDecimalPlaces(2),
-      totalAmount: totalAmount.toDecimalPlaces(2),
+      discountAmount: roundedDiscount,
+      taxAmount: roundedTax,
+      totalAmount: roundedTotal,
       balanceDue: balance.isNegative() ? new Decimal(0) : balance,
       items: calculatedItems,
     };

@@ -47,4 +47,14 @@ export class QueryAuditLogsDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for startDate (ISO string)' })
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for endDate (ISO string)' })
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string;
 }

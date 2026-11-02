@@ -75,15 +75,78 @@ export const App: React.FC = () => {
             >
               <Route index element={<Navigate to="/overview" replace />} />
               <Route path="/overview" element={<OverviewDashboard />} />
-              <Route path="/documents/invoices" element={<InvoicesPage />} />
-              <Route path="/documents/invoices/new" element={<InvoiceBuilderPage />} />
-              <Route path="/documents/invoices/:id/edit" element={<InvoiceBuilderPage />} />
-              <Route path="/documents/waybills" element={<WaybillsPage />} />
-              <Route path="/documents/waybills/new" element={<WaybillBuilderPage />} />
-              <Route path="/documents/waybills/:id/edit" element={<WaybillBuilderPage />} />
-              <Route path="/documents/letters" element={<LettersPage />} />
-              <Route path="/documents/letters/new" element={<LetterBuilderPage />} />
-              <Route path="/documents/letters/:id/edit" element={<LetterBuilderPage />} />
+              <Route
+                path="/documents/invoices"
+                element={
+                  <ProtectedRoute requiredPermission="invoice:view">
+                    <InvoicesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/invoices/new"
+                element={
+                  <ProtectedRoute requiredPermission="invoice:create">
+                    <InvoiceBuilderPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/invoices/:id/edit"
+                element={
+                  <ProtectedRoute requiredPermission="invoice:update">
+                    <InvoiceBuilderPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/waybills"
+                element={
+                  <ProtectedRoute requiredPermission="waybill:view">
+                    <WaybillsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/waybills/new"
+                element={
+                  <ProtectedRoute requiredPermission="waybill:create">
+                    <WaybillBuilderPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/waybills/:id/edit"
+                element={
+                  <ProtectedRoute requiredPermission="waybill:update">
+                    <WaybillBuilderPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/letters"
+                element={
+                  <ProtectedRoute requiredPermission="letter:view">
+                    <LettersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/letters/new"
+                element={
+                  <ProtectedRoute requiredPermission="letter:create">
+                    <LetterBuilderPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documents/letters/:id/edit"
+                element={
+                  <ProtectedRoute requiredPermission="letter:update">
+                    <LetterBuilderPage />
+                  </ProtectedRoute>
+                }
+              />
               {/* Direct Route Aliases */}
               <Route path="/documents" element={<Navigate to="/documents/invoices" replace />} />
               <Route path="/invoices" element={<Navigate to="/documents/invoices" replace />} />
@@ -93,11 +156,46 @@ export const App: React.FC = () => {
               <Route path="/settings" element={<Navigate to="/settings/company" replace />} />
               <Route path="/settings/audit-logs" element={<Navigate to="/audit-logs" replace />} />
               <Route path="/audit" element={<Navigate to="/audit-logs" replace />} />
-              <Route path="/payments" element={<PaymentsPage />} />
-              <Route path="/clients" element={<ClientsPage />} />
-              <Route path="/vendors" element={<VendorsPage />} />
-              <Route path="/supplies" element={<SuppliesPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
+              <Route
+                path="/payments"
+                element={
+                  <ProtectedRoute requiredPermission="payment:view">
+                    <PaymentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clients"
+                element={
+                  <ProtectedRoute requiredPermission="clients:view">
+                    <ClientsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/vendors"
+                element={
+                  <ProtectedRoute requiredPermission="vendors:view">
+                    <VendorsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/supplies"
+                element={
+                  <ProtectedRoute requiredPermission="supplies:view">
+                    <SuppliesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute requiredPermission="reports:view">
+                    <ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/audit-logs"
                 element={

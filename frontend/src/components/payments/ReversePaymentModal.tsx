@@ -29,21 +29,10 @@ export const ReversePaymentModal: React.FC<ReversePaymentModalProps> = ({
         throw new Error('A detailed reversal audit reason of at least 5 characters is mandatory.');
       }
 
-      try {
-        const res = await apiClient.post(`/payments/${payment.id}/reverse`, {
-          reason: reason.trim(),
-        });
-        return res.data;
-      } catch (err: any) {
-        // Standalone offline fallback
-        if (!err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-          payment.isReversed = true;
-          payment.reversedAt = new Date().toISOString();
-          payment.reversalReason = reason.trim();
-          return payment;
-        }
-        throw err;
-      }
+      const res = await apiClient.post(`/payments/${payment.id}/reverse`, {
+        reason: reason.trim(),
+      });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });

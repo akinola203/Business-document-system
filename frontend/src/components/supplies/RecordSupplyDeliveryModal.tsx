@@ -124,56 +124,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
         ? err.response.data.message.join(', ')
         : err?.response?.data?.message;
 
-      if (serverMessage) {
-        setErrorMessage(serverMessage);
-        return;
-      }
-
-      // Offline fallback
-      const chosenVendor = vendors.find((v) => v.id === vendorId);
-      const fallbackOrder: SupplyOrder = {
-        id: `so-local-${Date.now()}`,
-        companyId: 'c0000000-0000-0000-0000-000000000001',
-        supplyNumber: `SUP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-        vendorId,
-        supplyDate,
-        deliveryRef: deliveryRef.trim() || null,
-        status,
-        currency,
-        subtotal,
-        taxTotal,
-        grandTotal,
-        amountPaid: status === 'RECEIVED' ? grandTotal : 0,
-        notes: notes.trim() || null,
-        createdAt: new Date().toISOString(),
-        vendor: chosenVendor
-          ? {
-              id: chosenVendor.id,
-              name: chosenVendor.name,
-              vendorCode: chosenVendor.vendorCode,
-              category: chosenVendor.category,
-            }
-          : undefined,
-        items: rows.map((r, i) => {
-          const matchedItem = supplies.find((s) => s.id === r.supplyItemId);
-          return {
-            id: `soi-local-${Date.now()}-${i}`,
-            supplyOrderId: `so-local-${Date.now()}`,
-            supplyItemId: r.supplyItemId,
-            description: matchedItem?.name || 'Supply Item',
-            unit: matchedItem?.unit || 'Units',
-            quantity: r.quantity,
-            unitCost: r.unitCost,
-            lineTotal: r.quantity * r.unitCost,
-            supplyItem: matchedItem,
-          };
-        }),
-      };
-
-      if (onOrderRecorded) {
-        onOrderRecorded(fallbackOrder);
-      }
-      handleClose();
+      setErrorMessage(serverMessage || err?.message || 'Failed to record supply delivery.');
     },
   });
 

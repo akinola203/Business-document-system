@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { apiClient } from '../../lib/api-client';
 import {
@@ -16,7 +16,18 @@ import {
 export const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const [token] = useState<string | null>(() => searchParams.get('token'));
+
+  // Immediately strip raw reset token from browser URL bar and history to prevent Referer/history leakage
+  useEffect(() => {
+    if (searchParams.get('token') && typeof window !== 'undefined' && window.history?.replaceState) {
+      const cleanUrl =
+        window.location.protocol === 'file:'
+          ? `${window.location.pathname}#/auth/reset-password`
+          : window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, [searchParams]);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

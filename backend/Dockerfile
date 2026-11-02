@@ -73,7 +73,8 @@ COPY prisma ./prisma/
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
-RUN npx prisma generate
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 # Create persistent storage folder and set permissions
 RUN mkdir -p /app/storage/secure-uploads && chown -R node:node /app
@@ -82,4 +83,6 @@ USER node
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/src/main.js"]
+# Run schema migrations out-of-band before starting the container:
+#   npx prisma migrate deploy
+CMD ["node", "dist/src/main.js"]

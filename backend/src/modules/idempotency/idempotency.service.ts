@@ -54,12 +54,31 @@ export class IdempotencyService {
       // Check for expiration
       if (existing.expiresAt < now) {
         await this.prisma.idempotencyKey.delete({ where: { id: existing.id } });
-      } else if (existing.responseStatus === null) {
-        // In-flight concurrent request with the same idempotency key
-        throw new ConflictException(
-          `A mutation with idempotency key "${key}" is currently in progress. Please wait for completion.`,
-        );
       } else {
+        // Strict validation of userId, endpoint, and requestHash on idempotency key reuse
+        if (existing.userId !== userId) {
+          throw new ConflictException(
+            `Idempotency key "${key}" belongs to a different user session.`,
+          );
+        }
+        if (existing.endpoint !== endpoint) {
+          throw new ConflictException(
+            `Idempotency key "${key}" was already used for a different endpoint.`,
+          );
+        }
+        if (existing.requestHash !== requestHash) {
+          throw new ConflictException(
+            `Idempotency key "${key}" was already used with a different request payload.`,
+          );
+        }
+
+        if (existing.responseStatus === null) {
+          // In-flight concurrent request with the same idempotency key
+          throw new ConflictException(
+            `A mutation with idempotency key "${key}" is currently in progress. Please wait for completion.`,
+          );
+        }
+
         // Return cached response
         this.logger.debug(
           `Idempotency cache hit for key "${key}" on endpoint "${endpoint}" (status ${existing.responseStatus}).`,

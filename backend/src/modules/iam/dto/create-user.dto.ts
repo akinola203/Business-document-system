@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { z } from 'zod';
 
 export const createUserSchema = z.object({
@@ -7,7 +7,11 @@ export const createUserSchema = z.object({
   fullName: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  password: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password cannot exceed 128 characters')
+    .optional(),
   phone: z.string().optional(),
   roleId: z.string().min(1, 'Role ID is required'),
   departmentId: z.string().optional(),
@@ -41,6 +45,7 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   @MinLength(8)
+  @MaxLength(128)
   password?: string;
 
   @ApiPropertyOptional({ example: '+234 802 333 4455', description: 'Contact telephone' })

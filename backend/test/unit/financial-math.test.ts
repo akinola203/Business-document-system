@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
+import { BadRequestException } from '@nestjs/common';
 import { FinancialMathUtil } from '../../src/modules/documents/utils/financial-math.util';
 
 test('FinancialMathUtil Authoritative Math Tests', async (t) => {
@@ -105,6 +106,17 @@ test('FinancialMathUtil Authoritative Math Tests', async (t) => {
     assert.strictEqual(feTotals.totalDiscount, beTotals.discountAmount.toNumber());
     assert.strictEqual(feTotals.totalTax, beTotals.taxAmount.toNumber());
     assert.strictEqual(feTotals.grandTotal, beTotals.totalAmount.toNumber());
+  });
+
+  await t.test('throws BadRequestException when subtotal, tax, or total exceeds 999999999999.99', () => {
+    assert.throws(
+      () => {
+        FinancialMathUtil.calculateDocumentTotals([
+          { quantity: 1000000, unitPrice: 1000000, discountPercent: 0, taxRate: 7.5 },
+        ]);
+      },
+      (err: any) => err instanceof BadRequestException && /exceeds.*maximum supported limit/i.test(err.message),
+    );
   });
 });
 

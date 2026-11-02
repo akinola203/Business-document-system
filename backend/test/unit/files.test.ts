@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
+import { ForbiddenException } from '@nestjs/common';
 import { FilesService } from '../../src/modules/files/files.service';
+import { FilesController } from '../../src/modules/files/files.controller';
 import { LocalStorageService } from '../../src/modules/files/storage/local-storage.service';
-import { FileCategory } from '@prisma/client';
+import { FileCategory, DocumentType } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -26,7 +28,7 @@ test('Files & Secure Storage Unit Tests', async (t) => {
     document: {
       findFirst: async ({ where }: any) => {
         if (where.id === 'doc-valid' && where.companyId === 'comp-1') {
-          return { id: 'doc-valid', companyId: 'comp-1' };
+          return { id: 'doc-valid', companyId: 'comp-1', documentType: DocumentType.INVOICE };
         }
         return null;
       },
@@ -232,6 +234,54 @@ test('Files & Secure Storage Unit Tests', async (t) => {
         await filesService.uploadFile('comp-1', fakePdfFile, {}, 'user-1');
       },
       /File binary signature \(magic bytes\) does not match reported MIME type/,
+    );
+  });
+
+  await t.test('11. FilesController enforces document and company permissions on upload/download/delete', async () => {
+    const controller = new FilesController(filesService);
+    const validFile: any = {
+      buffer: Buffer.from('%PDF-1.4 Valid PDF stream'),
+      originalname: 'attachment.pdf',
+      mimetype: 'application/pdf',
+    };
+
+    const unprivilegedUser: any = {
+      id: 'usr-unpriv',
+      companyId: 'comp-1',
+      role: 'Staff',
+      permissions: ['waybill:view'], // lacks invoice:update / invoice:view
+    };
+
+    // Unprivileged user cannot upload attachment to an INVOICE document
+    await assert.rejects(
+      async () => {
+        await controller.uploadFile(unprivilegedUser, validFile, { documentId: 'doc-valid' });
+      },
+      ForbiddenException,
+    );
+
+    // User with invoice:update can upload attachment to INVOICE document
+    const invoiceEditor: any = {
+      id: 'usr-editor',
+      companyId: 'comp-1',
+      role: 'Staff',
+      permissions: ['invoice:update', 'invoice:view'],
+    };
+    const uploaded = await controller.uploadFile(invoiceEditor, validFile, { documentId: 'doc-valid' });
+    assert.ok(uploaded.id);
+
+    // Unprivileged user cannot download or delete the invoice file
+    await assert.rejects(
+      async () => {
+        await controller.downloadFile(unprivilegedUser, uploaded.id, {} as any);
+      },
+      ForbiddenException,
+    );
+    await assert.rejects(
+      async () => {
+        await controller.deleteFile(unprivilegedUser, uploaded.id);
+      },
+      ForbiddenException,
     );
   });
 

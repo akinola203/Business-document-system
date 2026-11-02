@@ -109,43 +109,8 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
           })),
       };
 
-      try {
-        const res = await apiClient.post('/clients', payload);
-        return res.data;
-      } catch (err: any) {
-        // Offline demo fallback
-        if (!err.response || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-          const fakeClient: Client = {
-            id: `cli-local-${Date.now()}`,
-            companyId: 'c0000000-0000-0000-0000-000000000001',
-            clientNumber: `CLI-${Math.floor(10000 + Math.random() * 90000)}`,
-            type,
-            name: name.trim(),
-            companyName: companyName.trim() || null,
-            email: email.trim() || null,
-            phone: phone.trim() || null,
-            taxNumber: taxNumber.trim() || null,
-            rcNumber: rcNumber.trim() || null,
-            creditLimit: creditLimit ? parseFloat(creditLimit) : null,
-            paymentTermsDays: paymentTermsDays ? parseInt(paymentTermsDays, 10) : 30,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            addresses: addresses.map((a, i) => ({
-              id: `addr-local-${i}-${Date.now()}`,
-              clientId: `cli-local-${Date.now()}`,
-              type: a.type,
-              line1: a.line1.trim() || 'Head Office Address',
-              city: a.city || 'Lagos',
-              state: a.state || 'Lagos State',
-              country: a.country || 'Nigeria',
-              isDefault: i === 0 || a.isDefault,
-            })),
-          };
-          return fakeClient;
-        }
-        throw err;
-      }
+      const res = await apiClient.post('/clients', payload);
+      return res.data;
     },
     onSuccess: (savedClient) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });

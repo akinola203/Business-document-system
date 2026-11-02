@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -19,6 +20,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { buildAllowedCorsOrigins, isOriginAllowed } from '../../common/utils/cors.util';
 
 const REFRESH_COOKIE_NAME = 'refresh_token';
 
@@ -32,15 +34,54 @@ export class AuthController {
     const apiPrefix = process.env.API_PREFIX || 'api/v1';
     const cleanPrefix = apiPrefix.startsWith('/') ? apiPrefix : `/${apiPrefix}`;
     const cookiePath = process.env.REFRESH_COOKIE_PATH || `${cleanPrefix}/auth`;
-    const sameSiteConfig = (process.env.REFRESH_COOKIE_SAME_SITE || (isProd ? 'none' : 'lax')) as 'strict' | 'lax' | 'none';
+    const rawSameSite = (
+      process.env.COOKIE_SAMESITE ||
+      process.env.REFRESH_COOKIE_SAME_SITE ||
+      'lax'
+    ).toLowerCase();
+    const sameSiteConfig = (
+      ['strict', 'lax', 'none'].includes(rawSameSite) ? rawSameSite : 'lax'
+    ) as 'strict' | 'lax' | 'none';
 
     return {
       httpOnly: true,
-      secure: isProd,
+      secure: isProd || sameSiteConfig === 'none',
       sameSite: sameSiteConfig,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: cookiePath,
     };
+  }
+
+  /**
+   * CSRF protection for cookie-bearing POST endpoints (/auth/refresh and /auth/logout).
+   * Blocks cross-site POSTs that lack a valid allowlisted Origin (or Referer origin).
+   */
+  private assertTrustedOrigin(req: Request): void {
+    const isProd = process.env.NODE_ENV === 'production';
+    const allowedOrigins = buildAllowedCorsOrigins({
+      corsOrigin: process.env.CORS_ORIGIN,
+      frontendUrl: process.env.FRONTEND_URL,
+      appUrl: process.env.APP_URL || 'http://localhost:5173',
+      nodeEnv: process.env.NODE_ENV || 'development',
+    });
+
+    const rawOrigin = (req.headers?.origin as string | undefined) || req.get?.('origin');
+    const rawReferer = (req.headers?.referer as string | undefined) || req.get?.('referer');
+
+    let candidateOrigin = rawOrigin?.trim();
+    if (!candidateOrigin && rawReferer) {
+      try {
+        candidateOrigin = new URL(rawReferer).origin;
+      } catch {
+        candidateOrigin = undefined;
+      }
+    }
+
+    if (!candidateOrigin || !isOriginAllowed(candidateOrigin, allowedOrigins, isProd)) {
+      throw new ForbiddenException(
+        'Cross-site POST blocked: missing or untrusted Origin header.',
+      );
+    }
   }
 
   @Public()
@@ -93,6 +134,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    this.assertTrustedOrigin(req);
     const rawRefreshToken = req.cookies?.[REFRESH_COOKIE_NAME] || req.body?.refreshToken;
     const ipAddress = req.ip || req.socket.remoteAddress;
     const userAgent = req.get('user-agent');
@@ -115,6 +157,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    this.assertTrustedOrigin(req);
     const rawRefreshToken = req.cookies?.[REFRESH_COOKIE_NAME] || req.body?.refreshToken;
     await this.authService.logout(rawRefreshToken);
 

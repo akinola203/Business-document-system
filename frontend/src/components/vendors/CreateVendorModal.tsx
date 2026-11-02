@@ -120,47 +120,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
         ? err.response.data.message.join(', ')
         : err?.response?.data?.message;
 
-      if (serverMessage) {
-        setErrorMessage(serverMessage);
-        return;
-      }
-
-      // In offline/demo mode, construct local mock vendor
-      const fallbackVendor: Vendor = {
-        id: vendorToEdit?.id || `vnd-local-${Date.now()}`,
-        companyId: vendorToEdit?.companyId || 'c0000000-0000-0000-0000-000000000001',
-        vendorCode: vendorToEdit?.vendorCode || `VND-${Math.floor(1000 + Math.random() * 9000)}`,
-        name,
-        category,
-        contactPerson: contactPerson || null,
-        email: email || null,
-        phone: phone || null,
-        taxId: taxId || null,
-        registrationNumber: registrationNumber || null,
-        address: address || null,
-        city: city || null,
-        state: state || null,
-        country,
-        bankName: bankName || null,
-        bankAccountName: bankAccountName || name,
-        bankAccountNumber: bankAccountNumber || null,
-        paymentTerms,
-        currency,
-        status: vendorToEdit?.status || 'ACTIVE',
-        notes: notes || null,
-        totalSuppliedAmount: vendorToEdit?.totalSuppliedAmount || 0,
-        outstandingPayable: vendorToEdit?.outstandingPayable || 0,
-        createdAt: vendorToEdit?.createdAt || new Date().toISOString(),
-        _count: vendorToEdit?._count || { items: 0, orders: 0 },
-      };
-
-      if (onVendorSaved) {
-        onVendorSaved(fallbackVendor);
-      }
-      if (onVendorCreated) {
-        onVendorCreated(fallbackVendor);
-      }
-      handleClose();
+      setErrorMessage(serverMessage || err?.message || 'Failed to save vendor profile.');
     },
   });
 

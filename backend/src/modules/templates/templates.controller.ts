@@ -7,6 +7,8 @@ import {
   Body,
   Query,
   Header,
+  UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { DocumentType } from '@prisma/client';
@@ -14,9 +16,18 @@ import { TemplatesService } from './templates.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
+import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { CompanyScopeGuard } from '../../common/guards/company-scope.guard';
+import {
+  assertDocumentPermission,
+  hasDocumentPermission,
+  viewableDocumentTypes,
+} from '../documents/utils/document-permissions.util';
 
 @ApiTags('Templates & Renderers')
 @ApiBearerAuth('JWT-auth')
+@UseGuards(CompanyScopeGuard, PermissionsGuard)
 @Controller('templates')
 export class TemplatesController {
   constructor(private readonly templatesService: TemplatesService) {}
@@ -29,6 +40,18 @@ export class TemplatesController {
     @CurrentUser() user: AuthenticatedUser,
     @Query('documentType') documentType?: DocumentType,
   ) {
+    const canManageSettings =
+      user.role === 'Admin' ||
+      user.permissions?.includes('*') ||
+      user.permissions?.includes('*:*') ||
+      user.permissions?.includes('settings:manage');
+
+    if (documentType && !canManageSettings) {
+      assertDocumentPermission(user, documentType, 'view');
+    } else if (!canManageSettings && viewableDocumentTypes(user).length === 0) {
+      throw new ForbiddenException('Access denied. You lack permission to view templates.');
+    }
+
     return this.templatesService.findAll(user.companyId, documentType);
   }
 
@@ -40,10 +63,22 @@ export class TemplatesController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
   ) {
-    return this.templatesService.findOne(user.companyId, id);
+    const template = await this.templatesService.findOne(user.companyId, id);
+    const canManageSettings =
+      user.role === 'Admin' ||
+      user.permissions?.includes('*') ||
+      user.permissions?.includes('*:*') ||
+      user.permissions?.includes('settings:manage');
+
+    if (!canManageSettings && !hasDocumentPermission(user, template.documentType, 'view')) {
+      assertDocumentPermission(user, template.documentType, 'view');
+    }
+
+    return template;
   }
 
   @Post()
+  @RequirePermissions('settings:manage')
   @ApiOperation({ summary: 'Register a new document template layout' })
   @ApiResponse({ status: 201, description: 'Template registered.' })
   @ApiResponse({ status: 400, description: 'Duplicate code or invalid schema.' })
@@ -55,6 +90,7 @@ export class TemplatesController {
   }
 
   @Patch(':id')
+  @RequirePermissions('settings:manage')
   @ApiOperation({ summary: 'Update template metadata or publish a new layout version' })
   @ApiResponse({ status: 200, description: 'Template updated.' })
   @ApiResponse({ status: 404, description: 'Template not found.' })
@@ -77,6 +113,8 @@ export class TemplatesController {
     @Param('documentId') documentId: string,
     @Query('version') version?: string,
   ) {
+    const documentType = await this.templatesService.getDocumentType(user.companyId, documentId);
+    assertDocumentPermission(user, documentType, 'view');
     const versionNumber = version ? parseInt(version, 10) : undefined;
     return this.templatesService.renderDocumentHtml(user.companyId, documentId, versionNumber);
   }

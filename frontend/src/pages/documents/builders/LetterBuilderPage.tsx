@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import DOMPurify from 'dompurify';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
 import { Client, Company, DocumentRecord } from '../../../types';
@@ -222,11 +223,21 @@ export const LetterBuilderPage: React.FC = () => {
   // Save Draft Mutation (POST /letters or PATCH /letters/:id)
   const saveDraftMutation = useMutation({
     mutationFn: async (data: LetterFormValues) => {
-      // Generate clean paragraph HTML from bodyText
-      const bodyHtml = data.bodyText
+      // Generate clean, escaped, and sanitized paragraph HTML from bodyText
+      const escapeParagraphText = (val: string) =>
+        val
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      const rawBodyHtml = data.bodyText
         .split('\n\n')
-        .map((p) => `<p>${p.trim()}</p>`)
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .map((p) => `<p>${escapeParagraphText(p)}</p>`)
         .join('');
+      const bodyHtml = DOMPurify.sanitize(rawBodyHtml);
 
       const payload = {
         title: data.title,

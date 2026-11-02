@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api-client';
 import { SupplyItem } from '../../types';
-import { DEMO_SUPPLIES } from '../../lib/mock-data';
 import { formatCurrency } from '../../lib/utils';
 import {
   X,
@@ -35,7 +34,7 @@ export const CatalogPickerModal: React.FC<CatalogPickerModalProps> = ({
         const res = await apiClient.get('/supplies/items', { params: { limit: 100 } });
         return res.data;
       } catch {
-        return { items: DEMO_SUPPLIES };
+        return { items: [] };
       }
     },
   });
@@ -45,7 +44,7 @@ export const CatalogPickerModal: React.FC<CatalogPickerModalProps> = ({
       ? suppliesData.items
       : suppliesData?.data && suppliesData.data.length > 0
       ? suppliesData.data
-      : DEMO_SUPPLIES;
+      : [];
 
   const filteredItems = useMemo(() => {
     return allSupplies.filter((item) => {
