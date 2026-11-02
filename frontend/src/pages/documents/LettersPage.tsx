@@ -34,6 +34,11 @@ export const LettersPage: React.FC = () => {
     clientId: '',
     startDate: '',
     endDate: '',
+    branchId: '',
+    departmentId: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    tag: '',
   });
 
   const [activeTab, setActiveTab] = useState('ALL');
@@ -49,8 +54,14 @@ export const LettersPage: React.FC = () => {
       const res = await apiClient.get('/documents', {
         params: {
           documentType: 'LETTER',
-          search: filters.search || undefined,
+          search: filters.search || filters.tag || undefined,
           status: filters.status || undefined,
+          branchId: filters.branchId || undefined,
+          departmentId: filters.departmentId || undefined,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+          sortBy: filters.sortBy || undefined,
+          sortOrder: filters.sortOrder || undefined,
           page: 1,
           limit: 100,
         },
@@ -64,11 +75,38 @@ export const LettersPage: React.FC = () => {
   }, [lettersData]);
 
   const filteredLetters = useMemo(() => {
-    return allLetters.filter((letDoc) => {
-      if (activeTab === 'ALL') return true;
-      return letDoc.status === activeTab;
+    const result = allLetters.filter((letDoc) => {
+      if (activeTab !== 'ALL' && letDoc.status !== activeTab) return false;
+      if (filters.status && letDoc.status !== filters.status) return false;
+      if (filters.branchId && letDoc.branchId && letDoc.branchId !== filters.branchId) return false;
+      if (filters.departmentId && letDoc.departmentId && letDoc.departmentId !== filters.departmentId) return false;
+      if (filters.startDate) {
+        const docDate = new Date(letDoc.issueDate || letDoc.createdAt).toISOString().slice(0, 10);
+        if (docDate < filters.startDate) return false;
+      }
+      if (filters.endDate) {
+        const docDate = new Date(letDoc.issueDate || letDoc.createdAt).toISOString().slice(0, 10);
+        if (docDate > filters.endDate) return false;
+      }
+      const q = (filters.search || filters.tag || '').trim().toLowerCase();
+      if (q) {
+        const hay = `${letDoc.documentNumber || ''} ${letDoc.title || ''} ${letDoc.letter?.recipientName || ''} ${letDoc.letter?.recipientOrganization || ''} ${letDoc.letter?.subject || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
     });
-  }, [allLetters, activeTab]);
+
+    const sortBy = filters.sortBy || 'createdAt';
+    const dir = filters.sortOrder === 'asc' ? 1 : -1;
+    return [...result].sort((a, b) => {
+      if (sortBy === 'documentNumber') {
+        return (a.documentNumber || '').localeCompare(b.documentNumber || '') * dir;
+      }
+      const tA = new Date(a.issueDate || a.createdAt).getTime();
+      const tB = new Date(b.issueDate || b.createdAt).getTime();
+      return (tA - tB) * dir;
+    });
+  }, [allLetters, activeTab, filters]);
 
   useEffect(() => {
     if (filteredLetters.length > 0) {
@@ -271,6 +309,11 @@ export const LettersPage: React.FC = () => {
             clientId: '',
             startDate: '',
             endDate: '',
+            branchId: '',
+            departmentId: '',
+            sortBy: 'createdAt',
+            sortOrder: 'desc',
+            tag: '',
           })
         }
         showClientFilter={false}

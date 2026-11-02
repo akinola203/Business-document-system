@@ -39,6 +39,11 @@ export const InvoicesPage: React.FC = () => {
     clientId: '',
     startDate: '',
     endDate: '',
+    branchId: '',
+    departmentId: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    tag: '',
   });
 
   // Top tab notch state ('ALL' | 'OVERDUE' | 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'ISSUED')
@@ -93,9 +98,15 @@ export const InvoicesPage: React.FC = () => {
       const res = await apiClient.get('/documents', {
         params: {
           documentType: 'INVOICE',
-          search: filters.search || undefined,
+          search: filters.search || filters.tag || undefined,
           status: filters.status || undefined,
           clientId: filters.clientId || undefined,
+          branchId: filters.branchId || undefined,
+          departmentId: filters.departmentId || undefined,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+          sortBy: filters.sortBy || undefined,
+          sortOrder: filters.sortOrder || undefined,
           page: 1,
           limit: 100,
         },
@@ -108,16 +119,50 @@ export const InvoicesPage: React.FC = () => {
     return extractArray<DocumentRecord>(invoicesData, DEMO_INVOICES);
   }, [invoicesData]);
 
-  // Tab filtering on client for instant responsiveness
+  // Tab & advanced filtering on client for instant responsiveness
   const filteredInvoices = useMemo(() => {
-    return allInvoices.filter((inv) => {
-      if (activeTab === 'ALL') return true;
-      if (activeTab === 'OVERDUE') {
-        return inv.isOverdue || inv.paymentStatus === 'UNPAID';
+    const result = allInvoices.filter((inv) => {
+      if (activeTab !== 'ALL') {
+        if (activeTab === 'OVERDUE') {
+          if (!(inv.isOverdue || inv.paymentStatus === 'UNPAID')) return false;
+        } else if (inv.status !== activeTab) {
+          return false;
+        }
       }
-      return inv.status === activeTab;
+      if (filters.status && inv.status !== filters.status) return false;
+      if (filters.clientId && inv.clientId !== filters.clientId) return false;
+      if (filters.branchId && inv.branchId && inv.branchId !== filters.branchId) return false;
+      if (filters.departmentId && inv.departmentId && inv.departmentId !== filters.departmentId) return false;
+      if (filters.startDate) {
+        const docDate = new Date(inv.issueDate || inv.createdAt).toISOString().slice(0, 10);
+        if (docDate < filters.startDate) return false;
+      }
+      if (filters.endDate) {
+        const docDate = new Date(inv.issueDate || inv.createdAt).toISOString().slice(0, 10);
+        if (docDate > filters.endDate) return false;
+      }
+      const q = (filters.search || filters.tag || '').trim().toLowerCase();
+      if (q) {
+        const hay = `${inv.documentNumber || ''} ${inv.title || ''} ${inv.client?.companyName || ''} ${inv.client?.name || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
     });
-  }, [allInvoices, activeTab]);
+
+    const sortBy = filters.sortBy || 'createdAt';
+    const dir = filters.sortOrder === 'asc' ? 1 : -1;
+    return [...result].sort((a, b) => {
+      if (sortBy === 'totalAmount') {
+        return ((Number(a.totalAmount) || 0) - (Number(b.totalAmount) || 0)) * dir;
+      }
+      if (sortBy === 'documentNumber') {
+        return (a.documentNumber || '').localeCompare(b.documentNumber || '') * dir;
+      }
+      const tA = new Date(a.issueDate || a.createdAt).getTime();
+      const tB = new Date(b.issueDate || b.createdAt).getTime();
+      return (tA - tB) * dir;
+    });
+  }, [allInvoices, activeTab, filters]);
 
   // Auto-select first document on load or filter change
   useEffect(() => {
@@ -372,6 +417,11 @@ export const InvoicesPage: React.FC = () => {
             clientId: '',
             startDate: '',
             endDate: '',
+            branchId: '',
+            departmentId: '',
+            sortBy: 'createdAt',
+            sortOrder: 'desc',
+            tag: '',
           })
         }
       />

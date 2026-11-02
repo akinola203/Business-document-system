@@ -40,6 +40,11 @@ export const WaybillsPage: React.FC = () => {
     clientId: '',
     startDate: '',
     endDate: '',
+    branchId: '',
+    departmentId: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    tag: '',
   });
 
   const [activeTab, setActiveTab] = useState('ALL');
@@ -75,9 +80,15 @@ export const WaybillsPage: React.FC = () => {
       const res = await apiClient.get('/documents', {
         params: {
           documentType: 'WAYBILL',
-          search: filters.search || undefined,
+          search: filters.search || filters.tag || undefined,
           status: filters.status || undefined,
           clientId: filters.clientId || undefined,
+          branchId: filters.branchId || undefined,
+          departmentId: filters.departmentId || undefined,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined,
+          sortBy: filters.sortBy || undefined,
+          sortOrder: filters.sortOrder || undefined,
           page: 1,
           limit: 100,
         },
@@ -90,17 +101,55 @@ export const WaybillsPage: React.FC = () => {
     return extractArray<DocumentRecord>(waybillsData, DEMO_WAYBILLS);
   }, [waybillsData]);
 
-  // Tab filtering based on deliveryStatus or document status
+  // Tab & advanced filtering based on deliveryStatus or document status
   const filteredWaybills = useMemo(() => {
-    return allWaybills.filter((wb) => {
-      if (activeTab === 'ALL') return true;
-      if (activeTab === 'IN_TRANSIT') return wb.waybill?.deliveryStatus === 'IN_TRANSIT';
-      if (activeTab === 'READY') return wb.waybill?.deliveryStatus === 'READY_FOR_DISPATCH';
-      if (activeTab === 'DELIVERED') return wb.waybill?.deliveryStatus === 'DELIVERED';
-      if (activeTab === 'FAILED') return wb.waybill?.deliveryStatus === 'DELIVERY_FAILED';
-      return wb.status === activeTab;
+    const result = allWaybills.filter((wb) => {
+      if (activeTab !== 'ALL') {
+        if (activeTab === 'IN_TRANSIT' && wb.waybill?.deliveryStatus !== 'IN_TRANSIT') return false;
+        else if (activeTab === 'READY' && wb.waybill?.deliveryStatus !== 'READY_FOR_DISPATCH') return false;
+        else if (activeTab === 'DELIVERED' && wb.waybill?.deliveryStatus !== 'DELIVERED') return false;
+        else if (activeTab === 'FAILED' && wb.waybill?.deliveryStatus !== 'DELIVERY_FAILED') return false;
+        else if (
+          !['IN_TRANSIT', 'READY', 'DELIVERED', 'FAILED'].includes(activeTab) &&
+          wb.status !== activeTab
+        ) {
+          return false;
+        }
+      }
+      if (filters.status && wb.status !== filters.status) return false;
+      if (filters.clientId && wb.clientId !== filters.clientId) return false;
+      if (filters.branchId && wb.branchId && wb.branchId !== filters.branchId) return false;
+      if (filters.departmentId && wb.departmentId && wb.departmentId !== filters.departmentId) return false;
+      if (filters.startDate) {
+        const docDate = new Date(wb.issueDate || wb.createdAt).toISOString().slice(0, 10);
+        if (docDate < filters.startDate) return false;
+      }
+      if (filters.endDate) {
+        const docDate = new Date(wb.issueDate || wb.createdAt).toISOString().slice(0, 10);
+        if (docDate > filters.endDate) return false;
+      }
+      const q = (filters.search || filters.tag || '').trim().toLowerCase();
+      if (q) {
+        const hay = `${wb.documentNumber || ''} ${wb.title || ''} ${wb.client?.companyName || ''} ${wb.client?.name || ''} ${wb.waybill?.driverName || ''} ${wb.waybill?.vehicleNumber || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
     });
-  }, [allWaybills, activeTab]);
+
+    const sortBy = filters.sortBy || 'createdAt';
+    const dir = filters.sortOrder === 'asc' ? 1 : -1;
+    return [...result].sort((a, b) => {
+      if (sortBy === 'totalAmount') {
+        return ((Number(a.totalAmount) || 0) - (Number(b.totalAmount) || 0)) * dir;
+      }
+      if (sortBy === 'documentNumber') {
+        return (a.documentNumber || '').localeCompare(b.documentNumber || '') * dir;
+      }
+      const tA = new Date(a.issueDate || a.createdAt).getTime();
+      const tB = new Date(b.issueDate || b.createdAt).getTime();
+      return (tA - tB) * dir;
+    });
+  }, [allWaybills, activeTab, filters]);
 
   useEffect(() => {
     if (filteredWaybills.length > 0) {
@@ -351,6 +400,11 @@ export const WaybillsPage: React.FC = () => {
             clientId: '',
             startDate: '',
             endDate: '',
+            branchId: '',
+            departmentId: '',
+            sortBy: 'createdAt',
+            sortOrder: 'desc',
+            tag: '',
           })
         }
       />
