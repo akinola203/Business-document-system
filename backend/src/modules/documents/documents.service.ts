@@ -229,7 +229,7 @@ export class DocumentsService {
       throw new BadRequestException('Completed documents cannot be cancelled directly.');
     }
 
-    const reason = (dto.reason || dto.notes || '').trim();
+    const reason = (dto.cancellationReason || dto.reason || dto.notes || '').trim();
     if (!reason) {
       throw new BadRequestException('Cancellation reason or notes is required.');
     }
@@ -630,7 +630,7 @@ export class DocumentsService {
       );
     }
 
-    const reason = (dto.reason || dto.notes || '').trim();
+    const reason = (dto.rejectionReason || dto.reason || dto.notes || '').trim();
     if (!reason) {
       throw new BadRequestException('Rejection reason or notes is required.');
     }

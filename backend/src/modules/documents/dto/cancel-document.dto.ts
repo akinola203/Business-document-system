@@ -8,6 +8,14 @@ export class CancelDocumentDto {
   })
   @IsOptional()
   @IsString()
+  cancellationReason?: string;
+
+  @ApiPropertyOptional({
+    example: 'Client requested order cancellation prior to dispatch',
+    description: 'Reason for document cancellation (alias)',
+  })
+  @IsOptional()
+  @IsString()
   reason?: string;
 
   @ApiPropertyOptional({

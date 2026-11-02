@@ -58,8 +58,8 @@ export const UsersPage: React.FC = () => {
     usersData?.items && usersData.items.length > 0
       ? usersData.items
       : usersData?.data && usersData.data.length > 0
-      ? usersData.data
-      : DEMO_USERS;
+        ? usersData.data
+        : DEMO_USERS;
 
   // 2. Fetch Roles
   const { data: rolesData } = useQuery<Role[]>({
@@ -74,8 +74,8 @@ export const UsersPage: React.FC = () => {
     Array.isArray(rolesData) && rolesData.length > 0
       ? rolesData
       : (rolesData as any)?.data && Array.isArray((rolesData as any).data) && (rolesData as any).data.length > 0
-      ? (rolesData as any).data
-      : DEMO_ROLES;
+        ? (rolesData as any).data
+        : DEMO_ROLES;
 
   // Invite User Mutation
   const inviteMutation = useMutation({
@@ -259,11 +259,10 @@ export const UsersPage: React.FC = () => {
       <div className="flex items-center gap-2 p-1.5 rounded-full bg-slate-100 w-fit">
         <button
           onClick={() => setActiveTab('USERS')}
-          className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'USERS'
+          className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'USERS'
               ? 'bg-[#16181F] text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
-          }`}
+            }`}
         >
           <Users className="w-3.5 h-3.5" />
           <span>Company Users ({allUsers.length})</span>
@@ -271,11 +270,10 @@ export const UsersPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('ROLES')}
-          className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'ROLES'
+          className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'ROLES'
               ? 'bg-[#16181F] text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900'
-          }`}
+            }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Roles & Permissions Matrix</span>
@@ -305,7 +303,7 @@ export const UsersPage: React.FC = () => {
                     (u.role?.name === 'Admin' && allUsers.filter((x) => x.role?.name === 'Admin').length <= 1);
                   const userFullName =
                     u.user?.fullName ||
-                    [(u.user as any)?.firstName, (u.user as any)?.lastName].filter(Boolean).join(' ') ||
+                    [u.user?.firstName, u.user?.lastName].filter(Boolean).join(' ') ||
                     u.user?.email ||
                     'User';
 
@@ -325,13 +323,12 @@ export const UsersPage: React.FC = () => {
 
                       <td className="py-4 px-6">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
-                            u.role?.name === 'Admin'
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${u.role?.name === 'Admin'
                               ? 'bg-purple-50 text-purple-700 border-purple-200'
                               : u.role?.name === 'Manager'
-                              ? 'bg-indigo-50 text-[#5847F6] border-indigo-200'
-                              : 'bg-slate-100 text-slate-700 border-slate-200'
-                          }`}
+                                ? 'bg-indigo-50 text-[#5847F6] border-indigo-200'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}
                         >
                           {u.role?.name || 'Staff'}
                         </span>
@@ -383,11 +380,10 @@ export const UsersPage: React.FC = () => {
                             disabled={isCurrentAdmin && u.status === 'ACTIVE'}
                             onClick={() => toggleStatusMutation.mutate(u)}
                             title={isCurrentAdmin ? 'Cannot deactivate active Admin' : 'Toggle Status'}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
-                              u.status === 'ACTIVE'
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${u.status === 'ACTIVE'
                                 ? 'hover:bg-rose-50 text-rose-600'
                                 : 'hover:bg-emerald-50 text-emerald-600'
-                            }`}
+                              }`}
                           >
                             <Ban className="w-4 h-4" />
                           </button>
@@ -603,11 +599,10 @@ export const UsersPage: React.FC = () => {
                   onClick={() =>
                     changeRoleMutation.mutate({ user: selectedUserForRole, newRoleId: r.id })
                   }
-                  className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedUserForRole.roleId === r.id
+                  className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${selectedUserForRole.roleId === r.id
                       ? 'bg-indigo-50 border-indigo-300 text-[#5847F6]'
                       : 'bg-[#F8F9FC] hover:bg-slate-100 border-slate-200 text-slate-800'
-                  }`}
+                    }`}
                 >
                   <div>
                     <span className="text-xs font-bold">{r.name}</span>

@@ -5,6 +5,11 @@ export class RejectDocumentDto {
   @ApiPropertyOptional({ description: 'Justification for document rejection' })
   @IsOptional()
   @IsString()
+  rejectionReason?: string;
+
+  @ApiPropertyOptional({ description: 'Justification for document rejection (alias)' })
+  @IsOptional()
+  @IsString()
   reason?: string;
 
   @ApiPropertyOptional({ description: 'Rejection notes or justification' })
