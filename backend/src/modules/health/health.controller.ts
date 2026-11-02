@@ -20,7 +20,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 
 @ApiTags('Health & Diagnostics')
-@Controller('health')
+@Controller(['health', 'api/v1/health'])
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
