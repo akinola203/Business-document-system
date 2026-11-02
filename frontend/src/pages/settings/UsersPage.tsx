@@ -301,11 +301,7 @@ export const UsersPage: React.FC = () => {
                   const isCurrentAdmin =
                     currentAuthUser?.email === u.user?.email ||
                     (u.role?.name === 'Admin' && allUsers.filter((x) => x.role?.name === 'Admin').length <= 1);
-                  const userFullName =
-                    u.user?.fullName ||
-                    [u.user?.firstName, u.user?.lastName].filter(Boolean).join(' ') ||
-                    u.user?.email ||
-                    'User';
+                  const userFullName = u.user?.fullName || u.user?.email || 'User';
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
