@@ -316,8 +316,7 @@ export const PaymentsPage: React.FC = () => {
             payment={selectedPayment}
             onPaymentReversed={() => {
               if (selectedPayment) {
-                selectedPayment.isReversed = true;
-                setSelectedPayment({ ...selectedPayment });
+                setSelectedPayment({ ...selectedPayment, isReversed: true });
               }
             }}
           />
