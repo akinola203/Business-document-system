@@ -26,9 +26,12 @@ import {
   UserCog,
   Sun,
   Moon,
+  RotateCcw,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ClientDemoModal } from '../demo/ClientDemoModal';
+import { PortfolioMockStore } from '../../mock/portfolio-data';
 
 interface NavTab {
   name: string;
@@ -116,8 +119,9 @@ export const TopPillNavbar: React.FC = () => {
   }, [location.pathname]);
 
   const handleLogout = () => {
+    PortfolioMockStore.resetToDefault();
     logout();
-    navigate('/login');
+    navigate('/overview');
   };
 
   const visiblePrimaryTabs = PRIMARY_TABS.filter((tab) => !tab.permission || hasPermission(tab.permission));
@@ -143,11 +147,11 @@ export const TopPillNavbar: React.FC = () => {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xs md:text-sm font-bold tracking-tight text-slate-900">
+            <h1 className="text-xs md:text-sm font-bold tracking-tight text-slate-900 dark:text-white">
               {user?.companyName || 'AOA 77 COMPANY LTD'}
             </h1>
-            <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-50 text-[#5847F6] border border-indigo-100">
-              PRO
+            <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
+              PORTFOLIO DEMO
             </span>
           </div>
           <p className="text-[10px] md:text-[11px] text-slate-500 font-normal">Smart Documents, Better Business</p>
@@ -320,13 +324,23 @@ export const TopPillNavbar: React.FC = () => {
                 )}
               </div>
 
-              <div className="pt-1 border-t border-slate-100">
+              <div className="pt-1 border-t border-slate-100 dark:border-slate-800 space-y-0.5">
+                <button
+                  onClick={() => {
+                    PortfolioMockStore.resetToDefault();
+                    window.location.reload();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-xl transition-colors cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
+                  Reset Demo Data
+                </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                  Sign Out
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  Restart Demo Session
                 </button>
               </div>
             </div>

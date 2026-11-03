@@ -58,10 +58,10 @@ export const App: React.FC = () => {
         <RouterComponent>
           <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
-            {/* Public Authentication Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/reset-password" element={<Navigate to="/auth/reset-password" replace />} />
+            {/* Public Authentication Routes - Redirect directly to Executive Dashboard in Portfolio Demo */}
+            <Route path="/login" element={<Navigate to="/overview" replace />} />
+            <Route path="/auth/reset-password" element={<Navigate to="/overview" replace />} />
+            <Route path="/reset-password" element={<Navigate to="/overview" replace />} />
 
             {/* Protected Application Routes wrapped in Finnova AppShell */}
             <Route
