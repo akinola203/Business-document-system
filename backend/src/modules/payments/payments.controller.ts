@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Headers,
   HttpCode,
@@ -84,12 +85,17 @@ export class PaymentsController {
   @RequirePermissions('payment:reverse')
   @ApiOperation({ summary: 'Reverse (void) a payment with a mandatory reason. Records are never deleted.' })
   @ApiResponse({ status: 200, description: 'Payment reversed; invoice balance re-derived.' })
-  @ApiResponse({ status: 400, description: 'Payment already reversed.' })
+  @ApiResponse({ status: 400, description: 'Payment already reversed or invalid reason.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only Managers or Administrators can execute payment reversals.' })
   async reversePayment(
     @CurrentUser() user: AuthenticatedUser,
     @Param('paymentId') paymentId: string,
     @Body() dto: ReversePaymentDto,
   ) {
-    return this.paymentsService.reversePayment(user.companyId, paymentId, dto, user.id);
+    const allowedRoles = ['Admin', 'ADMIN', 'Administrator', 'Manager', 'MANAGER'];
+    if (!user?.role || !allowedRoles.includes(user.role)) {
+      throw new ForbiddenException('Only Managers or Administrators can execute payment reversals.');
+    }
+    return this.paymentsService.reversePayment(user.companyId, paymentId, dto, user.id, user.role);
   }
 }

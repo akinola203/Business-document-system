@@ -30,6 +30,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { CompanyScopeGuard } from './common/guards/company-scope.guard';
+import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -87,6 +88,7 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    RateLimitGuard,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

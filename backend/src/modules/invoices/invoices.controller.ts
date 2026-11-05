@@ -4,6 +4,7 @@ import {
   Patch,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { InvoicesService } from './invoices.service';
@@ -15,6 +16,8 @@ import { ApproveDocumentDto } from '../documents/dto/approve-document.dto';
 import { IssueDocumentDto } from '../documents/dto/issue-document.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 
 @ApiTags('Invoices')
 @ApiBearerAuth('JWT-auth')
@@ -26,6 +29,8 @@ export class InvoicesController {
   ) {}
 
   @Post()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 30, ttl: 60 })
   @RequirePermissions('invoice:create')
   @ApiOperation({ summary: 'Create a new invoice draft with calculated line items and sequential number' })
   @ApiResponse({ status: 201, description: 'Invoice draft successfully created.' })

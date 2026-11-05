@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -220,7 +221,24 @@ export class PaymentsService {
    * Reverses (voids) a payment. The row is never deleted; it is flagged with actor, time and reason,
    * and the invoice balance/status is re-derived from the remaining active ledger.
    */
-  async reversePayment(companyId: string, paymentId: string, dto: ReversePaymentDto, actorId: string) {
+  async reversePayment(
+    companyId: string,
+    paymentId: string,
+    dto: ReversePaymentDto,
+    actorId: string,
+    userRole?: string,
+  ) {
+    if (userRole !== undefined) {
+      const allowedRoles = ['Admin', 'ADMIN', 'Administrator', 'Manager', 'MANAGER'];
+      if (!allowedRoles.includes(userRole)) {
+        throw new ForbiddenException('Only Managers or Administrators can execute payment reversals.');
+      }
+    }
+
+    if (!dto?.reason || typeof dto.reason !== 'string' || dto.reason.trim().length < 5) {
+      throw new BadRequestException('A valid reversal reason of at least 5 characters is required.');
+    }
+
     const reason = dto.reason.trim();
 
     const result = await this.prisma.$transaction(async (tx) => {

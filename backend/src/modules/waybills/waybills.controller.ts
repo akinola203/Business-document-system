@@ -4,6 +4,7 @@ import {
   Patch,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { WaybillsService } from './waybills.service';
@@ -15,6 +16,8 @@ import { FailWaybillDto } from './dto/fail-waybill.dto';
 import { CompleteWaybillDto } from './dto/complete-waybill.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
+import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 
 @ApiTags('Waybills & Delivery Notes')
 @ApiBearerAuth('JWT-auth')
@@ -23,6 +26,8 @@ export class WaybillsController {
   constructor(private readonly waybillsService: WaybillsService) {}
 
   @Post()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 30, ttl: 60 })
   @RequirePermissions('waybill:create')
   @ApiOperation({ summary: 'Create a new waybill / delivery note draft' })
   @ApiResponse({ status: 201, description: 'Waybill draft created.' })
