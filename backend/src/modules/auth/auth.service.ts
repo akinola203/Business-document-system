@@ -17,6 +17,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
+import { UserResponseDto } from '../iam/dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -248,7 +249,7 @@ export class AuthService {
     );
 
     return {
-      user: {
+      user: new UserResponseDto({
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -259,7 +260,7 @@ export class AuthService {
         },
         role: membership.role.name,
         permissions,
-      },
+      }),
       ...tokens,
     };
   }

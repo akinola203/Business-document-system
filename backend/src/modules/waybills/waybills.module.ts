@@ -12,4 +12,4 @@ import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
   providers: [WaybillsService, RateLimitGuard],
   exports: [WaybillsService, RateLimitGuard],
 })
-export class WaybillsModule {}
+export class WaybillsModule { }

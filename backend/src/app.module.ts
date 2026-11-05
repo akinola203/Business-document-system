@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { PrismaModule } from './modules/prisma/prisma.module';
@@ -106,12 +106,27 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
       useClass: HttpExceptionFilter,
     },
     {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      }),
+    },
+    {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
       useClass: IdempotencyInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,
