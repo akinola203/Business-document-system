@@ -1,4 +1,10 @@
-import { ClassSerializerInterceptor, Module, ValidationPipe } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -32,6 +38,7 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
 import { CompanyScopeGuard } from './common/guards/company-scope.guard';
 import { RateLimitGuard } from './common/guards/rate-limit.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
@@ -134,4 +141,8 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

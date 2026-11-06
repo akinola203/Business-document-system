@@ -459,6 +459,7 @@ model Document {
 
   @@unique([companyId, documentNumber])
   @@index([companyId, documentType, status])
+  @@index([companyId, documentType, createdAt])
   @@index([companyId, status])
   @@index([companyId, issueDate])
   @@index([companyId, dueDate])
@@ -545,6 +546,8 @@ model Invoice {
   waybills Waybill[]     @relation("InvoiceWaybills")
 
   @@index([paymentStatus])
+  @@index([paymentStatus, createdAt])
+  @@index([documentId, paymentStatus])
   @@index([createdAt])
   @@index([deletedAt])
   @@map("invoices")
@@ -601,6 +604,8 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   @@unique([companyId, paymentNumber])
+  @@index([companyId, invoiceId])
+  @@index([companyId, invoiceId, isReversed])
   @@index([invoiceId, isReversed])
   @@index([companyId, paymentDate])
   @@index([companyId, referenceNumber])
@@ -659,6 +664,8 @@ model Waybill {
   items WaybillItem[]
 
   @@index([deliveryStatus])
+  @@index([deliveryStatus, createdAt])
+  @@index([invoiceId, deliveryStatus])
   @@index([invoiceId])
   @@index([shipmentDate])
   @@index([trackingNumber])
@@ -806,6 +813,8 @@ model AuditLog {
   @@index([companyId, entityType, entityId])
   @@index([companyId, action])
   @@index([companyId, createdAt])
+  @@index([actorId])
+  @@index([companyId, actorId, createdAt])
   @@map("audit_logs")
 }
 

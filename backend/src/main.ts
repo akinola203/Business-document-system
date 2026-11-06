@@ -4,7 +4,13 @@ import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
+import { createWinstonConfig } from './common/logger/winston.config';
+import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
+import { SentryExceptionFilter } from './common/filters/sentry-exception.filter';
 import { buildAllowedCorsOrigins, isOriginAllowed } from './common/utils/cors.util';
 
 // Safe BigInt JSON serialization for Prisma BigInt fields (e.g. File.sizeBytes)
@@ -13,15 +19,34 @@ import { buildAllowedCorsOrigins, isOriginAllowed } from './common/utils/cors.ut
 };
 
 async function bootstrap() {
-  const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  // Initialize Sentry for real-time error tracking and performance profiling
+  if (process.env.SENTRY_DSN) {
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+      integrations: [nodeProfilingIntegration()],
+      environment: process.env.NODE_ENV || 'development',
+    });
+  }
 
+  // Create NestJS app with Winston structured JSON logger
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger(createWinstonConfig()),
+  });
+
+  const logger = new Logger('Bootstrap');
   const configService = app.get(ConfigService);
   const port = parseInt(String(configService.get<string | number>('PORT', 3000)), 10) || 3000;
   const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
   const appUrl = configService.get<string>('APP_URL', 'http://localhost:5173');
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
   const isProduction = nodeEnv === 'production';
+
+  // Inject Request ID tracing middleware on all incoming requests
+  app.use(new RequestIdMiddleware().use);
+
+  // Global Exception Filter capturing 500s in Sentry while omitting 4xx client errors
+  app.useGlobalFilters(new SentryExceptionFilter());
 
   // Trust reverse proxy for client IP resolution and rate limiters
   (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
@@ -57,7 +82,14 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Idempotency-Key', 'Idempotency-Key'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'X-Idempotency-Key',
+      'Idempotency-Key',
+      'X-Request-Id',
+    ],
   });
 
   // Global API Prefix (/api/v1) with exclusion for uptime health checks

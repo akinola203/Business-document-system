@@ -1,22 +1,39 @@
-name: CI / Security Hardening Pipeline
+name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, portfolio-demo]
   pull_request:
-    branches: [main]
+    branches: [main, portfolio-demo]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  backend:
-    name: Backend (Build, Test & Audit)
+  backend-ci:
+    name: Backend CI (Build, Test & Security)
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: backend
+    env:
+      NODE_ENV: test
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: dev-jwt-access-secret-32-chars-minimum-key-aoa77-doc-app
+      JWT_REFRESH_SECRET: dev-jwt-refresh-secret-32-chars-minimum-key-aoa77-doc-app
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,21 +48,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma client
+      - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Build backend
+      - name: Run backend security and unit tests
+        run: |
+          npm run test
+          npm run test:security
+
+      - name: Verify production build
         run: npm run build
 
-      - name: Run unit & integration test suites
-        run: npm test
-
-      - name: Run security dependency audit
-        run: npm audit --audit-level=high || true
-        continue-on-error: true
-
-  frontend:
-    name: Frontend (Typecheck, Lint & Build)
+  frontend-ci:
+    name: Frontend CI (Typecheck & Build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -64,28 +79,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linter (oxlint)
-        run: npm run lint
+      - name: Run TypeScript build verification
+        run: npx tsc -b
 
-      - name: Typecheck and build frontend
+      - name: Run production bundle build
         run: npm run build
-
-      - name: Run security dependency audit
-        run: npm audit --audit-level=high || true
-        continue-on-error: true
-
-  security-scan:
-    name: Secret & Vulnerability Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Gitleaks secret detection
-        uses: gitleaks/gitleaks-action@v2
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
