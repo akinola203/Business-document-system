@@ -36,7 +36,7 @@ RUN apk add --no-cache dumb-init
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm ci --omit=dev && npx prisma generate
+RUN npm ci --only=production && npx prisma generate
 
 # Copy compiled JavaScript output from builder stage
 COPY --from=builder /app/dist ./dist
