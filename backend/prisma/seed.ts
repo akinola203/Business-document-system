@@ -399,6 +399,33 @@ async function main() {
     },
   });
 
+  const staffUser = await prisma.user.upsert({
+    where: { email: 'staff@aoa77.com' },
+    update: { passwordHash, isActive: true },
+    create: {
+      email: 'staff@aoa77.com',
+      passwordHash,
+      firstName: 'Babajide',
+      lastName: 'Sanwo',
+      phone: '+234 803 555 6666',
+      isActive: true,
+    },
+  });
+
+  await prisma.companyUser.upsert({
+    where: { companyId_userId: { companyId: company.id, userId: staffUser.id } },
+    update: { roleId: roleStaff.id, branchId: branchOta.id, departmentId: deptAccounts.id },
+    create: {
+      companyId: company.id,
+      userId: staffUser.id,
+      roleId: roleStaff.id,
+      branchId: branchOta.id,
+      departmentId: deptAccounts.id,
+      isOwner: false,
+      status: CompanyUserStatus.ACTIVE,
+    },
+  });
+
   // 8. Document Number Sequences (Atomic Counters)
   console.log('Seeding Document Number Sequences...');
   const currentYear = new Date().getFullYear();
@@ -564,29 +591,32 @@ async function main() {
     },
   });
 
-  await prisma.clientAddress.create({
-    data: {
-      clientId: client1.id,
-      type: AddressType.BILLING,
-      addressLine1: 'Marble House, 1 Alfred Rewane Road',
-      city: 'Ikoyi',
-      state: 'Lagos',
-      country: 'Nigeria',
-      isDefault: true,
-    },
-  });
+  const client1AddrCount = await prisma.clientAddress.count({ where: { clientId: client1.id } });
+  if (client1AddrCount === 0) {
+    await prisma.clientAddress.create({
+      data: {
+        clientId: client1.id,
+        type: AddressType.BILLING,
+        addressLine1: 'Marble House, 1 Alfred Rewane Road',
+        city: 'Ikoyi',
+        state: 'Lagos',
+        country: 'Nigeria',
+        isDefault: true,
+      },
+    });
 
-  await prisma.clientAddress.create({
-    data: {
-      clientId: client1.id,
-      type: AddressType.SHIPPING,
-      addressLine1: 'Dangote Cement Works, Ibese Works Complex',
-      city: 'Ibese, Yewa North',
-      state: 'Ogun State',
-      country: 'Nigeria',
-      isDefault: false,
-    },
-  });
+    await prisma.clientAddress.create({
+      data: {
+        clientId: client1.id,
+        type: AddressType.SHIPPING,
+        addressLine1: 'Dangote Cement Works, Ibese Works Complex',
+        city: 'Ibese, Yewa North',
+        state: 'Ogun State',
+        country: 'Nigeria',
+        isDefault: false,
+      },
+    });
+  }
 
   const client2 = await prisma.client.upsert({
     where: { companyId_clientNumber: { companyId: company.id, clientNumber: 'CLI-00002' } },
@@ -607,17 +637,103 @@ async function main() {
     },
   });
 
-  await prisma.clientAddress.create({
-    data: {
-      clientId: client2.id,
-      type: AddressType.BILLING,
-      addressLine1: 'Plot 2, Agbara Industrial Estate',
-      city: 'Agbara',
-      state: 'Ogun State',
-      country: 'Nigeria',
-      isDefault: true,
+  const client2AddrCount = await prisma.clientAddress.count({ where: { clientId: client2.id } });
+  if (client2AddrCount === 0) {
+    await prisma.clientAddress.create({
+      data: {
+        clientId: client2.id,
+        type: AddressType.BILLING,
+        addressLine1: 'Plot 2, Agbara Industrial Estate',
+        city: 'Agbara',
+        state: 'Ogun State',
+        country: 'Nigeria',
+        isDefault: true,
+      },
+    });
+  }
+
+  // 11. Seed Baseline Invoices & Payments (Ledger History)
+  console.log('Seeding Baseline Invoices & Payments...');
+  const baselineDoc = await prisma.document.upsert({
+    where: {
+      companyId_documentNumber: {
+        companyId: company.id,
+        documentNumber: 'INV-2026-000001',
+      },
+    },
+    update: {},
+    create: {
+      companyId: company.id,
+      branchId: branchOta.id,
+      departmentId: deptAccounts.id,
+      clientId: client1.id,
+      documentType: DocumentType.INVOICE,
+      documentNumber: 'INV-2026-000001',
+      title: 'Haulage & Materials Supply - Q2 Settlement',
+      status: 'APPROVED',
+      issueDate: new Date(),
+      currency: 'NGN',
+      subtotal: 5000000.00,
+      taxAmount: 375000.00,
+      discountAmount: 0.00,
+      totalAmount: 5375000.00,
+      balanceDue: 3875000.00,
+      createdById: managerUser.id,
+      invoice: {
+        create: {
+          paymentTerms: 'Net 30 Days',
+          poNumber: 'DANGOTE-PO-9921',
+          paymentStatus: 'PARTIALLY_PAID',
+          items: {
+            create: [
+              {
+                lineNumber: 1,
+                description: 'Industrial Heavy Duty Haulage Services (10 Trips)',
+                quantity: 10,
+                unit: 'Trips',
+                unitPrice: 500000.00,
+                taxRate: 7.50,
+                taxAmount: 375000.00,
+                lineTotal: 5375000.00,
+              },
+            ],
+          },
+        },
+      },
+    },
+    include: {
+      invoice: true,
     },
   });
+
+  const baselineInvoice = await prisma.invoice.findUnique({
+    where: { documentId: baselineDoc.id },
+  });
+
+  if (baselineInvoice) {
+    await prisma.payment.upsert({
+      where: {
+        companyId_paymentNumber: {
+          companyId: company.id,
+          paymentNumber: 'PAY-2026-000001',
+        },
+      },
+      update: {},
+      create: {
+        companyId: company.id,
+        invoiceId: baselineInvoice.id,
+        paymentNumber: 'PAY-2026-000001',
+        amount: 1500000.00,
+        currency: 'NGN',
+        paymentDate: new Date(),
+        method: 'BANK_TRANSFER',
+        referenceNumber: 'GLB-TRF-2026-881920',
+        notes: 'Initial 30% advance settlement via Globus Bank NIP',
+        recordedById: managerUser.id,
+        isReversed: false,
+      },
+    });
+  }
 
   // 12. Seed Corporate Vendors
   console.log('Seeding Corporate Vendors...');
@@ -849,6 +965,7 @@ async function main() {
   console.log(`Company ID: ${company.id}`);
   console.log(`Admin User: admin@aoa77.com (Password: Aoa77@Password2026!)`);
   console.log(`Manager User: manager@aoa77.com (Password: Aoa77@Password2026!)`);
+  console.log(`Staff User: staff@aoa77.com (Password: Aoa77@Password2026!)`);
 }
 
 if (require.main === module) {

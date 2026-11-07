@@ -40,3 +40,7 @@ storage/temp/
 
 # Prisma
 # Keep schema and migrations, ignore generated client if copied
+
+# Playwright Test Artifacts
+playwright-report/
+test-results/

@@ -25,6 +25,7 @@ import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 import { buildAllowedCorsOrigins, isOriginAllowed } from '../../common/utils/cors.util';
 
 const REFRESH_COOKIE_NAME = 'refresh_token';
+const LOGIN_RATE_LIMIT = process.env.NODE_ENV === 'test' ? 100 : 5;
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -92,8 +93,8 @@ export class AuthController {
 
   @Public()
   @UseGuards(RateLimitGuard)
-  @RateLimit({ limit: 5, ttl: 60 })
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @RateLimit({ limit: LOGIN_RATE_LIMIT, ttl: 60 })
+  @Throttle({ default: { limit: LOGIN_RATE_LIMIT, ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate user credentials and receive JWT access token' })

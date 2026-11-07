@@ -1,0 +1,16 @@
+{
+  "name": "aoa77-document-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise Document Management System E2E Suite",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.1"
+  }
+}
+

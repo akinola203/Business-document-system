@@ -11,6 +11,7 @@
     "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron .\"",
     "dev:web": "vite",
     "build": "tsc -b && vite build",
+    "test:e2e": "playwright test --config=../playwright.config.ts",
     "lint": "oxlint",
     "preview": "vite preview",
     "package": "npm run build && electron-builder --win nsis"
