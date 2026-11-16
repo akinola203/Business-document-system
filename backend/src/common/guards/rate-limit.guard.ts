@@ -9,6 +9,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import Redis from 'ioredis';
 import { RATE_LIMIT_KEY, RateLimitOptions } from '../decorators/rate-limit.decorator';
+import { MetricsService } from '../../modules/metrics/metrics.service';
 
 interface MemoryBucket {
   count: number;
@@ -145,8 +146,10 @@ export class RateLimitGuard implements CanActivate {
     // 1. Identify client: user_{id} for authenticated; ip_{ip} for unauthenticated
     const user = request.user;
     let clientIdentifier: string;
+    let clientType = 'ip';
     if (user && (user.id || user.sub)) {
       clientIdentifier = `user_${user.id || user.sub}`;
+      clientType = 'user';
     } else {
       const forwarded = request.headers?.['x-forwarded-for'];
       let clientIp: string | undefined;
@@ -159,6 +162,7 @@ export class RateLimitGuard implements CanActivate {
         clientIp = request.ip || request.socket?.remoteAddress || '127.0.0.1';
       }
       clientIdentifier = `ip_${clientIp}`;
+      clientType = 'ip';
     }
 
     // 2. Build route namespace
@@ -186,6 +190,9 @@ export class RateLimitGuard implements CanActivate {
       if (response && typeof response.setHeader === 'function') {
         response.setHeader('Retry-After', retryAfter.toString());
       }
+
+      // Record rate limit throttle metric for Prometheus observability
+      MetricsService.recordRateLimitThrottle(routeScope, clientType);
 
       throw new HttpException(
         {

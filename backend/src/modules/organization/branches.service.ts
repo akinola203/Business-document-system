@@ -3,33 +3,53 @@ import {
   NotFoundException,
   ConflictException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TenantCacheService } from '../cache/tenant-cache.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 
 @Injectable()
 export class BranchesService {
   private readonly logger = new Logger(BranchesService.name);
+  private static readonly CACHE_TTL_SECONDS = 300;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly cache?: TenantCacheService,
+  ) {}
 
   async findAll(companyId: string, isActive?: boolean) {
-    return this.prisma.branch.findMany({
-      where: {
-        companyId,
-        ...(isActive !== undefined ? { isActive } : {}),
-      },
-      include: {
-        _count: {
-          select: {
-            companyUsers: true,
-            documents: true,
+    const loader = () =>
+      this.prisma.branch.findMany({
+        where: {
+          companyId,
+          ...(isActive !== undefined ? { isActive } : {}),
+        },
+        include: {
+          _count: {
+            select: {
+              companyUsers: true,
+              documents: true,
+            },
           },
         },
-      },
-      orderBy: { name: 'asc' },
-    });
+        orderBy: { name: 'asc' },
+      });
+
+    if (this.cache) {
+      const subKey = isActive === undefined ? 'all' : String(isActive);
+      return this.cache.getOrSetTenant(
+        companyId,
+        'org:branches',
+        subKey,
+        BranchesService.CACHE_TTL_SECONDS,
+        loader,
+      );
+    }
+
+    return loader();
   }
 
   async findOne(companyId: string, id: string) {
@@ -90,6 +110,7 @@ export class BranchesService {
       },
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'org:branches');
     this.logger.log(`Branch "${created.code}" created by user "${actorId}".`);
     return created;
   }
@@ -126,6 +147,7 @@ export class BranchesService {
       },
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'org:branches');
     return updated;
   }
 
@@ -148,6 +170,7 @@ export class BranchesService {
       },
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'org:branches');
     this.logger.log(`Branch "${branch.code}" deactivated by user "${actorId}".`);
     return deactivated;
   }

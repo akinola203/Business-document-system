@@ -11,12 +11,12 @@ import { Type } from 'class-transformer';
 import { ClientType } from '@prisma/client';
 
 export class UpdateClientDto {
-  @ApiPropertyOptional({ enum: ClientType, description: 'Client entity classification' })
+  @ApiPropertyOptional({ enum: ClientType, description: 'Client / Customer entity classification' })
   @IsOptional()
   @IsEnum(ClientType)
   type?: ClientType;
 
-  @ApiPropertyOptional({ example: 'Dangote Cement Distribution Hub', description: 'Trading or primary contact name' })
+  @ApiPropertyOptional({ example: 'Dangote Cement Distribution Hub', description: 'Client / Customer trading or primary contact name' })
   @IsOptional()
   @IsString()
   name?: string;

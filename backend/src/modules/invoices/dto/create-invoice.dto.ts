@@ -8,14 +8,16 @@ import {
   ArrayMinSize,
   IsBoolean,
   IsDateString,
+  IsIn,
   Length,
   Validate,
   ValidatorConstraint,
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { Type, Transform, Expose } from 'class-transformer';
 import { InvoiceItemDto } from './invoice-item.dto';
+import { SUPPORTED_CURRENCIES } from '../../currency/currency.service';
 
 @ValidatorConstraint({ name: 'isDueDateAfterOrEqualIssueDate', async: false })
 export class IsDueDateAfterOrEqualIssueDateConstraint implements ValidatorConstraintInterface {
@@ -37,10 +39,23 @@ export class CreateInvoiceDto {
   @IsString()
   title!: string;
 
-  @ApiProperty({ example: 'c0000000-0000-0000-0000-000000000001', description: 'Recipient Client ID' })
-  @IsNotEmpty({ message: 'Client ID is required' })
+  @ApiProperty({ example: 'c0000000-0000-0000-0000-000000000001', description: 'Recipient Client / Customer ID' })
+  @Expose()
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
+  @IsNotEmpty({ message: 'Client / Customer ID is required' })
   @IsString()
   clientId!: string;
+
+  @ApiPropertyOptional({ example: 'c0000000-0000-0000-0000-000000000001', description: 'Alias for Recipient Client / Customer ID (clientId)' })
+  @Transform(({ value, obj }) => {
+    if (value && !obj.clientId) {
+      obj.clientId = value;
+    }
+    return value;
+  })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 
   @ApiPropertyOptional({ description: 'Branch issuing the invoice' })
   @IsOptional()
@@ -63,10 +78,17 @@ export class CreateInvoiceDto {
   @Validate(IsDueDateAfterOrEqualIssueDateConstraint)
   dueDate?: string;
 
-  @ApiPropertyOptional({ example: 'NGN', default: 'NGN', description: 'Currency code' })
+  @ApiPropertyOptional({
+    example: 'NGN',
+    default: 'NGN',
+    enum: SUPPORTED_CURRENCIES,
+    description: 'Currency code (NGN, USD, JPY, GBP, EUR)',
+  })
   @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
   @IsString()
   @Length(3, 3)
+  @IsIn(SUPPORTED_CURRENCIES)
   currency?: string = 'NGN';
 
   @ApiPropertyOptional({ example: 'Net 30 Days', default: 'Net 30 Days', description: 'Payment terms' })
@@ -74,7 +96,7 @@ export class CreateInvoiceDto {
   @IsString()
   paymentTerms?: string = 'Net 30 Days';
 
-  @ApiPropertyOptional({ example: 'PO-DANGOTE-2026-089', description: 'Client Purchase Order Number' })
+  @ApiPropertyOptional({ example: 'PO-DANGOTE-2026-089', description: 'Client / Customer Purchase Order Number' })
   @IsOptional()
   @IsString()
   poNumber?: string;
@@ -99,7 +121,7 @@ export class CreateInvoiceDto {
   @IsString()
   templateVersionId?: string;
 
-  @ApiPropertyOptional({ description: 'Selected Client Address ID for billing override' })
+  @ApiPropertyOptional({ description: 'Selected Client / Customer Address ID for billing override' })
   @IsOptional()
   @IsString()
   selectedAddressId?: string;

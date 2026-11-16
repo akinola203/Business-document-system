@@ -48,7 +48,12 @@ services:
       API_PREFIX: api/v1
       APP_URL: http://localhost:5173
       FRONTEND_URL: http://localhost:5173
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/${POSTGRES_DB:-business_doc_db}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/${POSTGRES_DB:-business_doc_db}?schema=public&connection_limit=20&pool_timeout=30
+      DATABASE_READ_REPLICA_URL: ${DATABASE_READ_REPLICA_URL:-}
+      DB_PRIMARY_CONNECTION_LIMIT: ${DB_PRIMARY_CONNECTION_LIMIT:-20}
+      DB_REPLICA_CONNECTION_LIMIT: ${DB_REPLICA_CONNECTION_LIMIT:-30}
+      DB_POOL_TIMEOUT: ${DB_POOL_TIMEOUT:-30}
+      DB_READ_AFTER_WRITE_WINDOW_MS: ${DB_READ_AFTER_WRITE_WINDOW_MS:-2000}
       REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -60,6 +65,9 @@ services:
       STORAGE_LOCAL_ROOT: ./storage/secure-uploads
       DEFAULT_CURRENCY: NGN
       DEFAULT_VAT_RATE: "7.5"
+      EXCHANGE_RATE_API_KEY: ${EXCHANGE_RATE_API_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
       postgres:
         condition: service_healthy

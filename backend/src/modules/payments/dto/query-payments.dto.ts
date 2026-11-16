@@ -24,10 +24,16 @@ export class QueryPaymentsDto {
   @IsUUID()
   documentId?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by client ID' })
+  @ApiPropertyOptional({ description: 'Filter by Client / Customer ID' })
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
   @IsOptional()
   @IsUUID()
   clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for Client / Customer ID (clientId)' })
+  @IsOptional()
+  @IsUUID()
+  customerId?: string;
 
   @ApiPropertyOptional({ enum: PaymentMethod })
   @IsOptional()

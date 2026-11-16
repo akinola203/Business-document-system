@@ -8,9 +8,16 @@ import {
   Query,
   ParseIntPipe,
   ForbiddenException,
+  Optional,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { DocumentType } from '@prisma/client';
 import { DocumentsService } from './documents.service';
+import {
+  DocumentConversionService,
+  ConvertInvoiceToWaybillOptions,
+  ConvertWaybillToInvoiceOptions,
+} from './document-conversion.service';
 import { QueryDocumentsDto } from './dto/query-documents.dto';
 import { CancelDocumentDto } from './dto/cancel-document.dto';
 import { SubmitDocumentDto } from './dto/submit-document.dto';
@@ -38,7 +45,10 @@ import {
 @ApiBearerAuth('JWT-auth')
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    @Optional() private readonly documentConversionService?: DocumentConversionService,
+  ) {}
 
   private async authorize(user: AuthenticatedUser, id: string, action: DocumentAction) {
     const documentType = await this.documentsService.getDocumentType(user.companyId, id);
@@ -245,5 +255,43 @@ export class DocumentsController {
   ) {
     await this.authorize(user, id, 'archive');
     return this.documentsService.softDelete(user.companyId, id, user.id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // BIDIRECTIONAL DOCUMENT CONVERSION (INVOICE <-> WAYBILL)
+  // ---------------------------------------------------------------------------
+
+  @Post(':id/convert-to-waybill')
+  @ApiOperation({ summary: 'Convert an existing invoice into a linked waybill' })
+  @ApiResponse({ status: 201, description: 'Waybill created and linked to invoice.' })
+  async convertInvoiceToWaybill(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() options: ConvertInvoiceToWaybillOptions = {},
+  ) {
+    assertDocumentPermission(user, DocumentType.INVOICE, 'view');
+    return this.documentConversionService!.createWaybillFromInvoice(
+      id,
+      user.companyId,
+      user.id,
+      options,
+    );
+  }
+
+  @Post(':id/convert-to-invoice')
+  @ApiOperation({ summary: 'Convert an unbilled waybill into a newly linked invoice' })
+  @ApiResponse({ status: 201, description: 'Invoice created and linked to waybill.' })
+  async convertWaybillToInvoice(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() options: ConvertWaybillToInvoiceOptions = {},
+  ) {
+    assertDocumentPermission(user, DocumentType.WAYBILL, 'view');
+    return this.documentConversionService!.createInvoiceFromWaybill(
+      id,
+      user.companyId,
+      user.id,
+      options,
+    );
   }
 }

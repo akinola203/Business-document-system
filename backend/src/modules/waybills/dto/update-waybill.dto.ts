@@ -8,7 +8,7 @@ import {
   IsInt,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { WaybillItemDto } from './waybill-item.dto';
 
 export class UpdateWaybillDto {
@@ -17,10 +17,16 @@ export class UpdateWaybillDto {
   @IsString()
   title?: string;
 
-  @ApiPropertyOptional({ description: 'Recipient Client ID' })
+  @ApiPropertyOptional({ description: 'Recipient Client / Customer ID' })
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for Recipient Client / Customer ID (clientId)' })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 
   @ApiPropertyOptional({ description: 'Dispatching branch or depot ID' })
   @IsOptional()

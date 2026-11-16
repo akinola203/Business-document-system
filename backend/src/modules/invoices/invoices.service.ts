@@ -5,9 +5,11 @@ import {
   ForbiddenException,
   ConflictException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NumberingService } from '../numbering/numbering.service';
+import { CurrencyService } from '../currency/currency.service';
 import { FinancialMathUtil } from '../documents/utils/financial-math.util';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
@@ -17,34 +19,56 @@ import { validateTenantScope } from '../../common/utils/tenant-validation.util';
 @Injectable()
 export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
+  private readonly currencyService: CurrencyService;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly numberingService: NumberingService,
-  ) {}
+    @Optional() currencyService?: CurrencyService,
+  ) {
+    this.currencyService = currencyService ?? new CurrencyService();
+  }
 
   /**
    * Creates a new invoice in DRAFT status with transaction-safe sequential number and authoritative financial math.
    */
   async createDraft(companyId: string, dto: CreateInvoiceDto, actorId: string) {
+    const effectiveClientId = dto.clientId || dto.customerId || '';
     // 1. Verify foreign keys belong to caller company
     const { client } = await validateTenantScope(this.prisma, companyId, {
-      clientId: dto.clientId,
+      clientId: effectiveClientId,
       branchId: dto.branchId,
       departmentId: dto.departmentId,
       templateId: dto.templateId,
     });
 
-    // 2. Authoritative Decimal Financial Calculations
+    // 2. Authoritative Decimal Financial Calculations & Multi-Currency Rate Snapshot
     const mathSummary = FinancialMathUtil.calculateDocumentTotals(dto.items);
+    const currency = this.currencyService.normalizeCurrency(dto.currency);
+    const exchangeRateNum = await this.currencyService.getExchangeRateToNgn(currency);
+    const baseSubtotal = await this.currencyService.convertDecimalToNgn(
+      mathSummary.subtotal,
+      currency,
+      exchangeRateNum,
+    );
+    const baseTaxAmount = await this.currencyService.convertDecimalToNgn(
+      mathSummary.taxAmount,
+      currency,
+      exchangeRateNum,
+    );
+    const baseTotalAmount = await this.currencyService.convertDecimalToNgn(
+      mathSummary.totalAmount,
+      currency,
+      exchangeRateNum,
+    );
 
     if (dto.selectedAddressId) {
       const address = await this.prisma.clientAddress.findFirst({
-        where: { id: dto.selectedAddressId, clientId: dto.clientId },
+        where: { id: dto.selectedAddressId, clientId: effectiveClientId },
       });
       if (!address) {
         throw new BadRequestException(
-          `Selected address ID "${dto.selectedAddressId}" does not belong to client "${dto.clientId}".`,
+          `Selected address ID "${dto.selectedAddressId}" does not belong to Client / Customer "${effectiveClientId}".`,
         );
       }
     }
@@ -60,7 +84,7 @@ export class InvoicesService {
       const document = await tx.document.create({
         data: {
           companyId,
-          clientId: dto.clientId,
+          clientId: effectiveClientId,
           branchId: dto.branchId,
           departmentId: dto.departmentId,
           documentType: DocumentType.INVOICE,
@@ -69,7 +93,11 @@ export class InvoicesService {
           status: DocumentStatus.DRAFT,
           issueDate: dto.issueDate ? new Date(dto.issueDate) : new Date(),
           dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
-          currency: dto.currency || 'NGN',
+          currency,
+          exchangeRate: exchangeRateNum.toFixed(6),
+          baseSubtotal: baseSubtotal.toString(),
+          baseTaxAmount: baseTaxAmount.toString(),
+          baseTotalAmount: baseTotalAmount.toString(),
           subtotal: mathSummary.subtotal.toString(),
           taxAmount: mathSummary.taxAmount.toString(),
           discountAmount: mathSummary.discountAmount.toString(),
@@ -81,13 +109,26 @@ export class InvoicesService {
           metadata: {
             ...(dto.notes ? { notes: dto.notes.trim() } : {}),
             ...(dto.selectedAddressId ? { selectedAddressId: dto.selectedAddressId } : {}),
+            currencySnapshot: {
+              currency,
+              baseCurrency: 'NGN',
+              exchangeRate: exchangeRateNum,
+              baseSubtotal: baseSubtotal.toString(),
+              baseTaxAmount: baseTaxAmount.toString(),
+              baseTotalAmount: baseTotalAmount.toString(),
+              snapshotAt: new Date().toISOString(),
+            },
           },
         },
       });
 
       await tx.invoice.create({
         data: {
+          companyId,
           documentId: document.id,
+          currency,
+          exchangeRate: exchangeRateNum.toFixed(6),
+          baseTotalAmount: baseTotalAmount.toString(),
           paymentTerms: dto.paymentTerms || 'Net 30 Days',
           poNumber: dto.poNumber?.trim(),
           notes: dto.notes?.trim(),
@@ -117,7 +158,10 @@ export class InvoicesService {
           entityId: document.id,
           newValues: {
             documentNumber: document.documentNumber,
+            currency,
+            exchangeRate: exchangeRateNum.toFixed(6),
             totalAmount: document.totalAmount.toString(),
+            baseTotalAmount: baseTotalAmount.toString(),
             clientId: client?.id || dto.clientId,
             clientName: client?.name || 'N/A',
           },
@@ -180,6 +224,19 @@ export class InvoicesService {
       );
     }
 
+    const effectiveCurrency = this.currencyService.normalizeCurrency(
+      dto.currency || document.currency || 'NGN',
+    );
+    const currencyChanged =
+      dto.currency !== undefined &&
+      this.currencyService.normalizeCurrency(dto.currency) !==
+        this.currencyService.normalizeCurrency(document.currency);
+    const existingRate = document.exchangeRate ? Number(document.exchangeRate.toString()) : 0;
+    const exchangeRateNum =
+      currencyChanged || !existingRate || existingRate <= 0
+        ? await this.currencyService.getExchangeRateToNgn(effectiveCurrency)
+        : existingRate;
+
     const updated = await this.prisma.$transaction(async (tx) => {
       // 1. Claim row atomically with OCC and status check
       const claimResult = await tx.document.updateMany({
@@ -237,6 +294,22 @@ export class InvoicesService {
         });
       }
 
+      const baseSubtotal = await this.currencyService.convertDecimalToNgn(
+        subtotal.toString(),
+        effectiveCurrency,
+        exchangeRateNum,
+      );
+      const baseTaxAmount = await this.currencyService.convertDecimalToNgn(
+        taxAmount.toString(),
+        effectiveCurrency,
+        exchangeRateNum,
+      );
+      const baseTotalAmount = await this.currencyService.convertDecimalToNgn(
+        totalAmount.toString(),
+        effectiveCurrency,
+        exchangeRateNum,
+      );
+
       await tx.document.update({
         where: { id: document.id, companyId },
         data: {
@@ -246,7 +319,11 @@ export class InvoicesService {
           departmentId: dto.departmentId,
           issueDate: dto.issueDate ? new Date(dto.issueDate) : undefined,
           dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
-          currency: dto.currency,
+          currency: effectiveCurrency,
+          exchangeRate: new Prisma.Decimal(exchangeRateNum.toFixed(6)),
+          baseSubtotal: new Prisma.Decimal(baseSubtotal.toString()),
+          baseTaxAmount: new Prisma.Decimal(baseTaxAmount.toString()),
+          baseTotalAmount: new Prisma.Decimal(baseTotalAmount.toString()),
           subtotal,
           taxAmount,
           discountAmount,
@@ -258,6 +335,15 @@ export class InvoicesService {
             ...(typeof document.metadata === 'object' && document.metadata ? (document.metadata as any) : {}),
             ...(dto.notes !== undefined ? { notes: dto.notes ? dto.notes.trim() : null } : {}),
             ...(dto.selectedAddressId !== undefined ? { selectedAddressId: dto.selectedAddressId } : {}),
+            currencySnapshot: {
+              currency: effectiveCurrency,
+              baseCurrency: 'NGN',
+              exchangeRate: exchangeRateNum,
+              baseSubtotal: baseSubtotal.toString(),
+              baseTaxAmount: baseTaxAmount.toString(),
+              baseTotalAmount: baseTotalAmount.toString(),
+              snapshotAt: new Date().toISOString(),
+            },
           },
         },
       });
@@ -265,6 +351,10 @@ export class InvoicesService {
       await tx.invoice.update({
         where: { id: document.invoice!.id, documentId: document.id },
         data: {
+          companyId,
+          currency: effectiveCurrency,
+          exchangeRate: new Prisma.Decimal(exchangeRateNum.toFixed(6)),
+          baseTotalAmount: new Prisma.Decimal(baseTotalAmount.toString()),
           paymentTerms: dto.paymentTerms,
           poNumber: dto.poNumber !== undefined ? dto.poNumber?.trim() : undefined,
           notes: dto.notes !== undefined ? dto.notes?.trim() : undefined,

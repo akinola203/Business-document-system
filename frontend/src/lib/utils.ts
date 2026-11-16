@@ -1,19 +1,19 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatCurrencyLocale, getCurrencySymbol, CURRENCY_OPTIONS, CURRENCY_CONFIG } from './currency';
+
+export { getCurrencySymbol, CURRENCY_OPTIONS, CURRENCY_CONFIG };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 /**
- * Format numeric currency with standard locale spacing (e.g. NGN 250,000.00)
+ * Format numeric currency using Intl.NumberFormat with locale-specific rules and precision
+ * (en-NG for NGN, en-US for USD, ja-JP for JPY with 0 decimals, en-GB for GBP, de-DE for EUR)
  */
 export function formatCurrency(amount: number | string | undefined | null, currency = 'NGN'): string {
-  const num = Number(amount) || 0;
-  return `${currency} ${num.toLocaleString('en-NG', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return formatCurrencyLocale(amount, currency);
 }
 
 /**

@@ -257,7 +257,7 @@ export const PillFilterBar: React.FC<PillFilterBarProps> = ({
                   : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50',
               )}
             >
-              <option value="">All Customers</option>
+              <option value="">All Clients / Customers</option>
               {resolvedClientOptions.map((cli) => (
                 <option key={cli.value} value={cli.value}>
                   {cli.label}
@@ -377,14 +377,14 @@ export const PillFilterBar: React.FC<PillFilterBarProps> = ({
               <div className="space-y-1">
                 <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
                   <Users className="w-3.5 h-3.5 text-[#5847F6]" />
-                  <span>Client Account</span>
+                  <span>Client / Customer Account</span>
                 </label>
                 <select
                   value={filters.clientId || ''}
                   onChange={(e) => onFilterChange({ clientId: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-[#F8F9FC] border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6] cursor-pointer"
                 >
-                  <option value="">All Clients</option>
+                  <option value="">All Clients / Customers</option>
                   {resolvedClientOptions.map((cli) => (
                     <option key={cli.value} value={cli.value}>
                       {cli.label}

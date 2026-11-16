@@ -474,10 +474,10 @@ export const WaybillBuilderPage: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-slate-700">
-                    Consignee Client <span className="text-slate-400 font-normal">(Optional)</span>
+                    Consignee Client / Customer <span className="text-slate-400 font-normal">(Optional)</span>
                   </label>
                   <span className="text-[10px] text-sky-600 font-bold bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
-                    {clients.length} Clients Available
+                    {clients.length} Clients / Customers Available
                   </span>
                 </div>
                 {/* 1-Tap Consignee Quick-Fill Pills & Demo Presets */}
@@ -509,10 +509,10 @@ export const WaybillBuilderPage: React.FC = () => {
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
                 >
-                  <option value="">Select a consignee client...</option>
+                  <option value="">Select a consignee Client / Customer...</option>
                   {(Array.isArray(clients) ? clients : []).map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''}
+                      {c.name || 'Client / Customer'} {c.companyName ? `(${c.companyName})` : ''}
                     </option>
                   ))}
                 </select>

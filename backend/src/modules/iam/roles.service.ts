@@ -5,15 +5,19 @@ import {
   BadRequestException,
   ForbiddenException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { TenantCacheService } from '../cache/tenant-cache.service';
 import { CreateRoleDto, createRoleSchema } from './dto/create-role.dto';
 import { UpdateRolePermissionsDto, updateRolePermissionsSchema } from './dto/update-role-permissions.dto';
 
 @Injectable()
 export class RolesService {
   private readonly logger = new Logger(RolesService.name);
+  private static readonly ROLES_CACHE_TTL_SECONDS = 300;
+  private static readonly PERMISSIONS_CACHE_TTL_SECONDS = 3600;
 
   // Core administrative permissions that must never be stripped from the Admin role to prevent tenant lockout
   private static readonly CORE_ADMIN_PERMISSIONS = [
@@ -28,41 +32,68 @@ export class RolesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    @Optional() private readonly cache?: TenantCacheService,
   ) {}
 
   /**
    * Retrieves all roles available to the company (both standard system roles and company custom roles).
+   * Cached per tenant in Redis to minimize read replica pressure.
    */
   async findAllRoles(companyId: string) {
-    return this.prisma.role.findMany({
-      where: {
-        OR: [{ companyId }, { companyId: null }],
-      },
-      include: {
-        rolePermissions: {
-          include: {
-            permission: true,
-          },
+    const loader = () =>
+      this.prisma.role.findMany({
+        where: {
+          OR: [{ companyId }, { companyId: null }],
         },
-        _count: {
-          select: {
-            companyUsers: {
-              where: { companyId },
+        include: {
+          rolePermissions: {
+            include: {
+              permission: true,
+            },
+          },
+          _count: {
+            select: {
+              companyUsers: {
+                where: { companyId },
+              },
             },
           },
         },
-      },
-      orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
-    });
+        orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
+      });
+
+    if (this.cache) {
+      return this.cache.getOrSetTenant(
+        companyId,
+        'iam',
+        'roles',
+        RolesService.ROLES_CACHE_TTL_SECONDS,
+        loader,
+      );
+    }
+
+    return loader();
   }
 
   /**
    * Retrieves master catalog of all system permissions, grouped by domain category.
+   * Cached globally as a static lookup table.
    */
   async findAllPermissions() {
-    return this.prisma.permission.findMany({
-      orderBy: [{ category: 'asc' }, { slug: 'asc' }],
-    });
+    const loader = () =>
+      this.prisma.permission.findMany({
+        orderBy: [{ category: 'asc' }, { slug: 'asc' }],
+      });
+
+    if (this.cache) {
+      return this.cache.getOrSet(
+        this.cache.buildGlobalKey('iam', 'permissions'),
+        RolesService.PERMISSIONS_CACHE_TTL_SECONDS,
+        loader,
+      );
+    }
+
+    return loader();
   }
 
   private async assertCallerCanGrantPermissions(companyId: string, actorId: string, targetPermissionIds: string[]) {
@@ -184,6 +215,7 @@ export class RolesService {
       return role;
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'iam');
     this.logger.log(`Custom role "${trimmedName}" created for company "${companyId}" by "${actorId}".`);
     return created;
   }
@@ -280,6 +312,7 @@ export class RolesService {
       });
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'iam');
     this.logger.log(`Permissions updated for role "${role.name}" (${roleId}) by user "${actorId}".`);
     return updated;
   }

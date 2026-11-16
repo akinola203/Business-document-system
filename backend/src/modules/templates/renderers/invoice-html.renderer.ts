@@ -68,7 +68,27 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
 
   const formatCurrency = (val: string | number) => {
     const num = Number(val) || 0;
-    return `${escapeHtml(ctx.currency)}&nbsp;${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const code = (ctx.currency || 'NGN').toUpperCase();
+    const localeMap: Record<string, string> = {
+      NGN: 'en-NG',
+      USD: 'en-US',
+      JPY: 'ja-JP',
+      GBP: 'en-GB',
+      EUR: 'de-DE',
+    };
+    const decimals = code === 'JPY' ? 0 : 2;
+    const locale = localeMap[code] || 'en-NG';
+    try {
+      const formatted = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: code,
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }).format(num);
+      return escapeHtml(formatted);
+    } catch {
+      return `${escapeHtml(code)}&nbsp;${num.toLocaleString('en-NG', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+    }
   };
 
   const itemsRows = (inv.items || [])

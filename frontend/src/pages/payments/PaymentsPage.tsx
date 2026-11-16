@@ -185,7 +185,7 @@ export const PaymentsPage: React.FC = () => {
         <BentoKpiCard
           title="Outstanding Invoices"
           value={formatCurrency(totalReceivables, 'NGN')}
-          subtitle="Pending customer receivables"
+          subtitle="Pending Client / Customer receivables"
           icon={Clock}
           iconBgColor="bg-amber-50"
           iconColor="text-amber-600"
@@ -242,7 +242,7 @@ export const PaymentsPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search ref #, client, amount..."
+            placeholder="Search ref #, Client / Customer, amount..."
             className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
           />
         </div>

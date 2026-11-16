@@ -140,14 +140,14 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
           </div>
         </div>
 
-        {/* Customer Information Glass Strip */}
+        {/* Client / Customer Information Glass Strip */}
         <div className="mt-4 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-between text-xs">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 block">
-              Billed Customer
+              Billed Client / Customer
             </span>
             <span className="font-extrabold text-sm text-white">
-              {document.client?.companyName || document.client?.name || 'Walk-in Customer'}
+              {document.client?.companyName || document.client?.name || 'Walk-in Client / Customer'}
             </span>
             {document.client?.email && (
               <span className="text-white/70 block text-[11px] mt-0.5">

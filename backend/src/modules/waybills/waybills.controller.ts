@@ -5,10 +5,13 @@ import {
   Param,
   Body,
   UseGuards,
+  Optional,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { WaybillsService } from './waybills.service';
+import { BatchWaybillService } from './batch-waybill.service';
 import { CreateWaybillDto } from './dto/create-waybill.dto';
+import { CreateBatchWaybillDto } from './dto/create-batch-waybill.dto';
 import { UpdateWaybillDto } from './dto/update-waybill.dto';
 import { StageWaybillReadyDto } from './dto/stage-waybill-ready.dto';
 import { DispatchWaybillDto } from './dto/dispatch-waybill.dto';
@@ -23,7 +26,28 @@ import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 @ApiBearerAuth('JWT-auth')
 @Controller('waybills')
 export class WaybillsController {
-  constructor(private readonly waybillsService: WaybillsService) {}
+  constructor(
+    private readonly waybillsService: WaybillsService,
+    @Optional() private readonly batchWaybillService?: BatchWaybillService,
+  ) {}
+
+  @Post('batch')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 20, ttl: 60 })
+  @RequirePermissions('waybill:create')
+  @ApiOperation({ summary: 'Consolidate multiple invoices into a MasterWaybill delivery manifest' })
+  @ApiResponse({ status: 201, description: 'Master waybill manifest and child waybills generated.' })
+  async createBatch(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateBatchWaybillDto,
+  ) {
+    return this.batchWaybillService!.createBatchWaybill(
+      user.companyId,
+      dto.invoiceIds,
+      dto.deliveryZone,
+      user.id,
+    );
+  }
 
   @Post()
   @UseGuards(RateLimitGuard)

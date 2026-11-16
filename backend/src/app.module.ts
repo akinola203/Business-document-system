@@ -10,6 +10,7 @@ import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { PrismaModule } from './modules/prisma/prisma.module';
+import { TenantCacheModule } from './modules/cache/tenant-cache.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { CompaniesModule } from './modules/companies/companies.module';
@@ -32,6 +33,9 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { VendorsModule } from './modules/vendors/vendors.module';
 import { SuppliesModule } from './modules/supplies/supplies.module';
 import { MailModule } from './modules/mail/mail.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
+import { MetricsInterceptor } from './modules/metrics/metrics.interceptor';
+import { CurrencyModule } from './modules/currency/currency.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -67,6 +71,7 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
       },
     ]),
     PrismaModule,
+    TenantCacheModule,
     AuditModule,
     IdempotencyModule,
     NotificationsModule,
@@ -89,6 +94,8 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
     VendorsModule,
     SuppliesModule,
     MailModule,
+    MetricsModule,
+    CurrencyModule,
   ],
   providers: [
     {
@@ -126,6 +133,10 @@ import { IdempotencyInterceptor } from './common/interceptors/idempotency.interc
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

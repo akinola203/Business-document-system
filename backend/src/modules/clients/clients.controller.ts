@@ -19,16 +19,16 @@ import { UpdateClientStatusDto } from './dto/update-client-status.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions } from '../../common/decorators/require-permissions.decorator';
 
-@ApiTags('Clients & Addresses')
+@ApiTags('Clients / Customers & Addresses')
 @ApiBearerAuth('JWT-auth')
-@Controller('clients')
+@Controller(['clients', 'customers'])
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Get()
   @RequirePermissions('clients:view')
-  @ApiOperation({ summary: 'List clients with pagination, full-text search, and status filters' })
-  @ApiResponse({ status: 200, description: 'Paginated client list retrieved.' })
+  @ApiOperation({ summary: 'List Clients / Customers with pagination, full-text search, and status filters' })
+  @ApiResponse({ status: 200, description: 'Paginated Client / Customer list retrieved.' })
   async findAll(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: QueryClientsDto,
@@ -38,18 +38,18 @@ export class ClientsController {
 
   @Get(':id')
   @RequirePermissions('clients:view')
-  @ApiOperation({ summary: 'Get full client profile by ID including all billing/shipping addresses' })
-  @ApiResponse({ status: 200, description: 'Client profile retrieved.' })
-  @ApiResponse({ status: 404, description: 'Client not found.' })
+  @ApiOperation({ summary: 'Get full Client / Customer profile by ID including all billing/shipping addresses' })
+  @ApiResponse({ status: 200, description: 'Client / Customer profile retrieved.' })
+  @ApiResponse({ status: 404, description: 'Client / Customer not found.' })
   async findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.clientsService.findOne(user.companyId, id);
   }
 
   @Post()
   @RequirePermissions('clients:create')
-  @ApiOperation({ summary: 'Create a new client with auto-generated or custom client code' })
-  @ApiResponse({ status: 201, description: 'Client created successfully.' })
-  @ApiResponse({ status: 409, description: 'Client number already exists in company.' })
+  @ApiOperation({ summary: 'Create a new Client / Customer with auto-generated or custom code' })
+  @ApiResponse({ status: 201, description: 'Client / Customer created successfully.' })
+  @ApiResponse({ status: 409, description: 'Client / Customer number already exists in company.' })
   async create(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateClientDto,
@@ -59,9 +59,9 @@ export class ClientsController {
 
   @Patch(':id')
   @RequirePermissions('clients:update')
-  @ApiOperation({ summary: 'Update client details and credit terms' })
-  @ApiResponse({ status: 200, description: 'Client successfully updated.' })
-  @ApiResponse({ status: 404, description: 'Client not found.' })
+  @ApiOperation({ summary: 'Update Client / Customer details and credit terms' })
+  @ApiResponse({ status: 200, description: 'Client / Customer successfully updated.' })
+  @ApiResponse({ status: 404, description: 'Client / Customer not found.' })
   async update(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,

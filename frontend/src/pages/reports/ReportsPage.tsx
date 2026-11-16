@@ -123,8 +123,8 @@ export const ReportsPage: React.FC = () => {
       ['61-90 Days', summary.agingReceivables.bucket61_90.amount, summary.agingReceivables.bucket61_90.count, `${summary.agingReceivables.bucket61_90.percent}%`],
       ['90+ Days Overdue', summary.agingReceivables.bucket90Plus.amount, summary.agingReceivables.bucket90Plus.count, `${summary.agingReceivables.bucket90Plus.percent}%`],
       [],
-      ['TOP CLIENT ACCOUNTS'],
-      ['Client Code', 'Client Name', 'Total Invoiced', 'Total Paid', 'Balance Due', 'Credit Limit', 'Utilization (%)'],
+      ['TOP CLIENT / CUSTOMER ACCOUNTS'],
+      ['Client / Customer Code', 'Client / Customer Name', 'Total Invoiced', 'Total Paid', 'Balance Due', 'Credit Limit', 'Utilization (%)'],
       ...summary.topClients.map((c) => [
         c.clientNumber,
         c.name,
@@ -457,7 +457,7 @@ export const ReportsPage: React.FC = () => {
 
               <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-white/80">
                 <span>Total Active Debtors: <strong>{summary.topClients.length}</strong></span>
-                <span className="font-bold">AOA 77 Client Portfolio</span>
+                <span className="font-bold">AOA 77 Client / Customer Portfolio</span>
               </div>
             </div>
           </div>

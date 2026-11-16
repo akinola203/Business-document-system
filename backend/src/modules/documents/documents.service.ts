@@ -49,6 +49,7 @@ export class DocumentsService {
       documentType,
       status,
       clientId,
+      customerId,
       branchId,
       departmentId,
       startDate,
@@ -58,6 +59,7 @@ export class DocumentsService {
       sortOrder = 'desc',
     } = query;
 
+    const effectiveClientId = clientId || customerId;
     const skip = (page - 1) * limit;
 
     const where: Prisma.DocumentWhereInput = {
@@ -70,7 +72,7 @@ export class DocumentsService {
           ? { documentType: { in: allowedTypes } }
           : {}),
       ...(status ? { status } : {}),
-      ...(clientId ? { clientId } : {}),
+      ...(effectiveClientId ? { clientId: effectiveClientId } : {}),
       ...(branchId ? { branchId } : {}),
       ...(departmentId ? { departmentId } : {}),
       ...(startDate || endDate

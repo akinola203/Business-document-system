@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TenantCacheService } from '../cache/tenant-cache.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
 import { Prisma } from '@prisma/client';
@@ -7,33 +8,52 @@ import { Prisma } from '@prisma/client';
 @Injectable()
 export class CompaniesService {
   private readonly logger = new Logger(CompaniesService.name);
+  private static readonly PROFILE_CACHE_TTL_SECONDS = 300;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly cache?: TenantCacheService,
+  ) {}
 
   /**
    * Retrieves the current company profile, settings, and summary stats.
+   * Uses tenant-scoped Redis caching to offload frequent read replica lookups.
    */
   async getCurrentCompany(companyId: string) {
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-      include: {
-        settings: true,
-        _count: {
-          select: {
-            departments: { where: { isActive: true } },
-            branches: { where: { isActive: true } },
-            clients: { where: { status: 'ACTIVE' } },
-            companyUsers: { where: { status: 'ACTIVE' } },
+    const loader = async () => {
+      const company = await this.prisma.company.findUnique({
+        where: { id: companyId },
+        include: {
+          settings: true,
+          _count: {
+            select: {
+              departments: { where: { isActive: true } },
+              branches: { where: { isActive: true } },
+              clients: { where: { status: 'ACTIVE' } },
+              companyUsers: { where: { status: 'ACTIVE' } },
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!company) {
-      throw new NotFoundException(`Company with ID "${companyId}" not found.`);
+      if (!company) {
+        throw new NotFoundException(`Company with ID "${companyId}" not found.`);
+      }
+
+      return company;
+    };
+
+    if (this.cache) {
+      return this.cache.getOrSetTenant(
+        companyId,
+        'company',
+        'profile',
+        CompaniesService.PROFILE_CACHE_TTL_SECONDS,
+        loader,
+      );
     }
 
-    return company;
+    return loader();
   }
 
   /**
@@ -87,6 +107,7 @@ export class CompaniesService {
       return result;
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'company');
     this.logger.log(`Company "${companyId}" profile updated by user "${actorId}".`);
     return updated;
   }
@@ -182,6 +203,7 @@ export class CompaniesService {
       return result;
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'company');
     this.logger.log(`Company "${companyId}" settings updated by user "${actorId}".`);
     return updatedSettings;
   }

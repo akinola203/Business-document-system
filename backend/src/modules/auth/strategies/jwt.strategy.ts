@@ -1,8 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Optional } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TenantCacheService } from '../../cache/tenant-cache.service';
 import { AuthenticatedUser } from '../../../common/decorators/current-user.decorator';
 
 export interface JwtPayload {
@@ -48,9 +49,12 @@ export function assertStrongJwtSecretInProduction(
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  private static readonly AUTH_USER_CACHE_TTL_SECONDS = 60;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    @Optional() private readonly cache?: TenantCacheService,
   ) {
     const secret = configService.getOrThrow<string>('JWT_ACCESS_SECRET');
     const nodeEnv = configService.get<string>('NODE_ENV') || process.env.NODE_ENV;
@@ -68,50 +72,64 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Invalid access token claims.');
     }
 
-    // Verify user and company membership remain active
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      include: {
-        companyUsers: {
-          where: { companyId: payload.companyId },
-          include: {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: {
-                    permission: true,
+    const loadAuthenticatedUser = async (): Promise<AuthenticatedUser> => {
+      // Verify user and company membership remain active
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        include: {
+          companyUsers: {
+            where: { companyId: payload.companyId },
+            include: {
+              role: {
+                include: {
+                  rolePermissions: {
+                    include: {
+                      permission: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('User account is inactive or does not exist.');
-    }
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('User account is inactive or does not exist.');
+      }
 
-    const membership = user.companyUsers[0];
-    if (!membership || membership.status !== 'ACTIVE') {
-      throw new UnauthorizedException('User membership in the selected company is no longer active.');
-    }
+      const membership = user.companyUsers[0];
+      if (!membership || membership.status !== 'ACTIVE') {
+        throw new UnauthorizedException('User membership in the selected company is no longer active.');
+      }
 
-    const permissions = membership.role.rolePermissions.map((rp) => rp.permission.slug);
-    const isSystemAdmin =
-      membership.role.name === 'Admin' ||
-      Boolean((membership.role as any).isSystem && membership.role.name.toLowerCase() === 'admin');
+      const permissions = membership.role.rolePermissions.map((rp) => rp.permission.slug);
+      const isSystemAdmin =
+        membership.role.name === 'Admin' ||
+        Boolean((membership.role as any).isSystem && membership.role.name.toLowerCase() === 'admin');
 
-    return {
-      id: user.id,
-      email: user.email,
-      companyId: membership.companyId,
-      branchId: membership.branchId,
-      departmentId: membership.departmentId,
-      role: membership.role.name,
-      isSystemAdmin,
-      permissions,
+      return {
+        id: user.id,
+        email: user.email,
+        companyId: membership.companyId,
+        branchId: membership.branchId,
+        departmentId: membership.departmentId,
+        role: membership.role.name,
+        isSystemAdmin,
+        permissions,
+      };
     };
+
+    if (this.cache && process.env.DISABLE_AUTH_CACHE !== 'true') {
+      return this.cache.getOrSetTenant(
+        payload.companyId,
+        'iam',
+        `auth-user:${payload.sub}`,
+        JwtStrategy.AUTH_USER_CACHE_TTL_SECONDS,
+        loadAuthenticatedUser,
+      );
+    }
+
+    return loadAuthenticatedUser();
   }
 }

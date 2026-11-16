@@ -3,33 +3,53 @@ import {
   NotFoundException,
   ConflictException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TenantCacheService } from '../cache/tenant-cache.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 
 @Injectable()
 export class DepartmentsService {
   private readonly logger = new Logger(DepartmentsService.name);
+  private static readonly CACHE_TTL_SECONDS = 300;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly cache?: TenantCacheService,
+  ) {}
 
   async findAll(companyId: string, isActive?: boolean) {
-    return this.prisma.department.findMany({
-      where: {
-        companyId,
-        ...(isActive !== undefined ? { isActive } : {}),
-      },
-      include: {
-        _count: {
-          select: {
-            companyUsers: true,
-            documents: true,
+    const loader = () =>
+      this.prisma.department.findMany({
+        where: {
+          companyId,
+          ...(isActive !== undefined ? { isActive } : {}),
+        },
+        include: {
+          _count: {
+            select: {
+              companyUsers: true,
+              documents: true,
+            },
           },
         },
-      },
-      orderBy: { name: 'asc' },
-    });
+        orderBy: { name: 'asc' },
+      });
+
+    if (this.cache) {
+      const subKey = isActive === undefined ? 'all' : String(isActive);
+      return this.cache.getOrSetTenant(
+        companyId,
+        'org:departments',
+        subKey,
+        DepartmentsService.CACHE_TTL_SECONDS,
+        loader,
+      );
+    }
+
+    return loader();
   }
 
   async findOne(companyId: string, id: string) {
@@ -88,6 +108,7 @@ export class DepartmentsService {
       },
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'org:departments');
     this.logger.log(`Department "${created.code}" created by user "${actorId}".`);
     return created;
   }
@@ -120,6 +141,7 @@ export class DepartmentsService {
       },
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'org:departments');
     return updated;
   }
 
@@ -142,6 +164,7 @@ export class DepartmentsService {
       },
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'org:departments');
     this.logger.log(`Department "${department.code}" deactivated by user "${actorId}".`);
     return deactivated;
   }

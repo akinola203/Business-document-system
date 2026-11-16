@@ -38,7 +38,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
     return (
       <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-400">
         <Building2 className="w-12 h-12 text-slate-600 mb-3 stroke-[1.5]" />
-        <p className="text-sm font-semibold text-slate-300">Select a client account</p>
+        <p className="text-sm font-semibold text-slate-300">Select a Client / Customer account</p>
         <p className="text-xs text-slate-500 max-w-xs mt-1">
           Click any corporate account from the left directory to inspect its 360° financial profile, addresses, and document history.
         </p>
@@ -129,7 +129,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
             className="px-3.5 py-2 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>+ Invoice Client</span>
+            <span>+ Invoice Client / Customer</span>
           </button>
 
           <button
@@ -173,7 +173,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
 
           <div className="space-y-2">
             {clientDocs.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center py-2">No documents created for this client yet.</p>
+              <p className="text-xs text-slate-500 text-center py-2">No documents created for this Client / Customer yet.</p>
             ) : (
               (Array.isArray(clientDocs) ? clientDocs : []).slice(0, 4).map((doc) => (
                 <div

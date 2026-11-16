@@ -398,10 +398,10 @@ export const LetterBuilderPage: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-slate-700">
-                    Quick-Fill from Clients Directory <span className="text-slate-400 font-normal">(Optional)</span>
+                    Quick-Fill from Clients / Customers Directory <span className="text-slate-400 font-normal">(Optional)</span>
                   </label>
                   <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    {clients.length} Clients Available
+                    {clients.length} Clients / Customers Available
                   </span>
                 </div>
                 {/* 1-Tap Quick-Fill Pill Buttons & Demo Presets */}
@@ -433,10 +433,10 @@ export const LetterBuilderPage: React.FC = () => {
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
-                  <option value="">Select a client to auto-fill addressee...</option>
+                  <option value="">Select a Client / Customer to auto-fill addressee...</option>
                   {(Array.isArray(clients) ? clients : []).map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''}
+                      {c.name || 'Client / Customer'} {c.companyName ? `(${c.companyName})` : ''}
                     </option>
                   ))}
                 </select>

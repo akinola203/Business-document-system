@@ -56,7 +56,7 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
           doc.client?.companyName ||
           doc.client?.name ||
           doc.letter?.recipientName ||
-          'Walk-in Client';
+          'Walk-in Client / Customer';
 
         const clientInitials = (clientName || 'WC')
           .split(' ')

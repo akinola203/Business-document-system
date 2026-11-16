@@ -103,15 +103,15 @@ export const ClientsPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-0.5 rounded-full bg-indigo-50 text-[#5847F6] text-[11px] font-bold border border-indigo-200">
-              Customer Directory
+              Client / Customer Directory
             </span>
             <span className="text-xs text-slate-400 font-semibold">• 360° Profiles</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">
-            Clients & Accounts Directory
+            Clients / Customers & Accounts Directory
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            Corporate debtors, CAC credentials, registered billing/shipping depots, and customer ledgers
+            Corporate debtors, CAC credentials, registered billing/shipping depots, and Client / Customer ledgers
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export const ClientsPage: React.FC = () => {
             className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            <span>Add New Client</span>
+            <span>Add New Client / Customer</span>
           </button>
         </div>
       </div>
@@ -144,7 +144,7 @@ export const ClientsPage: React.FC = () => {
       ========================================================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <BentoKpiCard
-          title="Total Active Clients"
+          title="Total Active Clients / Customers"
           value={allClients.length}
           subtitle="Verified commercial entities"
           icon={Building2}
@@ -235,8 +235,8 @@ export const ClientsPage: React.FC = () => {
             {filteredClients.length === 0 ? (
               <div className="p-8 text-center text-slate-400">
                 <Building2 className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-300">No client records found</p>
-                <p className="text-[11px] text-slate-500 mt-1">Register a new client or adjust your search.</p>
+                <p className="text-xs font-semibold text-slate-300">No Client / Customer records found</p>
+                <p className="text-[11px] text-slate-500 mt-1">Register a new Client / Customer or adjust your search.</p>
               </div>
             ) : (
               filteredClients.map((c) => {

@@ -18,15 +18,21 @@ export class CreateWaybillDto {
   @IsString()
   title!: string;
 
-  @ApiPropertyOptional({ description: 'Optional linked Invoice ID to copy client and item details from' })
+  @ApiPropertyOptional({ description: 'Optional linked Invoice ID to copy Client / Customer and item details from' })
   @IsOptional()
   @IsString()
   invoiceId?: string;
 
-  @ApiPropertyOptional({ description: 'Recipient Client ID (required if invoiceId is not provided)' })
+  @ApiPropertyOptional({ description: 'Recipient Client / Customer ID (required if invoiceId is not provided)' })
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for Recipient Client / Customer ID (clientId)' })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 
   @ApiPropertyOptional({ description: 'Dispatching branch or depot ID' })
   @IsOptional()

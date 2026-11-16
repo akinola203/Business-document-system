@@ -9,10 +9,16 @@ export class CreateLetterDto {
   @IsString()
   title!: string;
 
-  @ApiPropertyOptional({ description: 'Optional linked Client ID' })
+  @ApiPropertyOptional({ description: 'Optional linked Client / Customer ID' })
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for linked Client / Customer ID (clientId)' })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 
   @ApiPropertyOptional({ description: 'Issuing branch ID' })
   @IsOptional()

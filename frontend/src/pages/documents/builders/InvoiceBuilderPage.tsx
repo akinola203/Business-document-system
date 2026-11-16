@@ -513,7 +513,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                   <Building2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">Client & Billing Address</h3>
+                  <h3 className="text-sm font-extrabold text-slate-900">Client / Customer & Billing Address</h3>
                   <p className="text-[11px] text-slate-500">Select corporate debtor to auto-fill registered billing address</p>
                 </div>
               </div>
@@ -522,10 +522,10 @@ export const InvoiceBuilderPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-xs font-bold text-slate-700">
-                      Recipient Client <span className="text-rose-500">*</span>
+                      Recipient Client / Customer <span className="text-rose-500">*</span>
                     </label>
                     <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                      {clients.length} Clients Available
+                      {clients.length} Clients / Customers Available
                     </span>
                   </div>
                   {/* 1-Tap Client Quick-Fill Pills & Enterprise Presets */}
@@ -563,10 +563,10 @@ export const InvoiceBuilderPage: React.FC = () => {
                     onChange={(e) => handleClientChange(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6] cursor-pointer"
                   >
-                    <option value="">Select a client from directory...</option>
+                    <option value="">Select a Client / Customer from directory...</option>
                     {(Array.isArray(clients) ? clients : []).map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name || 'Client'} {c.companyName ? `(${c.companyName})` : ''} — {c.clientNumber || 'ID'}
+                        {c.name || 'Client / Customer'} {c.companyName ? `(${c.companyName})` : ''} — {c.clientNumber || 'ID'}
                       </option>
                     ))}
                   </select>
@@ -646,6 +646,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     >
                       <option value="NGN">NGN (Nigerian Naira - ₦)</option>
                       <option value="USD">USD (US Dollar - $)</option>
+                      <option value="JPY">JPY (Japanese Yen - ¥)</option>
                       <option value="GBP">GBP (British Pound - £)</option>
                       <option value="EUR">EUR (Euro - €)</option>
                     </select>
@@ -689,7 +690,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Client PO Number <span className="text-slate-400 font-normal">(Optional)</span>
+                      Client / Customer PO Number <span className="text-slate-400 font-normal">(Optional)</span>
                     </label>
                     <input
                       type="text"

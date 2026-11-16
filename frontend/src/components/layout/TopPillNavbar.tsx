@@ -49,7 +49,7 @@ const PRIMARY_TABS: NavTab[] = [
 
 // 2. Secondary / Management Tabs ("More ▼" Dropdown Menu)
 const SECONDARY_TABS: NavTab[] = [
-  { name: 'Clients', path: '/clients', icon: Users, permission: 'clients:view', category: 'operations' },
+  { name: 'Clients / Customers', path: '/clients', icon: Users, permission: 'clients:view', category: 'operations' },
   { name: 'Vendors', path: '/vendors', icon: Building2, permission: 'vendors:view', category: 'operations' },
   { name: 'Supplies', path: '/supplies', icon: Package, permission: 'supplies:view', category: 'operations' },
   { name: 'Reports', path: '/reports', icon: BarChart3, permission: 'reports:view', category: 'system' },

@@ -63,3 +63,12 @@ npm run prisma:seed
 
 ## License
 Proprietary & Confidential - AOA 77 COMPANY LTD
+
+
+---
+
+## Operations & Runbooks
+
+- [Production Deployment Runbook](./DEPLOYMENT_RUNBOOK.md)
+- [Disaster Recovery & Rollback Runbook](./DISASTER_RECOVERY.md)
+- [Database Migrations Guide](./backend/MIGRATIONS.md)

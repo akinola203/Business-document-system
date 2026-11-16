@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as crypto from 'crypto';
+import { trace, context } from '@opentelemetry/api';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
 
@@ -24,7 +25,17 @@ export class RequestIdMiddleware implements NestMiddleware {
     req.requestId = requestId;
     res.setHeader(REQUEST_ID_HEADER, requestId);
 
+    // Propagate request ID into active OpenTelemetry span for distributed correlation
+    try {
+      const activeSpan = trace.getSpan(context.active());
+      if (activeSpan) {
+        activeSpan.setAttribute('http.request_id', requestId);
+        activeSpan.setAttribute('app.request_id', requestId);
+      }
+    } catch {
+      // In case tracing is not active, continue cleanly
+    }
+
     next();
   }
 }
-

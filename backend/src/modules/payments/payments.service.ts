@@ -374,18 +374,19 @@ export class PaymentsService {
   }
 
   async findAll(companyId: string, query: QueryPaymentsDto) {
-    const { page = 1, limit = 20, documentId, clientId, method, search, startDate, endDate, includeReversed } = query;
+    const { page = 1, limit = 20, documentId, clientId, customerId, method, search, startDate, endDate, includeReversed } = query;
+    const effectiveClientId = clientId || customerId;
 
     const where: Prisma.PaymentWhereInput = {
       companyId,
       deletedAt: null,
       ...(includeReversed ? {} : { isReversed: false }),
       ...(method ? { method } : {}),
-      ...(documentId || clientId
+      ...(documentId || effectiveClientId
         ? {
             invoice: {
               ...(documentId ? { documentId } : {}),
-              ...(clientId ? { document: { clientId } } : {}),
+              ...(effectiveClientId ? { document: { clientId: effectiveClientId } } : {}),
             },
           }
         : {}),

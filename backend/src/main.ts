@@ -1,3 +1,4 @@
+import './tracing';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -92,9 +93,22 @@ async function bootstrap() {
     ],
   });
 
-  // Global API Prefix (/api/v1) with exclusion for uptime health checks
+  // Global API Prefix (/api/v1) with exclusion for uptime health checks and Prometheus metrics
   app.setGlobalPrefix(apiPrefix, {
-    exclude: ['health', 'health/(.*)', 'api/health', 'api/health/(.*)', 'api/v1/health', 'api/v1/health/(.*)'],
+    exclude: [
+      'health',
+      'health/(.*)',
+      'api/health',
+      'api/health/(.*)',
+      'api/v1/health',
+      'api/v1/health/(.*)',
+      'metrics',
+      'metrics/(.*)',
+      'api/metrics',
+      'api/metrics/(.*)',
+      'api/v1/metrics',
+      'api/v1/metrics/(.*)',
+    ],
   });
 
   // Global Input Validation & Transformation

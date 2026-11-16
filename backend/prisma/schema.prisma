@@ -1,3 +1,5 @@
+// Primary PostgreSQL connection with pool tuning parameters (`connection_limit` & `pool_timeout`).
+// Heavy read queries are routed dynamically via PrismaService `$extends()` to `DATABASE_READ_REPLICA_URL`.
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -150,6 +152,9 @@ model Company {
   files                   File[]
   auditLogs               AuditLog[]
   payments                Payment[]
+  invoices                Invoice[]
+  waybills                Waybill[]
+  masterWaybills          MasterWaybill[]
   notifications           Notification[]
   idempotencyKeys         IdempotencyKey[]
   outboxEvents            OutboxEvent[]
@@ -348,16 +353,18 @@ model RefreshToken {
 }
 
 // -----------------------------------------------------------------------------
-// CLIENTS & ADDRESSES
+// CLIENTS / CUSTOMERS & ADDRESSES
+// Unified Client / Customer master record linked to Invoices, Waybills, and Letters
 // -----------------------------------------------------------------------------
 
+/// Unified Client / Customer entity representing corporate or individual debtors/recipients.
 model Client {
   id           String       @id @default(uuid())
   companyId    String
   company      Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  clientNumber String // e.g. "CLI-00001"
+  clientNumber String // Unified Client / Customer code (e.g. "CLI-00001")
   type         ClientType   @default(COMPANY)
-  name         String // Primary contact name or trading name
+  name         String // Primary Client / Customer contact name or trading name
   companyName  String? // Registered corporate entity name
   email        String?
   phone        String?
@@ -381,6 +388,7 @@ model Client {
   @@map("clients")
 }
 
+/// Billing, shipping, and office addresses associated with a Client / Customer.
 model ClientAddress {
   id           String      @id @default(uuid())
   clientId     String
@@ -412,6 +420,7 @@ model Document {
   branch       Branch?     @relation(fields: [branchId], references: [id], onDelete: SetNull)
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  /// Unified Client / Customer foreign key (aliased as clientId / customerId at the API DTO layer)
   clientId     String?
   client       Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
@@ -422,6 +431,10 @@ model Document {
   issueDate      DateTime       @default(now())
   dueDate        DateTime?
   currency       String         @default("NGN")
+  exchangeRate   Decimal        @default(1.0) @db.Decimal(14, 6) // Rate relative to NGN at creation time
+  baseTotalAmount Decimal?      @db.Decimal(14, 2) // Total in base NGN currency
+  baseSubtotal    Decimal?      @db.Decimal(14, 2) // Subtotal in base NGN currency
+  baseTaxAmount   Decimal?      @db.Decimal(14, 2) // Tax in base NGN currency
 
   // Authoritative Financial Summary (Authoritative Backend Decimal Math)
   subtotal       Decimal @default(0.00) @db.Decimal(14, 2)
@@ -464,6 +477,7 @@ model Document {
   @@index([companyId, issueDate])
   @@index([companyId, dueDate])
   @@index([companyId, clientId])
+  @@index([companyId, currency])
   @@index([companyId, createdAt])
   @@index([companyId, deletedAt])
   @@index([createdById])
@@ -530,8 +544,13 @@ model DocumentNumberSequence {
 
 model Invoice {
   id                 String               @id @default(uuid())
+  companyId          String?
+  company            Company?             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   documentId         String               @unique
   document           Document             @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  currency           String               @default("NGN")
+  exchangeRate       Decimal              @default(1.0) @db.Decimal(14, 6)
+  baseTotalAmount    Decimal?             @db.Decimal(14, 2)
   paymentTerms       String? // e.g. "Net 30 Days"
   poNumber           String? // Client Purchase Order Reference
   notes              String? // Remittance advice, payment instructions, or notes
@@ -545,6 +564,7 @@ model Invoice {
   payments Payment[]
   waybills Waybill[]     @relation("InvoiceWaybills")
 
+  @@index([companyId, currency])
   @@index([paymentStatus])
   @@index([paymentStatus, createdAt])
   @@index([documentId, paymentStatus])
@@ -636,12 +656,36 @@ model PaymentNumberSequence {
 // SPECIALIZED: WAYBILLS / DELIVERY NOTES & ITEMS
 // -----------------------------------------------------------------------------
 
+model MasterWaybill {
+  id           String    @id @default(uuid())
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  manifestCode String    @unique
+  deliveryZone String // e.g., "LAGOS-EPE-ZONE-A"
+  status       String    @default("MANIFEST_CREATED")
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  waybills Waybill[]
+
+  @@index([companyId, deliveryZone])
+  @@index([companyId, createdAt])
+  @@map("master_waybills")
+}
+
 model Waybill {
   id                 String                @id @default(uuid())
+  companyId          String?
+  company            Company?              @relation(fields: [companyId], references: [id], onDelete: Cascade)
   documentId         String                @unique
   document           Document              @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  masterWaybillId    String?
+  masterWaybill      MasterWaybill?        @relation(fields: [masterWaybillId], references: [id], onDelete: SetNull)
   invoiceId          String?
   invoice            Invoice?              @relation("InvoiceWaybills", fields: [invoiceId], references: [id], onDelete: SetNull)
+  currency           String                @default("NGN")
+  exchangeRate       Decimal               @default(1.0) @db.Decimal(14, 6)
   shipmentDate       DateTime              @default(now())
   consignorSnapshot  Json // Sender company/branch address snapshot
   consigneeSnapshot  Json // Recipient client address snapshot
@@ -651,6 +695,7 @@ model Waybill {
   driverName         String? // Driver name
   driverPhone        String? // Driver telephone contact
   trackingNumber     String? // Waybill dispatch tracker
+  trackingCode       String? // Batch manifest waybill tracking code
   deliveryStatus     WaybillDeliveryStatus @default(PREPARING)
 
   // Delivery Confirmation
@@ -663,12 +708,15 @@ model Waybill {
 
   items WaybillItem[]
 
+  @@index([companyId, masterWaybillId])
+  @@index([companyId, currency])
   @@index([deliveryStatus])
   @@index([deliveryStatus, createdAt])
   @@index([invoiceId, deliveryStatus])
   @@index([invoiceId])
   @@index([shipmentDate])
   @@index([trackingNumber])
+  @@index([trackingCode])
   @@index([createdAt])
   @@index([deletedAt])
   @@map("waybills")

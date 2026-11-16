@@ -34,10 +34,16 @@ export class QueryDocumentsDto {
   @IsEnum(DocumentStatus)
   status?: DocumentStatus;
 
-  @ApiPropertyOptional({ description: 'Filter by recipient client ID' })
+  @ApiPropertyOptional({ description: 'Filter by recipient Client / Customer ID' })
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for recipient Client / Customer ID (clientId)' })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 
   @ApiPropertyOptional({ description: 'Filter by issuing branch ID' })
   @IsOptional()

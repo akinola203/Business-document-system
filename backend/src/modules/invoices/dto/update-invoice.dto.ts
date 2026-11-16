@@ -6,6 +6,7 @@ import {
   ValidateNested,
   IsBoolean,
   IsDateString,
+  IsIn,
   IsInt,
   Min,
   Length,
@@ -14,6 +15,7 @@ import {
 import { Type, Transform } from 'class-transformer';
 import { InvoiceItemDto } from './invoice-item.dto';
 import { IsDueDateAfterOrEqualIssueDateConstraint } from './create-invoice.dto';
+import { SUPPORTED_CURRENCIES } from '../../currency/currency.service';
 
 export class UpdateInvoiceDto {
   @ApiPropertyOptional({ example: 'Commercial Supply of Portland Cement - Order #4501', description: 'Document header title' })
@@ -22,10 +24,16 @@ export class UpdateInvoiceDto {
   @IsString()
   title?: string;
 
-  @ApiPropertyOptional({ description: 'Recipient Client ID' })
+  @ApiPropertyOptional({ description: 'Recipient Client / Customer ID' })
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for Recipient Client / Customer ID (clientId)' })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 
   @ApiPropertyOptional({ description: 'Branch issuing the invoice' })
   @IsOptional()
@@ -48,10 +56,16 @@ export class UpdateInvoiceDto {
   @Validate(IsDueDateAfterOrEqualIssueDateConstraint)
   dueDate?: string;
 
-  @ApiPropertyOptional({ example: 'NGN', description: 'Currency code' })
+  @ApiPropertyOptional({
+    example: 'NGN',
+    enum: SUPPORTED_CURRENCIES,
+    description: 'Currency code (NGN, USD, JPY, GBP, EUR)',
+  })
   @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
   @IsString()
   @Length(3, 3)
+  @IsIn(SUPPORTED_CURRENCIES)
   currency?: string;
 
   @ApiPropertyOptional({ example: 'Net 30 Days', description: 'Payment terms' })

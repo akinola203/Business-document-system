@@ -136,7 +136,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Register New Corporate Client</h2>
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Register New Client / Customer</h2>
               <p className="text-xs text-slate-500 font-medium">Add corporate debtor, TIN/RC credentials, and billing/shipping sites</p>
             </div>
           </div>
@@ -169,7 +169,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Client Entity Type <span className="text-rose-500">*</span>
+                Client / Customer Entity Type <span className="text-rose-500">*</span>
               </label>
               <select
                 value={type}
@@ -410,7 +410,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Save Client Profile</span>
+                  <span>Save Client / Customer Profile</span>
                 </>
               )}
             </button>

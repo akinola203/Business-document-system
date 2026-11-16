@@ -324,4 +324,28 @@ test('InvoicesService Unit Tests', async (t) => {
     assert.ok(errors.some((e) => e.property === 'quantity'));
     assert.ok(errors.some((e) => e.property === 'unitPrice'));
   });
+
+  await t.test('CreateInvoiceDto accepts customerId alias and enforces unified Client / Customer validation', async () => {
+    const aliasedDto = plainToInstance(CreateInvoiceDto, {
+      title: 'Customer Alias Invoice',
+      customerId: 'client-1',
+      items: [{ description: 'Item', quantity: 1, unit: 'Units', unitPrice: 500 }],
+    });
+    const aliasErrors = await validate(aliasedDto);
+    assert.equal(aliasErrors.length, 0);
+    assert.equal(aliasedDto.clientId, 'client-1');
+
+    const missingClientDto = plainToInstance(CreateInvoiceDto, {
+      title: 'Missing Client / Customer Invoice',
+      items: [{ description: 'Item', quantity: 1, unit: 'Units', unitPrice: 500 }],
+    });
+    const missingErrors = await validate(missingClientDto);
+    const clientErr = missingErrors.find((e) => e.property === 'clientId');
+    assert.ok(clientErr);
+    assert.ok(
+      Object.values(clientErr.constraints || {}).some((msg) =>
+        msg.includes('Client / Customer ID is required'),
+      ),
+    );
+  });
 });

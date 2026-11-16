@@ -5,11 +5,13 @@ import {
   BadRequestException,
   ForbiddenException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { TenantCacheService } from '../cache/tenant-cache.service';
 import { CompanyUserStatus } from '@prisma/client';
 import { CreateUserDto, createUserSchema } from './dto/create-user.dto';
 import { UpdateUserRoleDto, updateUserRoleSchema } from './dto/update-user-role.dto';
@@ -25,6 +27,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    @Optional() private readonly cache?: TenantCacheService,
   ) {}
 
   private formatCompanyUser(cu: any) {
@@ -327,6 +330,7 @@ export class UsersService {
       };
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'iam');
     this.logger.log(`New user "${normalizedEmail}" created for company "${companyId}" by "${actorId}".`);
     return created;
   }
@@ -492,6 +496,7 @@ export class UsersService {
       return this.formatCompanyUser(refreshed);
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'iam');
     this.logger.log(`Profile for user "${targetUserId}" updated by "${caller.id}".`);
     return updated;
   }
@@ -565,6 +570,7 @@ export class UsersService {
       return this.formatCompanyUser(result);
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'iam');
     this.logger.log(`User "${companyUser.userId}" role changed from "${companyUser.role.name}" to "${newRole.name}" by "${actorId}".`);
     return updated;
   }
@@ -645,6 +651,7 @@ export class UsersService {
       return this.formatCompanyUser(result);
     });
 
+    await this.cache?.invalidateTenantNamespace(companyId, 'iam');
     this.logger.log(`User "${resolvedUserId}" status transitioned to "${dto.status}" by "${actorId}".`);
     return updated;
   }

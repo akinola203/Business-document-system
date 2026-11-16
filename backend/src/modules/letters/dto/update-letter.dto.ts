@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDateString, IsInt, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class UpdateLetterDto {
   @ApiPropertyOptional({ example: 'Updated Corporate Letter Title', description: 'Internal document title' })
@@ -8,10 +8,16 @@ export class UpdateLetterDto {
   @IsString()
   title?: string;
 
-  @ApiPropertyOptional({ description: 'Optional linked Client ID' })
+  @ApiPropertyOptional({ description: 'Optional linked Client / Customer ID' })
+  @Transform(({ value, obj }) => value ?? obj?.customerId)
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @ApiPropertyOptional({ description: 'Alias for linked Client / Customer ID (clientId)' })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
 
   @ApiPropertyOptional({ description: 'Issuing branch ID' })
   @IsOptional()

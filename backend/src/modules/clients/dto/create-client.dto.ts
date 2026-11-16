@@ -15,18 +15,24 @@ import { ClientType } from '@prisma/client';
 import { CreateAddressDto } from './create-address.dto';
 
 export class CreateClientDto {
-  @ApiPropertyOptional({ example: 'CLI-00001', description: 'Unique client code (auto-generated if omitted)' })
+  @ApiPropertyOptional({ example: 'CLI-00001', description: 'Unique Client / Customer code (auto-generated if omitted)' })
+  @Transform(({ value, obj }) => value ?? obj?.customerNumber)
   @IsOptional()
   @IsString()
   clientNumber?: string;
 
-  @ApiPropertyOptional({ enum: ClientType, default: ClientType.COMPANY, description: 'Client entity classification' })
+  @ApiPropertyOptional({ example: 'CLI-00001', description: 'Alias for unique Client / Customer code (clientNumber)' })
+  @IsOptional()
+  @IsString()
+  customerNumber?: string;
+
+  @ApiPropertyOptional({ enum: ClientType, default: ClientType.COMPANY, description: 'Client / Customer entity classification' })
   @IsOptional()
   @IsEnum(ClientType)
   type?: ClientType = ClientType.COMPANY;
 
-  @ApiProperty({ example: 'Dangote Cement Distribution Hub', description: 'Trading or primary contact name' })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'Dangote Cement Distribution Hub', description: 'Client / Customer trading or primary contact name' })
+  @IsNotEmpty({ message: 'Client / Customer name is required' })
   @IsString()
   name!: string;
 
