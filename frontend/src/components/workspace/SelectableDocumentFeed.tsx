@@ -1,8 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DocumentRecord, DocumentType } from '../../types';
 import { formatCurrency, formatRelativeTime } from '../../lib/utils';
 import { cn } from '../../lib/utils';
-import { FileText, Truck, Mail, Inbox } from 'lucide-react';
+import { FileText, Truck, Mail, Inbox, Plus } from 'lucide-react';
 
 interface SelectableDocumentFeedProps {
   documents: DocumentRecord[];
@@ -19,8 +20,10 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
   onSelect,
   isLoading = false,
   documentType,
-  emptyMessage = 'No documents found matching current filters.',
+  emptyMessage,
 }) => {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <div className="space-y-3 py-2">
@@ -35,13 +38,43 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
   }
 
   if (documents.length === 0) {
+    const emptyConfig =
+      documentType === 'INVOICE'
+        ? {
+            prompt: 'No invoices created yet. Click below to create your first client invoice.',
+            buttonLabel: '+ Create New Invoice',
+            path: '/documents/invoices/new',
+          }
+        : documentType === 'WAYBILL'
+          ? {
+              prompt: 'No waybills created yet. Click below to generate your first delivery waybill.',
+              buttonLabel: '+ Generate Waybill',
+              path: '/documents/waybills/new',
+            }
+          : {
+              prompt: 'No official letters created yet. Click below to write your first corporate letter.',
+              buttonLabel: '+ Write Official Letter',
+              path: '/documents/letters/new',
+            };
+
     return (
       <div className="p-10 rounded-2xl bg-[#1E2029] border border-[#282B37] text-center flex flex-col items-center justify-center">
-        <Inbox className="w-10 h-10 text-slate-600 mb-3" />
-        <p className="text-sm font-semibold text-slate-300">{emptyMessage}</p>
-        <p className="text-xs text-slate-500 mt-1">
-          Adjust your filter criteria or create a new {documentType.toLowerCase()} to get started.
+        <Inbox className="w-12 h-12 text-[#5847F6] mb-3" />
+        <p className="text-base font-extrabold text-white">
+          {emptyMessage || emptyConfig.prompt}
         </p>
+        <p className="text-sm text-slate-400 mt-1.5 max-w-sm">
+          Your numbering counter starts cleanly at <strong>0001</strong> with{' '}
+          <strong>Akindeji Akinlade</strong> pre-filled as Authorized Signatory.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate(emptyConfig.path)}
+          className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{emptyConfig.buttonLabel}</span>
+        </button>
       </div>
     );
   }

@@ -229,7 +229,16 @@ export class PaymentsService {
     userRole?: string,
   ) {
     if (userRole !== undefined) {
-      const allowedRoles = ['Admin', 'ADMIN', 'Administrator', 'Manager', 'MANAGER'];
+      const allowedRoles = [
+        'Admin',
+        'ADMIN',
+        'Administrator',
+        'Super Admin / Managing Director',
+        'Super Admin',
+        'Managing Director',
+        'Manager',
+        'MANAGER',
+      ];
       if (!allowedRoles.includes(userRole)) {
         throw new ForbiddenException('Only Managers or Administrators can execute payment reversals.');
       }

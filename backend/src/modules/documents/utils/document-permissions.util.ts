@@ -63,7 +63,13 @@ export function hasDocumentPermission(
   documentType: DocumentType,
   action: DocumentAction,
 ): boolean {
-  if (user.role === 'Admin') return true;
+  if (
+    user.role === 'Admin' ||
+    user.role === 'Super Admin / Managing Director' ||
+    user.isSystemAdmin
+  ) {
+    return true;
+  }
   if (!Array.isArray(user.permissions)) return false;
   if (user.permissions.includes('*') || user.permissions.includes('*:*')) return true;
 

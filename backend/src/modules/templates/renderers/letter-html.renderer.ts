@@ -281,9 +281,9 @@ export function renderLetterHtml(ctx: LetterRenderContext): string {
 
   <div class="sign-off-block">
     <div class="sign-closing">Yours faithfully,</div>
-    <div class="signatory-name">${escapeHtml(letData.signatoryName)}</div>
-    ${letData.signatoryTitle ? `<div class="signatory-title">${escapeHtml(letData.signatoryTitle)}${letData.signatoryDepartment ? `, ${escapeHtml(letData.signatoryDepartment)}` : ''}</div>` : ''}
-    <div class="signatory-company">For: ${escapeHtml(comp.legalName || comp.name)}</div>
+    <div class="signatory-name">${escapeHtml(letData.signatoryName || 'Akindeji Akinlade')}</div>
+    <div class="signatory-title">${escapeHtml(letData.signatoryTitle || 'Managing Director')}${letData.signatoryDepartment ? `, ${escapeHtml(letData.signatoryDepartment)}` : ''}</div>
+    <div class="signatory-company">Authorized Signatory &bull; For: ${escapeHtml(comp.legalName || comp.name)}</div>
   </div>
 
   <div class="footer">

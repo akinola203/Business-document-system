@@ -163,12 +163,10 @@ export const PaymentsPage: React.FC = () => {
       ========================================================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <BentoKpiCard
-          title="Total Collected"
+          title="Account Balance & History"
           value={formatCurrency(totalCollected, 'NGN')}
-          subtitle={`${activePayments.length} verified settlements`}
+          subtitle={`${activePayments.length} verified payment receipt(s)`}
           icon={ArrowDownLeft}
-          trendText="18.4% this month"
-          trendType="up"
           iconBgColor="bg-indigo-50"
           iconColor="text-[#5847F6]"
         />
@@ -255,10 +253,22 @@ export const PaymentsPage: React.FC = () => {
         leftPane={
           <div className="space-y-3">
             {filteredPayments.length === 0 ? (
-              <div className="p-8 text-center text-slate-400">
-                <Receipt className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-300">No payment records found</p>
-                <p className="text-[11px] text-slate-500 mt-1">Try adjusting your filters or record a new settlement.</p>
+              <div className="p-10 rounded-2xl bg-[#1E2029] border border-[#282B37] text-center flex flex-col items-center justify-center">
+                <Receipt className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                <p className="text-base font-extrabold text-white">
+                  No payments recorded yet. Click below to record your first payment receipt.
+                </p>
+                <p className="text-sm text-slate-400 mt-1">
+                  All recorded payments automatically update your invoice balances and receipt history.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsRecordModalOpen(true)}
+                  className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Record Payment</span>
+                </button>
               </div>
             ) : (
               filteredPayments.map((p) => {

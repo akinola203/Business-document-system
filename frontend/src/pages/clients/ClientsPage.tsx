@@ -233,10 +233,22 @@ export const ClientsPage: React.FC = () => {
         leftPane={
           <div className="space-y-3">
             {filteredClients.length === 0 ? (
-              <div className="p-8 text-center text-slate-400">
-                <Building2 className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-300">No Client / Customer records found</p>
-                <p className="text-[11px] text-slate-500 mt-1">Register a new Client / Customer or adjust your search.</p>
+              <div className="p-10 rounded-2xl bg-[#1E2029] border border-[#282B37] text-center flex flex-col items-center justify-center">
+                <Building2 className="w-12 h-12 text-[#5847F6] mx-auto mb-3" />
+                <p className="text-base font-extrabold text-white">
+                  No Client / Customer accounts added yet. Click below to add your first client.
+                </p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Save client addresses and contact details once to use across all invoices and waybills.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Add Client / Customer</span>
+                </button>
               </div>
             ) : (
               filteredClients.map((c) => {

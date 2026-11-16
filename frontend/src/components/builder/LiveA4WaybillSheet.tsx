@@ -305,17 +305,18 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
 
         {showSignature && (
           <div className="grid grid-cols-3 gap-3 text-[10px]">
-            {/* 1. Dispatching Officer */}
+            {/* 1. Authorized Signatory / Issued By */}
             <div className="p-3 rounded-xl border border-slate-300 bg-white space-y-2">
               <span className="font-extrabold text-slate-900 uppercase tracking-wider block text-[9px] pb-1 border-b border-slate-200">
-                1. Dispatched By (Warehouse)
+                1. Authorized Signatory / Issued By
               </span>
               <div className="space-y-1 text-slate-600 text-[10px]">
                 <div>
-                  <span className="text-slate-400">Officer: </span>
-                  <span className="font-semibold text-slate-800">Loading Bay Lead</span>
+                  <span className="text-slate-400">Issued By: </span>
+                  <span className="font-extrabold text-slate-900">Akindeji Akinlade</span>
                 </div>
-                <div className="pt-2">
+                <div className="text-[9px] text-slate-500">Managing Director</div>
+                <div className="pt-1">
                   <div className="w-full border-b border-dashed border-slate-400 mb-1" />
                   <span className="text-[9px] text-slate-400">Signature & Date</span>
                 </div>

@@ -92,8 +92,17 @@ export class PaymentsController {
     @Param('paymentId') paymentId: string,
     @Body() dto: ReversePaymentDto,
   ) {
-    const allowedRoles = ['Admin', 'ADMIN', 'Administrator', 'Manager', 'MANAGER'];
-    if (!user?.role || !allowedRoles.includes(user.role)) {
+    const allowedRoles = [
+      'Admin',
+      'ADMIN',
+      'Administrator',
+      'Super Admin / Managing Director',
+      'Super Admin',
+      'Managing Director',
+      'Manager',
+      'MANAGER',
+    ];
+    if (!user?.isSystemAdmin && (!user?.role || !allowedRoles.includes(user.role))) {
       throw new ForbiddenException('Only Managers or Administrators can execute payment reversals.');
     }
     return this.paymentsService.reversePayment(user.companyId, paymentId, dto, user.id, user.role);

@@ -36,16 +36,16 @@ export class NumberingService {
     });
 
     if (!sequence) {
-      // Fallback defaults based on document type
+      // Fallback defaults based on document type (4-digit padding: 0001)
       let defaultPrefix = 'DOC';
-      let defaultPadding = 6;
+      let defaultPadding = 4;
 
       if (documentType === DocumentType.INVOICE) {
         defaultPrefix = 'INV';
-        defaultPadding = 6;
+        defaultPadding = 4;
       } else if (documentType === DocumentType.WAYBILL) {
         defaultPrefix = 'WB';
-        defaultPadding = 6;
+        defaultPadding = 4;
       } else if (documentType === DocumentType.LETTER) {
         defaultPrefix = 'AOA/LET';
         defaultPadding = 4;

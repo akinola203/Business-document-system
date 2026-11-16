@@ -106,7 +106,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       const permissions = membership.role.rolePermissions.map((rp) => rp.permission.slug);
       const isSystemAdmin =
         membership.role.name === 'Admin' ||
-        Boolean((membership.role as any).isSystem && membership.role.name.toLowerCase() === 'admin');
+        membership.role.name === 'Super Admin / Managing Director' ||
+        Boolean(membership.isOwner) ||
+        Boolean((membership.role as any).isSystem && membership.role.name.toLowerCase().includes('admin'));
 
       return {
         id: user.id,

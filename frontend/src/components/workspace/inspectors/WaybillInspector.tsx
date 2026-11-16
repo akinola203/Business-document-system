@@ -267,11 +267,28 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
 
             <button
               onClick={onOpenHistory}
-              title="Audit & Version History"
+              title="Account Balance & History"
               className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center justify-center text-white transition-all shadow-sm"
             >
               <History className="w-4 h-4" />
             </button>
+
+            {!wb?.invoiceId && (
+              <button
+                onClick={async () => {
+                  try {
+                    await apiClient.post(`/documents/${document.id}/convert-to-invoice`, {});
+                    window.location.href = '/documents/invoices';
+                  } catch (err: any) {
+                    alert(err?.response?.data?.message || 'Unable to convert waybill to invoice.');
+                  }
+                }}
+                title="Convert Waybill to Invoice"
+                className="px-3.5 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center gap-1.5 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                <span>Convert Waybill to Invoice</span>
+              </button>
+            )}
 
             <button
               onClick={() => onActionClick('DUPLICATE')}

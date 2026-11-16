@@ -183,18 +183,14 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
                 style={{ borderColor: accentColor }}
               />
               <div className="font-black text-slate-900 text-xs">
-                {formValues.signatoryName || 'Chief Executive / Managing Director'}
+                {formValues.signatoryName || 'Akindeji Akinlade'}
               </div>
-              {formValues.signatoryTitle && (
-                <div className="text-[11px] text-slate-700 font-bold">
-                  {formValues.signatoryTitle}
-                </div>
-              )}
-              {formValues.signatoryDepartment && (
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
-                  {formValues.signatoryDepartment}
-                </div>
-              )}
+              <div className="text-[11px] text-slate-700 font-bold">
+                {formValues.signatoryTitle || 'Managing Director'}
+              </div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                {formValues.signatoryDepartment || 'Authorized Signatory'}
+              </div>
             </div>
           ) : (
             <div />

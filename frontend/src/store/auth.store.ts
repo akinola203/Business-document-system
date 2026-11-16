@@ -4,7 +4,15 @@ import { AuthUser } from '../types';
 export function checkIsAdmin(user: AuthUser | null): boolean {
   if (!user) return false;
   const role = (user.role || user.roleName || '').toUpperCase();
-  if (role === 'ADMIN' || role === 'ADMINISTRATOR' || role === 'OWNER') return true;
+  if (
+    role === 'ADMIN' ||
+    role === 'ADMINISTRATOR' ||
+    role === 'OWNER' ||
+    role.includes('SUPER ADMIN') ||
+    role.includes('MANAGING DIRECTOR')
+  ) {
+    return true;
+  }
   const perms = user.permissions || [];
   return (
     perms.includes('*:*') ||

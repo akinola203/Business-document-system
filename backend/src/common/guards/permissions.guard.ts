@@ -24,8 +24,12 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('Access denied. No permissions found on active session.');
     }
 
-    // Admin has superuser override or permissions check
-    if (user.role === 'Admin') {
+    // Admin / Super Admin / Managing Director has superuser override or permissions check
+    if (
+      user.role === 'Admin' ||
+      user.role === 'Super Admin / Managing Director' ||
+      user.isSystemAdmin
+    ) {
       return true;
     }
 

@@ -261,13 +261,13 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
           )}
         </div>
 
-        {/* Recorded Settlements Ledger */}
+        {/* Account Balance & History */}
         {payments.length > 0 && (
           <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 space-y-2.5 text-xs animate-in fade-in duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <span className="font-extrabold uppercase tracking-wider text-[10px] text-white/90 flex items-center gap-1.5">
                 <Receipt className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Recorded Settlements ({payments.length})</span>
+                <span>Account Balance & History ({payments.length})</span>
               </span>
               <span className="text-[10px] font-bold text-emerald-300">
                 Paid: {formatCurrency(payments.reduce((s, p) => s + Number(p.amount), 0), document.currency)}
@@ -340,10 +340,25 @@ export const InvoiceInspector: React.FC<InvoiceInspectorProps> = ({
 
             <button
               onClick={onOpenHistory}
-              title="Audit & Version Snapshots"
+              title="Account Balance & History"
               className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center justify-center text-white transition-all shadow-sm"
             >
               <History className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={async () => {
+                try {
+                  await apiClient.post(`/documents/${document.id}/convert-to-waybill`, {});
+                  window.location.href = '/documents/waybills';
+                } catch (err: any) {
+                  alert(err?.response?.data?.message || 'Unable to convert invoice to waybill.');
+                }
+              }}
+              title="Convert Invoice to Waybill"
+              className="px-3.5 h-10 rounded-full bg-white/20 hover:bg-white/30 border border-white/20 flex items-center gap-1.5 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+            >
+              <span>Convert Invoice to Waybill</span>
             </button>
 
             <button

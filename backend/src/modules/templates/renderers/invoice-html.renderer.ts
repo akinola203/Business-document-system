@@ -579,6 +579,21 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
     </tr>
   </table>
 
+  <table style="width: 100%; border-collapse: collapse; margin-top: 24px; page-break-inside: avoid;">
+    <tr>
+      <td style="width: 55%; vertical-align: bottom; font-size: 8.5pt; color: #475569;">
+        <strong>Issued By:</strong> ${escapeHtml((ctx as any).issuedByName || 'Akindeji Akinlade')}<br>
+        <span style="color: #64748b;">Managing Director &bull; ${escapeHtml(comp.legalName || comp.name)}</span>
+      </td>
+      <td style="width: 45%; text-align: right; vertical-align: bottom;">
+        <div style="border-top: 1px solid #334155; padding-top: 6px; display: inline-block; min-width: 200px; text-align: right;">
+          <div style="font-weight: 800; font-size: 9.5pt; color: #0f172a;">${escapeHtml((ctx as any).signatoryName || 'Akindeji Akinlade')}</div>
+          <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Authorized Signatory / Managing Director</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
   <div class="footer">
     Thank you for your business. Generated on ${new Date().toLocaleDateString('en-GB')} by ${escapeHtml(comp.name)}.
   </div>
