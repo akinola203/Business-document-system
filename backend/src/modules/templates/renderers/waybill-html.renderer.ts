@@ -486,7 +486,7 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
   <table class="sign-section">
     <tr>
       <td class="sign-box" style="width: 33.3%;">
-        <div class="sign-box-title">1. Authorized Signatory / Issued By</div>
+        <div class="sign-box-title">1. Dispatched By / Authorized Signatory</div>
         <div>
           <strong>Akindeji Akinlade</strong><br>
           <span style="color: #64748b;">Managing Director &bull; Goods released in good order.</span>

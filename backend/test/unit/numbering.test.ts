@@ -36,15 +36,15 @@ test('NumberingService Unit Tests', async (t) => {
   await t.test('allocates sequential invoice numbers with INV prefix and zero padding', async () => {
     sequencesDb = [];
     const num1 = await service.getNextDocumentNumber(mockTx, 'comp-1', DocumentType.INVOICE);
-    assert.equal(num1, `INV-${currentYear}-000001`);
+    assert.equal(num1, `INV-${currentYear}-0001`);
 
     const num2 = await service.getNextDocumentNumber(mockTx, 'comp-1', DocumentType.INVOICE);
-    assert.equal(num2, `INV-${currentYear}-000002`);
+    assert.equal(num2, `INV-${currentYear}-0002`);
   });
 
   await t.test('allocates sequential waybill numbers with WB prefix', async () => {
     const num1 = await service.getNextDocumentNumber(mockTx, 'comp-1', DocumentType.WAYBILL);
-    assert.equal(num1, `WB-${currentYear}-000001`);
+    assert.equal(num1, `WB-${currentYear}-0001`);
   });
 
   await t.test('allocates sequential letter numbers with slash delimiter pattern', async () => {

@@ -29,6 +29,7 @@ jobs:
         working-directory: backend
     env:
       NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aoa77_ci_test?schema=public
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       REDIS_URL: redis://localhost:6379
