@@ -1,4 +1,5 @@
 import { escapeHtml } from '../../../common/utils/html-escape.util';
+import { DEFAULT_AOA77_LOGO_DATA_URI } from '../../../assets/aoa77-logo';
 
 export interface WaybillRenderContext {
   company: {
@@ -55,7 +56,8 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
   const settings = comp.settings;
   const wb = ctx.waybill;
   const client = ctx.client;
-  const logoUrl = settings?.logoUrl || (settings?.metadata as any)?.logoUrl || null;
+  const logoUrl =
+    settings?.logoUrl || (settings?.metadata as any)?.logoUrl || DEFAULT_AOA77_LOGO_DATA_URI;
   const signatureSpecimenUrl =
     settings?.signatureSpecimenUrl || (settings?.metadata as any)?.signatureSpecimenUrl || null;
   const corporateSealUrl =

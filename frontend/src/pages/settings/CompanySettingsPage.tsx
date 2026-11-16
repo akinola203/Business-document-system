@@ -71,7 +71,8 @@ export const CompanySettingsPage: React.FC = () => {
       const savedLogo =
         company.settings.logoUrl ||
         company.settings.metadata?.logoUrl ||
-        localStorage.getItem('aoa_branding_logo_url');
+        localStorage.getItem('aoa_branding_logo_url') ||
+        '/aoa77-logo.svg';
       const savedSignature =
         company.settings.signatureSpecimenUrl ||
         company.settings.metadata?.signatureSpecimenUrl ||
@@ -92,9 +93,9 @@ export const CompanySettingsPage: React.FC = () => {
   const [waybillPrefix, setWaybillPrefix] = useState('WB-');
   const [letterPrefix, setLetterPrefix] = useState('AOA/LET/');
 
-  // Branding asset states (persisted in DB & localStorage)
-  const [logoPreview, setLogoPreview] = useState<string | null>(() =>
-    localStorage.getItem('aoa_branding_logo_url'),
+  // Branding asset states (persisted in DB & localStorage, with official AOA 77 Supports circular badge default)
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    () => localStorage.getItem('aoa_branding_logo_url') || '/aoa77-logo.svg',
   );
   const [signaturePreview, setSignaturePreview] = useState<string | null>(() =>
     localStorage.getItem('aoa_branding_signature_url'),

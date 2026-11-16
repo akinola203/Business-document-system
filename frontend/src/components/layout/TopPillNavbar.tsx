@@ -124,7 +124,7 @@ export const TopPillNavbar: React.FC = () => {
     companyObj?.settings?.logoUrl ||
     companyObj?.settings?.metadata?.logoUrl ||
     (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_logo_url') : null) ||
-    null;
+    '/aoa77-logo.svg';
 
   return (
     <header className="w-full flex flex-wrap items-center justify-between gap-3 py-2 px-3 rounded-3xl bg-white/80 dark:bg-[#11131A]/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-sm">

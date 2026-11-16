@@ -10,6 +10,7 @@ import { TenantCacheService } from '../cache/tenant-cache.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
 import { Prisma } from '@prisma/client';
+import { DEFAULT_AOA77_LOGO_DATA_URI } from '../../assets/aoa77-logo';
 
 export interface UploadedBrandingFiles {
   logo?: Express.Multer.File[];
@@ -46,7 +47,7 @@ export class CompaniesService {
         : {};
     return {
       ...settings,
-      logoUrl: settings.logoUrl ?? meta.logoUrl ?? null,
+      logoUrl: settings.logoUrl ?? meta.logoUrl ?? DEFAULT_AOA77_LOGO_DATA_URI,
       signatureSpecimenUrl: settings.signatureSpecimenUrl ?? meta.signatureSpecimenUrl ?? null,
       corporateSealUrl: settings.corporateSealUrl ?? meta.corporateSealUrl ?? null,
     };

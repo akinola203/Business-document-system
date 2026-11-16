@@ -85,10 +85,12 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md bg-white dark:bg-[#12141C] rounded-[32px] p-8 md:p-10 shadow-xl shadow-slate-900/5 dark:shadow-black/40 border border-slate-200/80 dark:border-slate-800 transition-colors">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#16181F] flex items-center justify-center text-white shadow-lg shadow-indigo-500/10 mb-4 border border-slate-800">
-            <Sparkles className="w-7 h-7 text-[#5847F6]" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">AOA 77 System</h1>
+          <img
+            src="/aoa77-logo.svg"
+            alt="AOA 77 Supports"
+            className="w-20 h-20 rounded-full object-contain shadow-xl mb-4"
+          />
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">AOA 77 Supports</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
             Enterprise Invoicing, Logistics Waybills & Payments
           </p>

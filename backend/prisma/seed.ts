@@ -4,6 +4,7 @@ import {
   CompanyUserStatus,
 } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { DEFAULT_AOA77_LOGO_DATA_URI } from '../src/assets/aoa77-logo';
 
 const prisma = new PrismaClient();
 
@@ -75,7 +76,7 @@ async function main() {
     },
   });
 
-  // 3. Company Settings & Bank Information
+  // 3. Company Settings & Bank Information (with Official AOA 77 Supports Circular Badge Logo)
   console.log('Seeding Company Settings & Banking details...');
   await prisma.companySetting.upsert({
     where: { companyId: company.id },
@@ -90,6 +91,9 @@ async function main() {
       defaultVatRate: 7.5,
       defaultPaymentTermsDays: 30,
       allowSelfApproval: true,
+      metadata: {
+        logoUrl: DEFAULT_AOA77_LOGO_DATA_URI,
+      },
     },
     create: {
       companyId: company.id,
@@ -103,6 +107,9 @@ async function main() {
       defaultVatRate: 7.5,
       defaultPaymentTermsDays: 30,
       allowSelfApproval: true,
+      metadata: {
+        logoUrl: DEFAULT_AOA77_LOGO_DATA_URI,
+      },
     },
   });
 

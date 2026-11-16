@@ -50,6 +50,7 @@ export const DEMO_COMPANY: Company = {
     defaultVatRate: 7.5,
     defaultPaymentTermsDays: 30,
     allowSelfApproval: true,
+    logoUrl: '/aoa77-logo.svg',
   },
 };
 

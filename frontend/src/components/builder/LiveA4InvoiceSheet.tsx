@@ -123,7 +123,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
     company?.settings?.logoUrl ||
     company?.settings?.metadata?.logoUrl ||
     (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_logo_url') : null) ||
-    null;
+    '/aoa77-logo.svg';
   const signatureSpecimenUrl =
     company?.settings?.signatureSpecimenUrl ||
     company?.settings?.metadata?.signatureSpecimenUrl ||
