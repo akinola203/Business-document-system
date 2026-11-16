@@ -294,7 +294,7 @@ export const TopPillNavbar: React.FC = () => {
       </div>
 
       {/* 3. Center: Flattened Single-Click Navigation Bar */}
-      <div className="w-full xl:w-auto flex items-center justify-center order-3 xl:order-2 overflow-x-auto">
+      <div className="w-full xl:w-auto flex items-center justify-center order-3 xl:order-2">
         <nav className="inline-flex items-center gap-1 bg-[#16181F] text-slate-200 rounded-2xl p-1.5 shadow-lg border border-slate-800 flex-wrap justify-center">
           {visibleTabs.map((tab) => {
             const Icon = tab.icon;
