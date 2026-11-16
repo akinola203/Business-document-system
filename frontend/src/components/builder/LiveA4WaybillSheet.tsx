@@ -46,6 +46,16 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
   const showQrCode = templateConfig?.showQrCode ?? true;
   const showSignature = templateConfig?.showSignature ?? true;
   const items = Array.isArray(formValues?.items) ? formValues.items : [];
+  const logoUrl =
+    company?.settings?.logoUrl ||
+    company?.settings?.metadata?.logoUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_logo_url') : null) ||
+    null;
+  const signatureSpecimenUrl =
+    company?.settings?.signatureSpecimenUrl ||
+    company?.settings?.metadata?.signatureSpecimenUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_signature_url') : null) ||
+    null;
 
   const totalQuantity = items.reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
   const totalPackages = items.reduce((acc, it) => acc + (Number(it.packageCount) || 0), 0);
@@ -89,12 +99,20 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
         >
           <div className={logoPosition === 'center' ? 'flex flex-col items-center' : ''}>
             <div className={`flex items-center gap-2.5 ${logoPosition === 'center' ? 'justify-center' : ''}`}>
-              <div
-                className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-black text-xs tracking-tighter transition-colors"
-                style={{ backgroundColor: primaryColor }}
-              >
-                OPS
-              </div>
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={company?.name || 'Company Logo'}
+                  className="w-11 h-11 rounded-full object-contain shrink-0"
+                />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-black text-xs tracking-tighter transition-colors"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  OPS
+                </div>
+              )}
               <div className={logoPosition === 'center' ? 'text-center' : ''}>
                 <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight uppercase">
                   {company?.name || 'AOA 77 COMPANY LTD'}
@@ -317,6 +335,13 @@ export const LiveA4WaybillSheet: React.FC<LiveA4WaybillSheetProps> = ({
                 </div>
                 <div className="text-[9px] text-slate-500">Managing Director</div>
                 <div className="pt-1">
+                  {signatureSpecimenUrl && (
+                    <img
+                      src={signatureSpecimenUrl}
+                      alt="Authorized Signature"
+                      className="h-8 max-w-[120px] object-contain mb-1"
+                    />
+                  )}
                   <div className="w-full border-b border-dashed border-slate-400 mb-1" />
                   <span className="text-[9px] text-slate-400">Signature & Date</span>
                 </div>

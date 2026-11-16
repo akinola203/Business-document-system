@@ -93,6 +93,21 @@ export class UpdateCompanySettingsDto {
   @IsString()
   signatureFileId?: string;
 
+  @ApiPropertyOptional({ description: 'Branding official company logo URL or Data URI' })
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Branding authorized signatory specimen URL or Data URI' })
+  @IsOptional()
+  @IsString()
+  signatureSpecimenUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Branding corporate seal / stamp URL or Data URI' })
+  @IsOptional()
+  @IsString()
+  corporateSealUrl?: string;
+
   @ApiPropertyOptional({ description: 'Additional arbitrary company configuration metadata' })
   @IsOptional()
   @IsObject()

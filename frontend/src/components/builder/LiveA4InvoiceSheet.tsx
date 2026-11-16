@@ -119,6 +119,21 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
       : selectedClient?.address || fallbackLine || 'No billing address specified');
 
   const showBank = formValues?.bankDetailsVisible ?? company?.settings?.showBankDetailsOnInvoice ?? true;
+  const logoUrl =
+    company?.settings?.logoUrl ||
+    company?.settings?.metadata?.logoUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_logo_url') : null) ||
+    null;
+  const signatureSpecimenUrl =
+    company?.settings?.signatureSpecimenUrl ||
+    company?.settings?.metadata?.signatureSpecimenUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_signature_url') : null) ||
+    null;
+  const corporateSealUrl =
+    company?.settings?.corporateSealUrl ||
+    company?.settings?.metadata?.corporateSealUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_seal_url') : null) ||
+    null;
 
   return (
     <div className="w-[794px] min-h-[1123px] shrink-0 bg-white text-slate-900 shadow-2xl rounded-sm p-8 text-left relative flex flex-col justify-between border border-slate-300">
@@ -157,12 +172,20 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
         >
           <div className={logoPosition === 'center' ? 'flex flex-col items-center' : ''}>
             <div className={`flex items-center gap-2.5 ${logoPosition === 'center' ? 'justify-center' : ''}`}>
-              <div
-                className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-black text-xs tracking-tighter transition-colors"
-                style={{ backgroundColor: primaryColor }}
-              >
-                AOA
-              </div>
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={company?.name || 'Company Logo'}
+                  className="w-11 h-11 rounded-full object-contain shrink-0"
+                />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-black text-xs tracking-tighter transition-colors"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  AOA
+                </div>
+              )}
               <div className={logoPosition === 'center' ? 'text-center' : ''}>
                 <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight uppercase">
                   {company?.name || 'AOA 77 COMPANY LTD'}
@@ -439,17 +462,31 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
           </div>
 
           <div className="flex items-end gap-5">
-            {showStamp && (
-              <div className="border-2 border-dashed border-rose-600/80 rounded-full w-20 h-20 p-1 flex flex-col items-center justify-center text-center text-rose-700 -rotate-12 bg-rose-50/50 select-none shadow-sm">
-                <ShieldCheck className="w-3.5 h-3.5 text-rose-600 mb-0.5" />
-                <span className="text-[7px] font-black uppercase tracking-wider leading-none">OFFICIAL SEAL</span>
-                <span className="text-[6px] font-bold text-rose-600 uppercase tracking-tighter mt-0.5">AOA 77 CO. LTD</span>
-                <span className="text-[5.5px] font-mono text-rose-500 mt-0.5">AUDITED</span>
-              </div>
-            )}
+            {showStamp &&
+              (corporateSealUrl ? (
+                <img
+                  src={corporateSealUrl}
+                  alt="Corporate Seal"
+                  className="w-20 h-20 object-contain select-none"
+                />
+              ) : (
+                <div className="border-2 border-dashed border-rose-600/80 rounded-full w-20 h-20 p-1 flex flex-col items-center justify-center text-center text-rose-700 -rotate-12 bg-rose-50/50 select-none shadow-sm">
+                  <ShieldCheck className="w-3.5 h-3.5 text-rose-600 mb-0.5" />
+                  <span className="text-[7px] font-black uppercase tracking-wider leading-none">OFFICIAL SEAL</span>
+                  <span className="text-[6px] font-bold text-rose-600 uppercase tracking-tighter mt-0.5">AOA 77 CO. LTD</span>
+                  <span className="text-[5.5px] font-mono text-rose-500 mt-0.5">AUDITED</span>
+                </div>
+              ))}
 
             {showSignature && (
               <div className="text-right">
+                {signatureSpecimenUrl && (
+                  <img
+                    src={signatureSpecimenUrl}
+                    alt="Authorized Signature"
+                    className="h-10 max-w-[150px] object-contain ml-auto mb-1"
+                  />
+                )}
                 <div className="text-[11px] font-extrabold text-slate-900">
                   Akindeji Akinlade
                 </div>

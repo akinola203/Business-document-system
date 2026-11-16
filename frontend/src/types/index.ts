@@ -119,6 +119,10 @@ export interface CompanySetting {
   defaultVatRate: number;
   defaultPaymentTermsDays: number;
   allowSelfApproval: boolean;
+  logoUrl?: string | null;
+  signatureSpecimenUrl?: string | null;
+  corporateSealUrl?: string | null;
+  metadata?: Record<string, any> | null;
 }
 
 export interface Company {

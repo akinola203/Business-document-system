@@ -67,48 +67,119 @@ export const CompanySettingsPage: React.FC = () => {
       if (company.settings.defaultVatRate !== undefined) setDefaultVatRate(company.settings.defaultVatRate.toString());
       if (company.settings.defaultPaymentTermsDays !== undefined) setDefaultPaymentTermsDays(company.settings.defaultPaymentTermsDays.toString());
       if (company.settings.allowSelfApproval !== undefined) setAllowSelfApproval(company.settings.allowSelfApproval);
+
+      const savedLogo =
+        company.settings.logoUrl ||
+        company.settings.metadata?.logoUrl ||
+        localStorage.getItem('aoa_branding_logo_url');
+      const savedSignature =
+        company.settings.signatureSpecimenUrl ||
+        company.settings.metadata?.signatureSpecimenUrl ||
+        localStorage.getItem('aoa_branding_signature_url');
+      const savedSeal =
+        company.settings.corporateSealUrl ||
+        company.settings.metadata?.corporateSealUrl ||
+        localStorage.getItem('aoa_branding_seal_url');
+
+      if (savedLogo) setLogoPreview(savedLogo);
+      if (savedSignature) setSignaturePreview(savedSignature);
+      if (savedSeal) setStampPreview(savedSeal);
     }
   }, [company]);
 
   // Numbering settings
   const [invoicePrefix, setInvoicePrefix] = useState('INV-');
   const [waybillPrefix, setWaybillPrefix] = useState('WB-');
-  const [letterPrefix, setLetterPrefix] = useState('LTR-');
+  const [letterPrefix, setLetterPrefix] = useState('AOA/LET/');
 
-  // Branding asset states (with instant local preview fallback)
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
-  const [stampPreview, setStampPreview] = useState<string | null>(null);
+  // Branding asset states (persisted in DB & localStorage)
+  const [logoPreview, setLogoPreview] = useState<string | null>(() =>
+    localStorage.getItem('aoa_branding_logo_url'),
+  );
+  const [signaturePreview, setSignaturePreview] = useState<string | null>(() =>
+    localStorage.getItem('aoa_branding_signature_url'),
+  );
+  const [stampPreview, setStampPreview] = useState<string | null>(() =>
+    localStorage.getItem('aoa_branding_seal_url'),
+  );
+  const [uploadingAsset, setUploadingAsset] = useState<'LOGO' | 'SIGNATURE' | 'STAMP' | null>(
+    null,
+  );
 
   const [feedback, setFeedback] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // File Upload Handler (Wired to /files/upload with instant local preview)
+  const readFileAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+
+  // File Upload Handler (Wired to POST /settings/branding-assets with live data-URI thumbnail preview)
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 'LOGO' | 'SIGNATURE' | 'STAMP'
+    type: 'LOGO' | 'SIGNATURE' | 'STAMP',
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Local instant preview
-    const localUrl = URL.createObjectURL(file);
-    if (type === 'LOGO') setLogoPreview(localUrl);
-    if (type === 'SIGNATURE') setSignaturePreview(localUrl);
-    if (type === 'STAMP') setStampPreview(localUrl);
+    setUploadingAsset(type);
+    setErrorMessage(null);
 
-    // Try posting to backend
     try {
+      const dataUrl = await readFileAsDataUrl(file);
+      if (type === 'LOGO') {
+        setLogoPreview(dataUrl);
+        localStorage.setItem('aoa_branding_logo_url', dataUrl);
+      } else if (type === 'SIGNATURE') {
+        setSignaturePreview(dataUrl);
+        localStorage.setItem('aoa_branding_signature_url', dataUrl);
+      } else if (type === 'STAMP') {
+        setStampPreview(dataUrl);
+        localStorage.setItem('aoa_branding_seal_url', dataUrl);
+      }
+
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('category', type);
-      await apiClient.post('/files/upload', formData, {
+      const fieldName =
+        type === 'LOGO'
+          ? 'logo'
+          : type === 'SIGNATURE'
+            ? 'signatureSpecimen'
+            : 'corporateSeal';
+      formData.append(fieldName, file);
+
+      const res = await apiClient.post('/settings/branding-assets', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setFeedback(`✓ ${type} uploaded and saved to company branding.`);
+      const result = res.data?.data ?? res.data;
+      if (result?.logoUrl) {
+        setLogoPreview(result.logoUrl);
+        localStorage.setItem('aoa_branding_logo_url', result.logoUrl);
+      }
+      if (result?.signatureSpecimenUrl) {
+        setSignaturePreview(result.signatureSpecimenUrl);
+        localStorage.setItem('aoa_branding_signature_url', result.signatureSpecimenUrl);
+      }
+      if (result?.corporateSealUrl) {
+        setStampPreview(result.corporateSealUrl);
+        localStorage.setItem('aoa_branding_seal_url', result.corporateSealUrl);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['company-current'] });
+      const label =
+        type === 'LOGO'
+          ? 'Official Company Logo'
+          : type === 'SIGNATURE'
+            ? 'Authorized Signatory Specimen'
+            : 'Corporate Seal';
+      setFeedback(`✓ ${label} uploaded and saved to company branding.`);
     } catch {
-      // Offline fallback: keep local preview
-      setFeedback(`✓ ${type} preview loaded (offline mode).`);
+      setFeedback(`✓ ${type} preview loaded and staged for saving.`);
+    } finally {
+      setUploadingAsset(null);
+      e.target.value = '';
     }
   };
 
@@ -136,6 +207,9 @@ export const CompanySettingsPage: React.FC = () => {
         defaultPaymentTermsDays: parseInt(defaultPaymentTermsDays, 10) || 30,
         showBankDetailsOnInvoice: true,
         allowSelfApproval,
+        ...(logoPreview ? { logoUrl: logoPreview } : {}),
+        ...(signaturePreview ? { signatureSpecimenUrl: signaturePreview } : {}),
+        ...(stampPreview ? { corporateSealUrl: stampPreview } : {}),
       };
 
       try {
@@ -487,7 +561,7 @@ export const CompanySettingsPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800">1. Official Company Logo</span>
                 <label className="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[11px] font-bold cursor-pointer transition-colors">
-                  Upload File
+                  {uploadingAsset === 'LOGO' ? 'Uploading...' : logoPreview ? 'Change Logo' : 'Upload File'}
                   <input
                     type="file"
                     accept="image/*"
@@ -497,8 +571,22 @@ export const CompanySettingsPage: React.FC = () => {
                 </label>
               </div>
               {logoPreview ? (
-                <div className="h-16 rounded-xl bg-slate-100 border border-slate-200 p-2 flex items-center justify-center">
-                  <img src={logoPreview} alt="Logo Preview" className="h-full object-contain" />
+                <div className="h-16 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={logoPreview}
+                      alt="Official Company Logo Preview"
+                      className="h-12 w-12 rounded-full object-contain bg-white border border-slate-200 shadow-xs"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-emerald-700 block">
+                        ✓ Custom Logo Active
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        Displayed on all Invoices, Waybills & Letters
+                      </span>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="h-14 rounded-xl border border-dashed border-slate-200 flex items-center justify-center text-[11px] text-slate-400">

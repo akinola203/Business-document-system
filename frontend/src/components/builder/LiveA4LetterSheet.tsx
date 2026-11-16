@@ -39,6 +39,21 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
   const showStamp = templateConfig?.showStamp ?? true;
   const showQrCode = templateConfig?.showQrCode ?? true;
   const showSignature = templateConfig?.showSignature ?? true;
+  const logoUrl =
+    company?.settings?.logoUrl ||
+    company?.settings?.metadata?.logoUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_logo_url') : null) ||
+    null;
+  const signatureSpecimenUrl =
+    company?.settings?.signatureSpecimenUrl ||
+    company?.settings?.metadata?.signatureSpecimenUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_signature_url') : null) ||
+    null;
+  const corporateSealUrl =
+    company?.settings?.corporateSealUrl ||
+    company?.settings?.metadata?.corporateSealUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_seal_url') : null) ||
+    null;
 
   // Convert newlines in plain text to clean paragraphs
   const paragraphs = (formValues?.bodyText || '')
@@ -66,12 +81,20 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
           className={`pb-5 border-b-2 transition-all ${headerAlignClass}`}
           style={{ borderColor: accentColor }}
         >
-          <div
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full text-white font-black text-sm tracking-wider mb-2 shadow-sm transition-colors"
-            style={{ backgroundColor: primaryColor }}
-          >
-            AOA
-          </div>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={company?.name || 'Company Logo'}
+              className="inline-block w-14 h-14 rounded-full object-contain mb-2"
+            />
+          ) : (
+            <div
+              className="inline-flex items-center justify-center w-10 h-10 rounded-full text-white font-black text-sm tracking-wider mb-2 shadow-sm transition-colors"
+              style={{ backgroundColor: primaryColor }}
+            >
+              AOA
+            </div>
+          )}
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase">
             {company?.legalName || company?.name || 'AOA 77 COMPANY LIMITED'}
           </h1>
@@ -177,6 +200,13 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
         <div className="flex justify-between items-end">
           {showSignature ? (
             <div className="space-y-1">
+              {signatureSpecimenUrl && (
+                <img
+                  src={signatureSpecimenUrl}
+                  alt="Authorized Signature"
+                  className="h-11 max-w-[160px] object-contain mb-1"
+                />
+              )}
               {/* Executive Signature Line */}
               <div
                 className="w-48 border-b-2 mb-2"
@@ -207,14 +237,21 @@ export const LiveA4LetterSheet: React.FC<LiveA4LetterSheetProps> = ({
               </div>
             )}
 
-            {showStamp && (
-              <div className="w-24 h-24 rounded-full border-2 border-dashed border-rose-600/80 flex flex-col items-center justify-center text-[8px] text-rose-700 font-black uppercase text-center p-2 select-none -rotate-12 bg-rose-50/50 shadow-sm">
-                <ShieldCheck className="w-4 h-4 text-rose-600 mb-0.5" />
-                <span className="leading-tight">DIRECTORATE</span>
-                <span className="text-[6.5px] text-rose-600 font-bold">OFFICIAL SEAL</span>
-                <span className="text-[6px] font-mono text-rose-500 mt-0.5">AUTHENTICATED</span>
-              </div>
-            )}
+            {showStamp &&
+              (corporateSealUrl ? (
+                <img
+                  src={corporateSealUrl}
+                  alt="Corporate Seal"
+                  className="w-24 h-24 object-contain select-none"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full border-2 border-dashed border-rose-600/80 flex flex-col items-center justify-center text-[8px] text-rose-700 font-black uppercase text-center p-2 select-none -rotate-12 bg-rose-50/50 shadow-sm">
+                  <ShieldCheck className="w-4 h-4 text-rose-600 mb-0.5" />
+                  <span className="leading-tight">DIRECTORATE</span>
+                  <span className="text-[6.5px] text-rose-600 font-bold">OFFICIAL SEAL</span>
+                  <span className="text-[6px] font-mono text-rose-500 mt-0.5">AUTHENTICATED</span>
+                </div>
+              ))}
           </div>
         </div>
 

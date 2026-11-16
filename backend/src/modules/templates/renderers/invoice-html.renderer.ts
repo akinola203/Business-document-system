@@ -15,6 +15,10 @@ export interface InvoiceRenderContext {
       bankAccountName?: string | null;
       bankSortCode?: string | null;
       showBankDetailsOnInvoice?: boolean;
+      logoUrl?: string | null;
+      signatureSpecimenUrl?: string | null;
+      corporateSealUrl?: string | null;
+      metadata?: Record<string, any> | null;
     } | null;
   };
   documentNumber: string;
@@ -107,6 +111,11 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
     .join('');
 
   const showBank = settings?.showBankDetailsOnInvoice && settings.bankAccountNumber;
+  const logoUrl = settings?.logoUrl || (settings?.metadata as any)?.logoUrl || null;
+  const signatureSpecimenUrl =
+    settings?.signatureSpecimenUrl || (settings?.metadata as any)?.signatureSpecimenUrl || null;
+  const corporateSealUrl =
+    settings?.corporateSealUrl || (settings?.metadata as any)?.corporateSealUrl || null;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -450,8 +459,13 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
   <table class="header-table">
     <tr>
       <td style="vertical-align: top;">
-        <div class="company-title">${escapeHtml(comp.name)}</div>
-        ${comp.rcNumber ? `<div class="rc-number">RC: ${escapeHtml(comp.rcNumber)}</div>` : ''}
+        <div style="display: flex; align-items: center; gap: 12px;">
+          ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="Company Logo" style="height: 54px; width: 54px; object-fit: contain; border-radius: 50%;" />` : ''}
+          <div>
+            <div class="company-title">${escapeHtml(comp.name)}</div>
+            ${comp.rcNumber ? `<div class="rc-number">RC: ${escapeHtml(comp.rcNumber)}</div>` : ''}
+          </div>
+        </div>
         <div class="company-meta">
           ${escapeHtml(comp.address)}<br>
           ${comp.phone ? `Phone: ${escapeHtml(comp.phone)} | ` : ''}${comp.email ? `Email: ${escapeHtml(comp.email)}` : ''}<br>
@@ -586,9 +600,13 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
         <span style="color: #64748b;">Managing Director &bull; ${escapeHtml(comp.legalName || comp.name)}</span>
       </td>
       <td style="width: 45%; text-align: right; vertical-align: bottom;">
-        <div style="border-top: 1px solid #334155; padding-top: 6px; display: inline-block; min-width: 200px; text-align: right;">
-          <div style="font-weight: 800; font-size: 9.5pt; color: #0f172a;">${escapeHtml((ctx as any).signatoryName || 'Akindeji Akinlade')}</div>
-          <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Authorized Signatory / Managing Director</div>
+        ${corporateSealUrl ? `<img src="${escapeHtml(corporateSealUrl)}" alt="Corporate Seal" style="height: 58px; width: 58px; object-fit: contain; display: inline-block; vertical-align: bottom; margin-right: 14px;" />` : ''}
+        <div style="display: inline-block; min-width: 200px; text-align: right;">
+          ${signatureSpecimenUrl ? `<img src="${escapeHtml(signatureSpecimenUrl)}" alt="Authorized Signature" style="height: 42px; max-width: 160px; object-fit: contain; display: block; margin-left: auto; margin-bottom: 4px;" />` : ''}
+          <div style="border-top: 1px solid #334155; padding-top: 6px;">
+            <div style="font-weight: 800; font-size: 9.5pt; color: #0f172a;">${escapeHtml((ctx as any).signatoryName || 'Akindeji Akinlade')}</div>
+            <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Authorized Signatory / Managing Director</div>
+          </div>
         </div>
       </td>
     </tr>

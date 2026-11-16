@@ -9,6 +9,12 @@ export interface WaybillRenderContext {
     address: string;
     email?: string | null;
     phone?: string | null;
+    settings?: {
+      logoUrl?: string | null;
+      signatureSpecimenUrl?: string | null;
+      corporateSealUrl?: string | null;
+      metadata?: Record<string, any> | null;
+    } | null;
   };
   documentNumber: string;
   title: string;
@@ -46,8 +52,14 @@ export interface WaybillRenderContext {
 
 export function renderWaybillHtml(ctx: WaybillRenderContext): string {
   const comp = ctx.company;
+  const settings = comp.settings;
   const wb = ctx.waybill;
   const client = ctx.client;
+  const logoUrl = settings?.logoUrl || (settings?.metadata as any)?.logoUrl || null;
+  const signatureSpecimenUrl =
+    settings?.signatureSpecimenUrl || (settings?.metadata as any)?.signatureSpecimenUrl || null;
+  const corporateSealUrl =
+    settings?.corporateSealUrl || (settings?.metadata as any)?.corporateSealUrl || null;
 
   const formatDate = (d?: string | Date | null) => {
     if (!d) return '—';
@@ -363,7 +375,10 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
   <table class="header-table">
     <tr>
       <td style="width: 55%;">
-        <div class="brand-name">${escapeHtml(comp.legalName || comp.name)}</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="Company Logo" style="height: 46px; width: 46px; object-fit: contain; border-radius: 50%;" />` : ''}
+          <div class="brand-name">${escapeHtml(comp.legalName || comp.name)}</div>
+        </div>
         <div class="company-meta">
           ${comp.rcNumber ? `<span>RC: ${escapeHtml(comp.rcNumber)}</span> &bull; ` : ''}
           ${comp.tin ? `<span>TIN: ${escapeHtml(comp.tin)}</span><br>` : ''}
@@ -491,6 +506,8 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
           <strong>Akindeji Akinlade</strong><br>
           <span style="color: #64748b;">Managing Director &bull; Goods released in good order.</span>
         </div>
+        ${signatureSpecimenUrl ? `<img src="${escapeHtml(signatureSpecimenUrl)}" alt="Authorized Signature" style="height: 32px; max-width: 130px; object-fit: contain; display: block; margin-top: 6px;" />` : ''}
+        ${corporateSealUrl ? `<img src="${escapeHtml(corporateSealUrl)}" alt="Corporate Seal" style="height: 36px; width: 36px; object-fit: contain; display: inline-block; margin-top: 4px;" />` : ''}
         <div class="signature-line">
           <span>Sign / Stamp</span>
           <span>Date</span>

@@ -11,6 +11,12 @@ export interface LetterRenderContext {
     email?: string | null;
     phone?: string | null;
     website?: string | null;
+    settings?: {
+      logoUrl?: string | null;
+      signatureSpecimenUrl?: string | null;
+      corporateSealUrl?: string | null;
+      metadata?: Record<string, any> | null;
+    } | null;
   };
   documentNumber: string;
   title: string;
@@ -32,7 +38,13 @@ export interface LetterRenderContext {
 
 export function renderLetterHtml(ctx: LetterRenderContext): string {
   const comp = ctx.company;
+  const settings = comp.settings;
   const letData = ctx.letter;
+  const logoUrl = settings?.logoUrl || (settings?.metadata as any)?.logoUrl || null;
+  const signatureSpecimenUrl =
+    settings?.signatureSpecimenUrl || (settings?.metadata as any)?.signatureSpecimenUrl || null;
+  const corporateSealUrl =
+    settings?.corporateSealUrl || (settings?.metadata as any)?.corporateSealUrl || null;
 
   const formatDate = (d?: string | Date | null) => {
     if (!d) return '—';
@@ -236,6 +248,7 @@ export function renderLetterHtml(ctx: LetterRenderContext): string {
 </head>
 <body>
   <div class="letterhead-container">
+    ${logoUrl ? `<div style="margin-bottom: 8px;"><img src="${escapeHtml(logoUrl)}" alt="Company Logo" style="height: 54px; width: 54px; object-fit: contain; border-radius: 50%;" /></div>` : ''}
     <div class="company-title">${escapeHtml(comp.legalName || comp.name)}</div>
     <div class="company-details">
       ${comp.rcNumber ? `<span>RC: ${escapeHtml(comp.rcNumber)}</span> &bull; ` : ''}
@@ -280,7 +293,9 @@ export function renderLetterHtml(ctx: LetterRenderContext): string {
   </div>
 
   <div class="sign-off-block">
-    <div class="sign-closing">Yours faithfully,</div>
+    <div class="sign-closing" style="${signatureSpecimenUrl ? 'margin-bottom: 12px;' : ''}">Yours faithfully,</div>
+    ${signatureSpecimenUrl ? `<div style="margin-bottom: 6px;"><img src="${escapeHtml(signatureSpecimenUrl)}" alt="Authorized Signature" style="height: 44px; max-width: 160px; object-fit: contain; display: block;" /></div>` : ''}
+    ${corporateSealUrl ? `<div style="margin-bottom: 6px;"><img src="${escapeHtml(corporateSealUrl)}" alt="Corporate Seal" style="height: 52px; width: 52px; object-fit: contain; display: inline-block;" /></div>` : ''}
     <div class="signatory-name">${escapeHtml(letData.signatoryName || 'Akindeji Akinlade')}</div>
     <div class="signatory-title">${escapeHtml(letData.signatoryTitle || 'Managing Director')}${letData.signatoryDepartment ? `, ${escapeHtml(letData.signatoryDepartment)}` : ''}</div>
     <div class="signatory-company">Authorized Signatory &bull; For: ${escapeHtml(comp.legalName || comp.name)}</div>

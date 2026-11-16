@@ -1,9 +1,21 @@
-import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TenantCacheService } from '../cache/tenant-cache.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
 import { Prisma } from '@prisma/client';
+
+export interface UploadedBrandingFiles {
+  logo?: Express.Multer.File[];
+  signatureSpecimen?: Express.Multer.File[];
+  corporateSeal?: Express.Multer.File[];
+}
 
 @Injectable()
 export class CompaniesService {
@@ -14,6 +26,31 @@ export class CompaniesService {
     private readonly prisma: PrismaService,
     @Optional() private readonly cache?: TenantCacheService,
   ) {}
+
+  /**
+   * Surfaces branding URLs stored in `settings.metadata` as top-level properties on `settings`
+   * so both frontend components and PDF renderers can read `settings.logoUrl`, `settings.signatureSpecimenUrl`,
+   * and `settings.corporateSealUrl` directly.
+   */
+  private enrichSettings<T extends Record<string, any> | null | undefined>(
+    settings: T,
+  ): (T & {
+    logoUrl?: string | null;
+    signatureSpecimenUrl?: string | null;
+    corporateSealUrl?: string | null;
+  }) {
+    if (!settings) return settings as any;
+    const meta =
+      settings.metadata && typeof settings.metadata === 'object'
+        ? (settings.metadata as Record<string, any>)
+        : {};
+    return {
+      ...settings,
+      logoUrl: settings.logoUrl ?? meta.logoUrl ?? null,
+      signatureSpecimenUrl: settings.signatureSpecimenUrl ?? meta.signatureSpecimenUrl ?? null,
+      corporateSealUrl: settings.corporateSealUrl ?? meta.corporateSealUrl ?? null,
+    };
+  }
 
   /**
    * Retrieves the current company profile, settings, and summary stats.
@@ -40,7 +77,10 @@ export class CompaniesService {
         throw new NotFoundException(`Company with ID "${companyId}" not found.`);
       }
 
-      return company;
+      return {
+        ...company,
+        settings: this.enrichSettings(company.settings),
+      };
     };
 
     if (this.cache) {
@@ -81,7 +121,6 @@ export class CompaniesService {
         },
       });
 
-      // Record immutable audit trail
       await tx.auditLog.create({
         data: {
           companyId,
@@ -104,7 +143,10 @@ export class CompaniesService {
         },
       });
 
-      return result;
+      return {
+        ...result,
+        settings: this.enrichSettings(result.settings),
+      };
     });
 
     await this.cache?.invalidateTenantNamespace(companyId, 'company');
@@ -120,10 +162,8 @@ export class CompaniesService {
     settingsDto: UpdateCompanySettingsDto,
     actorId: string,
   ) {
-    // Ensure company exists
     await this.getCurrentCompany(companyId);
 
-    // Validate branding file IDs belong to caller's company if provided
     const fileIdsToVerify = [
       settingsDto.logoFileId,
       settingsDto.stampFileId,
@@ -146,6 +186,29 @@ export class CompaniesService {
         where: { companyId },
       });
 
+      const existingMeta =
+        currentSettings?.metadata && typeof currentSettings.metadata === 'object'
+          ? (currentSettings.metadata as Record<string, any>)
+          : {};
+
+      const hasMetaUpdates =
+        settingsDto.metadata !== undefined ||
+        settingsDto.logoUrl !== undefined ||
+        settingsDto.signatureSpecimenUrl !== undefined ||
+        settingsDto.corporateSealUrl !== undefined;
+
+      const mergedMetadata: Record<string, any> = {
+        ...existingMeta,
+        ...(settingsDto.metadata || {}),
+        ...(settingsDto.logoUrl !== undefined ? { logoUrl: settingsDto.logoUrl } : {}),
+        ...(settingsDto.signatureSpecimenUrl !== undefined
+          ? { signatureSpecimenUrl: settingsDto.signatureSpecimenUrl }
+          : {}),
+        ...(settingsDto.corporateSealUrl !== undefined
+          ? { corporateSealUrl: settingsDto.corporateSealUrl }
+          : {}),
+      };
+
       const dataToSave: Prisma.CompanySettingUpdateInput = {
         ...(settingsDto.bankName !== undefined ? { bankName: settingsDto.bankName } : {}),
         ...(settingsDto.bankAccountNumber !== undefined ? { bankAccountNumber: settingsDto.bankAccountNumber } : {}),
@@ -159,7 +222,7 @@ export class CompaniesService {
         ...(settingsDto.logoFileId !== undefined ? { logoFileId: settingsDto.logoFileId } : {}),
         ...(settingsDto.stampFileId !== undefined ? { stampFileId: settingsDto.stampFileId } : {}),
         ...(settingsDto.signatureFileId !== undefined ? { signatureFileId: settingsDto.signatureFileId } : {}),
-        ...(settingsDto.metadata !== undefined ? { metadata: settingsDto.metadata as Prisma.InputJsonValue } : {}),
+        ...(hasMetaUpdates ? { metadata: mergedMetadata as Prisma.InputJsonValue } : {}),
         defaultVatRate:
           settingsDto.defaultVatRate !== undefined
             ? new Prisma.Decimal(settingsDto.defaultVatRate)
@@ -181,10 +244,12 @@ export class CompaniesService {
           defaultVatRate:
             settingsDto.defaultVatRate !== undefined
               ? new Prisma.Decimal(settingsDto.defaultVatRate)
-              : new Prisma.Decimal(7.50),
+              : new Prisma.Decimal(7.5),
           defaultPaymentTermsDays: settingsDto.defaultPaymentTermsDays ?? 30,
           allowSelfApproval: settingsDto.allowSelfApproval ?? false,
-          metadata: (settingsDto.metadata as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+          metadata: hasMetaUpdates
+            ? (mergedMetadata as Prisma.InputJsonValue)
+            : Prisma.JsonNull,
         },
       });
 
@@ -196,15 +261,78 @@ export class CompaniesService {
           entityType: 'CompanySetting',
           entityId: result.id,
           oldValues: currentSettings ? (currentSettings as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
-          newValues: settingsDto as unknown as Prisma.InputJsonValue,
+          newValues: {
+            ...settingsDto,
+            logoUpdated: Boolean(settingsDto.logoUrl),
+            signatureUpdated: Boolean(settingsDto.signatureSpecimenUrl),
+            sealUpdated: Boolean(settingsDto.corporateSealUrl),
+          } as unknown as Prisma.InputJsonValue,
         },
       });
 
-      return result;
+      return this.enrichSettings(result);
     });
 
     await this.cache?.invalidateTenantNamespace(companyId, 'company');
     this.logger.log(`Company "${companyId}" settings updated by user "${actorId}".`);
     return updatedSettings;
+  }
+
+  /**
+   * Handles multipart/form-data or data-URI branding asset uploads (`logo`, `signatureSpecimen`, `corporateSeal`).
+   * Converts uploaded image buffers into persistent data URIs in `companySetting.metadata` so they render
+   * reliably in both Live A4 previews and headless Puppeteer PDFs across container restarts.
+   */
+  async uploadBrandingAssets(
+    companyId: string,
+    files: UploadedBrandingFiles = {},
+    bodyUrls: {
+      logoUrl?: string;
+      signatureSpecimenUrl?: string;
+      corporateSealUrl?: string;
+    } = {},
+    actorId: string,
+  ) {
+    const fileToDataUri = (file?: Express.Multer.File): string | undefined => {
+      if (!file || !file.buffer || file.buffer.length === 0) return undefined;
+      const mime = file.mimetype || 'image/png';
+      if (!mime.startsWith('image/')) {
+        throw new BadRequestException(`Uploaded branding asset "${file.originalname}" must be an image.`);
+      }
+      return `data:${mime};base64,${file.buffer.toString('base64')}`;
+    };
+
+    const logoUrl = fileToDataUri(files.logo?.[0]) ?? bodyUrls.logoUrl;
+    const signatureSpecimenUrl =
+      fileToDataUri(files.signatureSpecimen?.[0]) ?? bodyUrls.signatureSpecimenUrl;
+    const corporateSealUrl =
+      fileToDataUri(files.corporateSeal?.[0]) ?? bodyUrls.corporateSealUrl;
+
+    if (
+      logoUrl === undefined &&
+      signatureSpecimenUrl === undefined &&
+      corporateSealUrl === undefined
+    ) {
+      throw new BadRequestException(
+        'Provide at least one branding asset (logo, signatureSpecimen, or corporateSeal).',
+      );
+    }
+
+    const updated = await this.updateCompanySettings(
+      companyId,
+      {
+        ...(logoUrl !== undefined ? { logoUrl } : {}),
+        ...(signatureSpecimenUrl !== undefined ? { signatureSpecimenUrl } : {}),
+        ...(corporateSealUrl !== undefined ? { corporateSealUrl } : {}),
+      },
+      actorId,
+    );
+
+    return {
+      logoUrl: updated.logoUrl ?? null,
+      signatureSpecimenUrl: updated.signatureSpecimenUrl ?? null,
+      corporateSealUrl: updated.corporateSealUrl ?? null,
+      settings: updated,
+    };
   }
 }
