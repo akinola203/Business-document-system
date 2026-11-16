@@ -525,9 +525,8 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
   <table class="summary-container">
     <tr>
       <td class="payment-instructions">
-        ${
-          showBank
-            ? `
+        ${showBank
+      ? `
         <div class="bank-card">
           <div class="bank-card-title">Banking & Settlement Details</div>
           <div class="bank-row"><strong>Bank:</strong> ${escapeHtml(settings.bankName || '')}</div>
@@ -535,8 +534,8 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
           ${settings.bankAccountName ? `<div class="bank-row"><strong>Account Name:</strong> ${escapeHtml(settings.bankAccountName)}</div>` : ''}
           ${settings.bankSortCode ? `<div class="bank-row"><strong>Sort Code:</strong> ${escapeHtml(settings.bankSortCode)}</div>` : ''}
         </div>`
-            : ''
-        }
+      : ''
+    }
         ${inv.notes ? `<div style="margin-top: 10px; font-size: 8.5pt; color: #64748b;"><strong>Notes:</strong> ${escapeHtml(inv.notes)}</div>` : ''}
       </td>
       <td class="totals-cell">

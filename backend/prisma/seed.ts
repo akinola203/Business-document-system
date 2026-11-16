@@ -17,38 +17,41 @@ export function assertSeedAllowed(env: NodeJS.ProcessEnv = process.env): void {
 
 async function main() {
   assertSeedAllowed(process.env);
-  console.log('--- STARTING PRODUCTION WORKSPACE SEEDING FOR AKINDEJI AKINLADE ---');
+  console.log('--- STARTING CLEAN PRODUCTION SEEDING FOR AOA 77 SUPPORTS (AKINDEJI AKINLADE) ---');
 
-  // Preserve all data created from October 7th, 2026 onwards; only remove records older than Oct 7, 2026
-  const cutoffDate = new Date('2026-10-07T00:00:00.000Z');
-  console.log(`Preserving all records from ${cutoffDate.toISOString()} till now...`);
-
+  // 1. Wipe all existing demo/test rows across all document, ledger, client, vendor, and audit tables
+  console.log('Wiping all existing demo/test rows across payments, invoices, waybills, master_waybills, letters, documents, audit_logs, clients, vendors, and supply_items...');
   await prisma.$transaction([
-    prisma.payment.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.invoiceItem.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.waybillItem.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.waybill.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.masterWaybill.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.invoice.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.letter.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.documentApproval.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.documentVersion.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.document.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.auditLog.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.notification.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.supplyOrder.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.supplyItem.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.vendor.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.clientAddress.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
-    prisma.client.deleteMany({ where: { createdAt: { lt: cutoffDate } } }),
+    prisma.payment.deleteMany({}),
+    prisma.invoiceItem.deleteMany({}),
+    prisma.waybillItem.deleteMany({}),
+    prisma.waybill.deleteMany({}),
+    prisma.masterWaybill.deleteMany({}),
+    prisma.invoice.deleteMany({}),
+    prisma.letter.deleteMany({}),
+    prisma.documentApproval.deleteMany({}),
+    prisma.documentVersion.deleteMany({}),
+    prisma.document.deleteMany({}),
+    prisma.auditLog.deleteMany({}),
+    prisma.notification.deleteMany({}),
+    prisma.supplyOrderItem.deleteMany({}),
+    prisma.supplyOrder.deleteMany({}),
+    prisma.supplyItem.deleteMany({}),
+    prisma.vendor.deleteMany({}),
+    prisma.clientAddress.deleteMany({}),
+    prisma.client.deleteMany({}),
+    prisma.paymentNumberSequence.deleteMany({}),
+    prisma.documentNumberSequence.deleteMany({}),
+    prisma.idempotencyKey.deleteMany({}),
+    prisma.outboxEvent.deleteMany({}),
   ]);
 
-  // 1. Create or Update Company Profile (AOA 77 COMPANY LTD)
-  console.log('Seeding Company: AOA 77 COMPANY LTD...');
+  // 2. Create or Update Company Profile (AOA 77 Supports / AOA 77 COMPANY LTD)
+  console.log('Seeding Company: AOA 77 Supports...');
   const company = await prisma.company.upsert({
     where: { id: 'c0000000-0000-0000-0000-000000000001' },
     update: {
-      name: 'AOA 77 COMPANY LTD',
+      name: 'AOA 77 Supports',
       legalName: 'AOA 77 COMPANY LTD',
       rcNumber: '9905345...',
       tin: '2622739227683',
@@ -60,7 +63,7 @@ async function main() {
     },
     create: {
       id: 'c0000000-0000-0000-0000-000000000001',
-      name: 'AOA 77 COMPANY LTD',
+      name: 'AOA 77 Supports',
       legalName: 'AOA 77 COMPANY LTD',
       rcNumber: '9905345...',
       tin: '2622739227683',
@@ -72,7 +75,7 @@ async function main() {
     },
   });
 
-  // 2. Company Settings & Bank Information
+  // 3. Company Settings & Bank Information
   console.log('Seeding Company Settings & Banking details...');
   await prisma.companySetting.upsert({
     where: { companyId: company.id },
@@ -103,7 +106,7 @@ async function main() {
     },
   });
 
-  // 3. Departments
+  // 4. Departments
   console.log('Seeding Departments...');
   const deptAccounts = await prisma.department.upsert({
     where: { companyId_code: { companyId: company.id, code: 'ACCT' } },
@@ -127,7 +130,7 @@ async function main() {
     },
   });
 
-  // 4. Branches
+  // 5. Branches
   console.log('Seeding Branches...');
   const branchOta = await prisma.branch.upsert({
     where: { companyId_code: { companyId: company.id, code: 'OTA-HQ' } },
@@ -155,7 +158,7 @@ async function main() {
     },
   });
 
-  // 5. Granular Permissions (32 Permissions)
+  // 6. Granular Permissions (32 Permissions)
   console.log('Seeding System Permissions...');
   const permissionsList = [
     { slug: 'company:view', name: 'View Company Profile', category: 'COMPANY' },
@@ -219,7 +222,7 @@ async function main() {
     dbPermissions[perm.slug] = record.id;
   }
 
-  // 6. Roles & RolePermission Mappings
+  // 7. Roles & RolePermission Mappings
   console.log('Seeding Roles...');
   const roleManagingDirector = await prisma.role.upsert({
     where: {
@@ -284,7 +287,6 @@ async function main() {
     },
   });
 
-  // Attach all 32 permissions to Super Admin / Managing Director and Admin
   for (const slug of Object.keys(dbPermissions)) {
     await prisma.rolePermission.upsert({
       where: {
@@ -315,8 +317,8 @@ async function main() {
     });
   }
 
-  // 7. Personalize Primary Owner Account for Akindeji Akinlade
-  console.log('Seeding Primary Owner Account: Akindeji Akinlade (dejakinlade@gmail.com)...');
+  // 8. Seed Primary Owner Account for Akindeji Akinlade
+  console.log('Seeding Primary Super Admin Account: Akindeji Akinlade (dejakinlade@gmail.com)...');
   const passwordHash = await argon2.hash('Aoa77@Password2026!');
 
   const ownerUser = await prisma.user.upsert({
@@ -360,131 +362,69 @@ async function main() {
     },
   });
 
-  // Also update any legacy owner email account (akinakinlade777@gmail.com) to Akindeji Akinlade / Managing Director role
-  await prisma.user.updateMany({
-    where: { email: 'akinakinlade777@gmail.com' },
-    data: {
-      firstName: 'Akindeji',
-      lastName: 'Akinlade',
-      passwordHash,
-    },
+  // Reassign any template versions to Akindeji Akinlade and remove old demo user accounts
+  await prisma.templateVersion.updateMany({
+    where: { createdById: { not: ownerUser.id } },
+    data: { createdById: ownerUser.id },
+  });
+  await prisma.refreshToken.deleteMany({
+    where: { userId: { not: ownerUser.id } },
+  });
+  await prisma.companyUser.deleteMany({
+    where: { userId: { not: ownerUser.id } },
+  });
+  await prisma.user.deleteMany({
+    where: { id: { not: ownerUser.id } },
   });
 
-  // 8. Sync Document Number Sequences (Reset to 0 if no docs exist, or align with preserved Oct 7+ docs so next number never collides)
-  console.log('Synchronizing sequential document numbering counters...');
+  // 9. Reset All Sequential Numbering Counters (INV, WB, AOA/LET, PAY) Back to 0 (First Document = 0001)
+  console.log('Resetting all sequential numbering counters (INV, WB, AOA/LET, PAY) to 0 (starts at 0001)...');
   const currentYear = new Date().getFullYear();
 
-  const extractMaxNumber = (docNumbers: string[]): number => {
-    let max = 0;
-    for (const numStr of docNumbers) {
-      const match = numStr.match(/(\d+)$/);
-      if (match) {
-        const val = parseInt(match[1], 10);
-        if (!isNaN(val) && val > max) max = val;
-      }
-    }
-    return max;
-  };
-
-  const [invDocs, wbDocs, letDocs, payRecords] = await Promise.all([
-    prisma.document.findMany({
-      where: { companyId: company.id, documentType: DocumentType.INVOICE },
-      select: { documentNumber: true },
-    }),
-    prisma.document.findMany({
-      where: { companyId: company.id, documentType: DocumentType.WAYBILL },
-      select: { documentNumber: true },
-    }),
-    prisma.document.findMany({
-      where: { companyId: company.id, documentType: DocumentType.LETTER },
-      select: { documentNumber: true },
-    }),
-    prisma.payment.findMany({
-      where: { companyId: company.id },
-      select: { paymentNumber: true },
-    }),
-  ]);
-
-  const maxInv = extractMaxNumber(invDocs.map((d) => d.documentNumber));
-  const maxWb = extractMaxNumber(wbDocs.map((d) => d.documentNumber));
-  const maxLet = extractMaxNumber(letDocs.map((d) => d.documentNumber));
-  const maxPay = extractMaxNumber(payRecords.map((p) => p.paymentNumber));
-
-  await prisma.documentNumberSequence.upsert({
-    where: {
-      companyId_documentType_resetYear: {
-        companyId: company.id,
-        documentType: DocumentType.INVOICE,
-        resetYear: currentYear,
-      },
-    },
-    update: { currentNumber: maxInv, padding: 4 },
-    create: {
+  await prisma.documentNumberSequence.create({
+    data: {
       companyId: company.id,
       documentType: DocumentType.INVOICE,
       prefix: 'INV',
-      currentNumber: maxInv,
+      currentNumber: 0,
       padding: 4,
       resetYear: currentYear,
     },
   });
 
-  await prisma.documentNumberSequence.upsert({
-    where: {
-      companyId_documentType_resetYear: {
-        companyId: company.id,
-        documentType: DocumentType.WAYBILL,
-        resetYear: currentYear,
-      },
-    },
-    update: { currentNumber: maxWb, padding: 4 },
-    create: {
+  await prisma.documentNumberSequence.create({
+    data: {
       companyId: company.id,
       documentType: DocumentType.WAYBILL,
       prefix: 'WB',
-      currentNumber: maxWb,
+      currentNumber: 0,
       padding: 4,
       resetYear: currentYear,
     },
   });
 
-  await prisma.documentNumberSequence.upsert({
-    where: {
-      companyId_documentType_resetYear: {
-        companyId: company.id,
-        documentType: DocumentType.LETTER,
-        resetYear: currentYear,
-      },
-    },
-    update: { currentNumber: maxLet, padding: 4 },
-    create: {
+  await prisma.documentNumberSequence.create({
+    data: {
       companyId: company.id,
       documentType: DocumentType.LETTER,
       prefix: 'AOA/LET',
-      currentNumber: maxLet,
+      currentNumber: 0,
       padding: 4,
       resetYear: currentYear,
     },
   });
 
-  await prisma.paymentNumberSequence.upsert({
-    where: {
-      companyId_resetYear: {
-        companyId: company.id,
-        resetYear: currentYear,
-      },
-    },
-    update: { currentNumber: maxPay, padding: 4 },
-    create: {
+  await prisma.paymentNumberSequence.create({
+    data: {
       companyId: company.id,
       prefix: 'PAY',
-      currentNumber: maxPay,
+      currentNumber: 0,
       padding: 4,
       resetYear: currentYear,
     },
   });
 
-  // 9. Default Document Templates (Authored by Akindeji Akinlade)
+  // 10. Default Document Templates (Authored by Akindeji Akinlade)
   console.log('Seeding Standard Document Templates...');
   const invoiceTemplate = await prisma.template.upsert({
     where: { companyId_code: { companyId: company.id, code: 'INV-CORP-CLASSIC' } },
@@ -567,11 +507,11 @@ async function main() {
     },
   });
 
-  console.log('--- PRODUCTION WORKSPACE SEEDING COMPLETED SUCCESSFULLY ---');
+  console.log('--- CLEAN PRODUCTION SEEDING COMPLETED SUCCESSFULLY ---');
   console.log(`Company: ${company.name} (${company.id})`);
   console.log(`Owner / Managing Director: Akindeji Akinlade <dejakinlade@gmail.com>`);
   console.log(`Role: Super Admin / Managing Director`);
-  console.log(`Preserved Documents (Oct 7 till now): ${invDocs.length} Invoices, ${wbDocs.length} Waybills, ${letDocs.length} Letters, ${payRecords.length} Payments`);
+  console.log(`Counters Reset to 0: INV-${currentYear}-0001, WB-${currentYear}-0001, AOA/LET/${currentYear}/0001, PAY-${currentYear}-0001`);
 }
 
 if (require.main === module) {

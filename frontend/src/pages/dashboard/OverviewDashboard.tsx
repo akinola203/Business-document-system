@@ -114,21 +114,21 @@ export const OverviewDashboard: React.FC = () => {
 
   return (
     <div className="space-y-7 md:space-y-8 max-w-full overflow-hidden">
-      {/* 1. Personalized Owner Greeting Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 1. Personalized Owner Greeting Header (Monochrome HorizonX Glassmorphism) */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-[#0F1117] via-[#161922] to-[#1E222D] text-white border border-white/10 shadow-xl">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Welcome back, {ownerFullName}
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              Welcome back, Akindeji Akinlade
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Managing Director Workspace
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white backdrop-blur-md border border-white/15">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              AOA 77 Supports &bull; Managing Director
             </span>
           </div>
-          <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
+          <p className="text-sm md:text-base text-slate-300 mt-1.5">
             Official business documents, dispatch waybills, and account balances for{' '}
-            <strong>{user?.companyName || 'AOA 77 COMPANY LTD'}</strong>
+            <strong className="text-white">{user?.companyName || 'AOA 77 Supports'}</strong>
           </p>
         </div>
       </div>
@@ -138,7 +138,7 @@ export const OverviewDashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/documents/invoices/new')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-base font-extrabold shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#0F1117] hover:bg-slate-800 text-white text-base font-extrabold shadow-lg border border-slate-700/80 transition-all cursor-pointer"
         >
           <Plus className="w-5 h-5 stroke-[2.5]" />
           <span>+ Create New Invoice</span>
@@ -147,7 +147,7 @@ export const OverviewDashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/documents/waybills/new')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white text-base font-extrabold shadow-lg shadow-sky-500/20 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#1A1D26] hover:bg-slate-800 text-white text-base font-extrabold shadow-lg border border-slate-700/80 transition-all cursor-pointer"
         >
           <Truck className="w-5 h-5 stroke-[2.2]" />
           <span>+ Generate Waybill</span>
@@ -156,7 +156,7 @@ export const OverviewDashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/payments')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-extrabold shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-base font-extrabold shadow-lg shadow-indigo-500/20 transition-all cursor-pointer"
         >
           <CreditCard className="w-5 h-5 stroke-[2.2]" />
           <span>+ Record Payment</span>
@@ -165,7 +165,7 @@ export const OverviewDashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/documents/letters/new')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#16181F] hover:bg-slate-800 text-white text-base font-extrabold shadow-lg transition-all cursor-pointer"
+          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 text-base font-extrabold shadow-md border border-slate-300 transition-all cursor-pointer"
         >
           <Mail className="w-5 h-5 stroke-[2.2]" />
           <span>+ Write Official Letter</span>

@@ -107,25 +107,56 @@ export const TopPillNavbar: React.FC = () => {
       ? user.fullName
       : 'Akindeji Akinlade';
 
+  // Fetch company branding logo if uploaded in Settings -> Branding Assets
+  const { data: companyData } = useQuery<any>({
+    queryKey: ['company-current'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/companies/current');
+        return res.data;
+      } catch {
+        return null;
+      }
+    },
+  });
+  const companyObj = companyData?.data || companyData;
+  const customLogoUrl =
+    companyObj?.settings?.logoUrl ||
+    companyObj?.settings?.metadata?.logoUrl ||
+    (typeof window !== 'undefined' ? localStorage.getItem('aoa_branding_logo_url') : null) ||
+    null;
+
   return (
-    <header className="w-full flex flex-wrap items-center justify-between gap-3 py-1.5 px-1">
-      {/* 1. Left: Brand Identity */}
+    <header className="w-full flex flex-wrap items-center justify-between gap-3 py-2 px-3 rounded-3xl bg-white/80 dark:bg-[#11131A]/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-sm">
+      {/* 1. Left: AOA 77 Supports Circular Badge Logo & Identity */}
       <Link
         to="/overview"
         title="Go to Dashboard"
-        className="flex items-center gap-3 order-1 cursor-pointer hover:opacity-80 transition-opacity"
+        className="flex items-center gap-3 order-1 cursor-pointer hover:opacity-90 transition-opacity"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#16181F] flex items-center justify-center text-white shadow-sm border border-slate-800 shrink-0">
-          <Sparkles className="w-5 h-5 text-[#5847F6]" />
-        </div>
+        {customLogoUrl ? (
+          <img
+            src={customLogoUrl}
+            alt="AOA 77 Supports Logo"
+            className="w-11 h-11 rounded-full object-contain bg-white border-2 border-slate-900 dark:border-white/20 shadow-md shrink-0"
+          />
+        ) : (
+          <div className="w-11 h-11 rounded-full bg-[#0F1117] text-white flex flex-col items-center justify-center shadow-md border-2 border-slate-700/80 shrink-0 select-none">
+            <span className="text-[10px] font-black tracking-tighter leading-none">AOA</span>
+            <span className="text-[9px] font-extrabold text-slate-300 leading-none mt-0.5">77</span>
+          </div>
+        )}
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-sm md:text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
-              {user?.companyName || 'AOA 77 COMPANY LTD'}
+              AOA 77 Supports
             </h1>
+            <span className="text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full bg-slate-900 text-white dark:bg-white/15 dark:text-white">
+              MD
+            </span>
           </div>
-          <p className="text-xs text-slate-500 font-medium">
-            Official Business Document Workspace
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            {user?.companyName || 'AOA 77 COMPANY LTD'}
           </p>
         </div>
       </Link>
