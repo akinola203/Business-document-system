@@ -64,7 +64,7 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
         {/* Modal Controls Bar (Hidden during print) */}
         <div className="no-print p-4 md:px-6 bg-[#16181F] text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <Receipt className="w-5 h-5 text-[#5847F6]" />
+            <Receipt className="w-5 h-5 text-orange-500" />
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-200">
               Official Payment Voucher & Receipt
             </span>
@@ -94,7 +94,7 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
 
             <button
               onClick={handlePrint}
-              className="px-4 py-1.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+              className="px-4 py-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Slip</span>
@@ -212,7 +212,7 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
                 Applied Against Document
               </span>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-extrabold font-mono text-indigo-700">
+                <span className="text-sm font-extrabold font-mono text-orange-500">
                   {docNumber}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase">
@@ -230,7 +230,7 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
               {invoice?.balanceDue !== undefined && (
                 <div className="flex justify-between text-slate-900 font-extrabold">
                   <span>Current Balance Due:</span>
-                  <span className="tabular-nums text-[#5847F6]">
+                  <span className="tabular-nums text-orange-500">
                     {formatCurrency(invoice.balanceDue, currency)}
                   </span>
                 </div>

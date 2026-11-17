@@ -198,7 +198,7 @@ export const SuppliesPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-indigo-50 text-[#5847F6] text-[11px] font-bold border border-indigo-200">
+            <span className="px-3 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[11px] font-bold border border-orange-500/30">
               Inventory & Procurement
             </span>
             <span className="text-xs text-slate-400 font-semibold">• Supply Ledger</span>
@@ -215,7 +215,7 @@ export const SuppliesPage: React.FC = () => {
           {activeTab === 'CATALOG' ? (
             <button
               onClick={() => setIsAddItemModalOpen(true)}
-              className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+              className="px-5 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Add Catalog Item</span>
@@ -223,7 +223,7 @@ export const SuppliesPage: React.FC = () => {
           ) : (
             <button
               onClick={() => setIsRecordDeliveryOpen(true)}
-              className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+              className="px-5 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
             >
               <Truck className="w-4 h-4" />
               <span>Record New Supply Delivery</span>
@@ -255,8 +255,8 @@ export const SuppliesPage: React.FC = () => {
             value={allSupplies.length}
             subtitle="Commercial inventory & services"
             icon={Package}
-            iconBgColor="bg-indigo-50"
-            iconColor="text-[#5847F6]"
+            iconBgColor="bg-orange-500/10"
+            iconColor="text-orange-500"
           />
           <BentoKpiCard
             title="Low Stock Alerts"
@@ -279,8 +279,8 @@ export const SuppliesPage: React.FC = () => {
             value={allVendors.length}
             subtitle="Registered active suppliers"
             icon={Building2}
-            iconBgColor="bg-purple-50"
-            iconColor="text-purple-600"
+            iconBgColor="bg-orange-500/10"
+            iconColor="text-orange-500"
           />
         </div>
       ) : (
@@ -290,8 +290,8 @@ export const SuppliesPage: React.FC = () => {
             value={allOrders.length}
             subtitle="Historical incoming consignments"
             icon={Truck}
-            iconBgColor="bg-indigo-50"
-            iconColor="text-[#5847F6]"
+            iconBgColor="bg-orange-500/10"
+            iconColor="text-orange-500"
           />
           <BentoKpiCard
             title="Received Supplies Value"
@@ -314,8 +314,8 @@ export const SuppliesPage: React.FC = () => {
             value="94.8%"
             subtitle="On-time delivery performance"
             icon={TrendingUp}
-            iconBgColor="bg-purple-50"
-            iconColor="text-purple-600"
+            iconBgColor="bg-sky-50"
+            iconColor="text-sky-600"
           />
         </div>
       )}
@@ -380,7 +380,7 @@ export const SuppliesPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={activeTab === 'CATALOG' ? 'Search SKU, item, vendor...' : 'Search order #, waybill ref...'}
-            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
       </div>
@@ -409,13 +409,13 @@ export const SuppliesPage: React.FC = () => {
                       onClick={() => setSelectedItem(item)}
                       className={`w-full text-left p-4 rounded-2xl transition-all cursor-pointer border ${
                         isSelected
-                          ? 'bg-[#1D2029] border-[#5847F6] shadow-lg shadow-indigo-950/30'
+                          ? 'bg-[#1D2029] border-orange-500 shadow-lg shadow-slate-950/30'
                           : 'bg-[#191B22] hover:bg-[#1D2029] border-slate-800/80 text-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-[10px] font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded border border-indigo-500/25">
+                          <span className="font-mono text-[10px] font-bold text-orange-400 bg-orange-500/15 px-2 py-0.5 rounded border border-orange-500/25">
                             {item.sku}
                           </span>
                           <span className="text-xs font-bold text-white truncate max-w-[150px]">
@@ -477,7 +477,7 @@ export const SuppliesPage: React.FC = () => {
                       onClick={() => setSelectedOrder(order)}
                       className={`w-full text-left p-4 rounded-2xl transition-all cursor-pointer border ${
                         isSelected
-                          ? 'bg-[#1D2029] border-[#5847F6] shadow-lg shadow-indigo-950/30'
+                          ? 'bg-[#1D2029] border-orange-500 shadow-lg shadow-slate-950/30'
                           : 'bg-[#191B22] hover:bg-[#1D2029] border-slate-800/80 text-slate-300'
                       }`}
                     >
@@ -526,16 +526,16 @@ export const SuppliesPage: React.FC = () => {
               <div className="h-full flex flex-col justify-between space-y-6">
                 <div className="space-y-6">
                   {/* Top Order Card */}
-                  <div className="rounded-[28px] bg-gradient-to-br from-[#5B58B6] to-[#45429B] p-6 text-white shadow-xl shadow-indigo-950/20 relative overflow-hidden border border-indigo-400/20">
+                  <div className="rounded-[28px] bg-gradient-to-br from-[#0B132B] to-[#1E293B] p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <span className="text-xs font-mono text-indigo-200 block mb-1">
+                        <span className="text-xs font-mono text-slate-400 block mb-1">
                           {selectedOrder.supplyNumber}
                         </span>
                         <h2 className="text-xl font-extrabold text-white tracking-tight">
                           {selectedOrder.vendor?.name || 'Vendor Consignment'}
                         </h2>
-                        <p className="text-xs text-indigo-200 mt-0.5">
+                        <p className="text-xs text-slate-300 mt-0.5">
                           Waybill / Invoice Ref: <strong>{selectedOrder.deliveryRef || 'None'}</strong>
                         </p>
                       </div>
@@ -555,13 +555,13 @@ export const SuppliesPage: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs">
                       <div>
-                        <span className="text-indigo-200 text-[11px]">Consignment Grand Total</span>
+                        <span className="text-slate-300 text-[11px]">Consignment Grand Total</span>
                         <p className="text-lg font-black text-white tabular-nums mt-0.5">
                           {formatCurrency(Number(selectedOrder.grandTotal), selectedOrder.currency)}
                         </p>
                       </div>
                       <div>
-                        <span className="text-indigo-200 text-[11px]">Receipt Date</span>
+                        <span className="text-slate-300 text-[11px]">Receipt Date</span>
                         <p className="text-sm font-bold text-white mt-1">
                           {new Date(selectedOrder.supplyDate).toLocaleDateString()}
                         </p>
@@ -572,7 +572,7 @@ export const SuppliesPage: React.FC = () => {
                   {/* Supplied Items Breakdown */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <Package className="w-4 h-4 text-indigo-400" />
+                      <Package className="w-4 h-4 text-orange-400" />
                       <h3 className="text-xs font-bold text-white uppercase tracking-wider">
                         Delivered Items ({selectedOrder.items?.length || 0})
                       </h3>
@@ -636,7 +636,7 @@ export const SuppliesPage: React.FC = () => {
                         })
                       }
                       disabled={updateOrderStatusMutation.isPending}
-                      className="flex-1 py-3 px-4 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
+                      className="flex-1 py-3 px-4 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all cursor-pointer"
                     >
                       <CreditCard className="w-4 h-4" />
                       <span>Record Vendor Payout</span>

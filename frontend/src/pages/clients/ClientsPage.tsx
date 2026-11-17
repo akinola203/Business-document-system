@@ -102,7 +102,7 @@ export const ClientsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-indigo-50 text-[#5847F6] text-[11px] font-bold border border-indigo-200">
+            <span className="px-3 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[11px] font-bold border border-orange-500/30">
               Client / Customer Directory
             </span>
             <span className="text-xs text-slate-400 font-semibold">• 360° Profiles</span>
@@ -124,14 +124,14 @@ export const ClientsPage: React.FC = () => {
               }}
               className="px-4 py-3 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
             >
-              <FileSpreadsheet className="w-4 h-4 text-[#5847F6]" />
+              <FileSpreadsheet className="w-4 h-4 text-orange-500" />
               <span>Statement of Account</span>
             </button>
           )}
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="px-5 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+            className="px-5 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Client / Customer</span>
@@ -148,8 +148,8 @@ export const ClientsPage: React.FC = () => {
           value={allClients.length}
           subtitle="Verified commercial entities"
           icon={Building2}
-          iconBgColor="bg-indigo-50"
-          iconColor="text-[#5847F6]"
+          iconBgColor="bg-orange-500/10"
+          iconColor="text-orange-500"
         />
 
         <BentoKpiCard
@@ -221,7 +221,7 @@ export const ClientsPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search company, RC, TIN, email..."
-            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
       </div>
@@ -234,7 +234,7 @@ export const ClientsPage: React.FC = () => {
           <div className="space-y-3">
             {filteredClients.length === 0 ? (
               <div className="p-10 rounded-2xl bg-[#1E2029] border border-[#282B37] text-center flex flex-col items-center justify-center">
-                <Building2 className="w-12 h-12 text-[#5847F6] mx-auto mb-3" />
+                <Building2 className="w-12 h-12 text-orange-500 mx-auto mb-3" />
                 <p className="text-base font-extrabold text-white">
                   No Client / Customer accounts added yet. Click below to add your first client.
                 </p>
@@ -244,7 +244,7 @@ export const ClientsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
+                  className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Add Client / Customer</span>
@@ -270,13 +270,13 @@ export const ClientsPage: React.FC = () => {
                     onClick={() => setSelectedClient(c)}
                     className={`w-full text-left p-4 rounded-2xl transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#1D2029] border-[#5847F6] shadow-lg shadow-indigo-950/30'
+                        ? 'bg-[#1D2029] border-orange-500 shadow-lg shadow-slate-950/30'
                         : 'bg-[#191B22] hover:bg-[#1D2029] border-slate-800/80 text-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-extrabold text-xs flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/30 text-indigo-300 font-extrabold text-xs flex items-center justify-center">
                           {initials}
                         </div>
                         <div>

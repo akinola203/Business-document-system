@@ -179,7 +179,7 @@ export const TopPillNavbar: React.FC = () => {
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200 shadow-xs transition-all cursor-pointer"
           >
-            <div className="w-7 h-7 rounded-full bg-[#5847F6] text-white flex items-center justify-center font-extrabold text-xs uppercase shadow-xs">
+            <div className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center font-extrabold text-xs uppercase shadow-xs">
               {displayFullName.charAt(0)}
             </div>
             <div className="text-left hidden sm:block">
@@ -207,9 +207,9 @@ export const TopPillNavbar: React.FC = () => {
                 <p className="text-xs text-slate-500 truncate">
                   {user?.email || 'dejakinlade@gmail.com'}
                 </p>
-                <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[11px] font-bold">
+                <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-600 text-[11px] font-bold">
                   <Building2 className="w-3 h-3" />
-                  {user?.companyName || 'AOA 77 COMPANY LTD'}
+                  {user?.companyName || 'AOA 77 Supports'}
                 </div>
               </div>
 
@@ -219,9 +219,9 @@ export const TopPillNavbar: React.FC = () => {
                     setIsProfileOpen(false);
                     navigate('/settings/users?edit=me');
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#5847F6] hover:bg-indigo-50 rounded-xl transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-orange-600 hover:bg-orange-500/10 rounded-xl transition-colors cursor-pointer"
                 >
-                  <UserCog className="w-4 h-4 text-[#5847F6]" />
+                  <UserCog className="w-4 h-4 text-orange-500" />
                   Edit My Profile & Password
                 </button>
                 {canManageSettings && (
@@ -278,7 +278,7 @@ export const TopPillNavbar: React.FC = () => {
 
       {/* 3. Center: Flattened Single-Click Navigation Bar */}
       <div className="w-full xl:w-auto flex items-center justify-center order-3 xl:order-2">
-        <nav className="inline-flex items-center gap-1 bg-[#16181F] text-slate-200 rounded-2xl p-1.5 shadow-lg border border-slate-800 flex-wrap justify-center">
+        <nav className="inline-flex items-center gap-1 bg-[#0B132B] text-slate-200 rounded-2xl p-1.5 shadow-lg border border-slate-800 flex-wrap justify-center">
           {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive =
@@ -293,7 +293,7 @@ export const TopPillNavbar: React.FC = () => {
                   cn(
                     'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all duration-150 whitespace-nowrap',
                     linkActive || isActive
-                      ? 'bg-[#5847F6] text-white shadow-sm shadow-indigo-500/30'
+                      ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/30'
                       : 'text-slate-300 hover:text-white hover:bg-white/10',
                   )
                 }

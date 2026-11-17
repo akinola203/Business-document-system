@@ -241,7 +241,7 @@ export const CompanySettingsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-indigo-50 text-[#5847F6] text-[11px] font-bold border border-indigo-200">
+            <span className="px-3 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[11px] font-bold border border-orange-500/30">
               Corporate Governance
             </span>
             <span className="text-xs text-slate-400 font-semibold">• Settings & Fiscal Rules</span>
@@ -257,7 +257,7 @@ export const CompanySettingsPage: React.FC = () => {
         <button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
-          className="px-6 py-3 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-60"
+          className="px-6 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-60"
         >
           {saveMutation.isPending ? (
             <>
@@ -295,7 +295,7 @@ export const CompanySettingsPage: React.FC = () => {
           {/* Card 1: Corporate Legal Identity */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5847F6]">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
                 <Building2 className="w-4 h-4" />
               </div>
               <div>
@@ -313,7 +313,7 @@ export const CompanySettingsPage: React.FC = () => {
                   type="text"
                   value={legalName}
                   onChange={(e) => setLegalName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -325,7 +325,7 @@ export const CompanySettingsPage: React.FC = () => {
                   type="text"
                   value={rcNumber}
                   onChange={(e) => setRcNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -339,7 +339,7 @@ export const CompanySettingsPage: React.FC = () => {
                   type="text"
                   value={tin}
                   onChange={(e) => setTin(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -350,7 +350,7 @@ export const CompanySettingsPage: React.FC = () => {
                 <select
                   value={defaultCurrency}
                   onChange={(e) => setDefaultCurrency(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="NGN">NGN (Nigerian Naira - ₦)</option>
                   <option value="USD">USD (United States Dollar - $)</option>
@@ -368,7 +368,7 @@ export const CompanySettingsPage: React.FC = () => {
                 rows={2}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
@@ -424,7 +424,7 @@ export const CompanySettingsPage: React.FC = () => {
                   type="text"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -436,7 +436,7 @@ export const CompanySettingsPage: React.FC = () => {
                   type="text"
                   value={bankAccountName}
                   onChange={(e) => setBankAccountName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -450,7 +450,7 @@ export const CompanySettingsPage: React.FC = () => {
                   type="text"
                   value={bankAccountNumber}
                   onChange={(e) => setBankAccountNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -462,7 +462,7 @@ export const CompanySettingsPage: React.FC = () => {
                   type="text"
                   value={bankSortCode}
                   onChange={(e) => setBankSortCode(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -537,7 +537,7 @@ export const CompanySettingsPage: React.FC = () => {
                   onChange={(e) => setAllowSelfApproval(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5847F6]"></div>
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
               </label>
             </div>
           </div>
@@ -548,7 +548,7 @@ export const CompanySettingsPage: React.FC = () => {
           {/* Card 3: Branding Asset Uploaders */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
                 <ImageIcon className="w-4 h-4" />
               </div>
               <div>
@@ -561,7 +561,7 @@ export const CompanySettingsPage: React.FC = () => {
             <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800">1. Official Company Logo</span>
-                <label className="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[11px] font-bold cursor-pointer transition-colors">
+                <label className="px-3 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 text-[11px] font-bold cursor-pointer transition-colors">
                   {uploadingAsset === 'LOGO' ? 'Uploading...' : logoPreview ? 'Change Logo' : 'Upload File'}
                   <input
                     type="file"
@@ -600,7 +600,7 @@ export const CompanySettingsPage: React.FC = () => {
             <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800">2. Authorized Signatory Specimen</span>
-                <label className="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[11px] font-bold cursor-pointer transition-colors">
+                <label className="px-3 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 text-[11px] font-bold cursor-pointer transition-colors">
                   Upload Specimen
                   <input
                     type="file"
@@ -625,7 +625,7 @@ export const CompanySettingsPage: React.FC = () => {
             <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800">3. Corporate Seal / Red Stamp</span>
-                <label className="px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#5847F6] text-[11px] font-bold cursor-pointer transition-colors">
+                <label className="px-3 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 text-[11px] font-bold cursor-pointer transition-colors">
                   Upload Seal
                   <input
                     type="file"
@@ -663,7 +663,7 @@ export const CompanySettingsPage: React.FC = () => {
               <div>
                 <div className="flex justify-between mb-1">
                   <label className="font-bold text-slate-700">Invoice Prefix</label>
-                  <span className="font-mono text-indigo-600 font-bold">{invoicePrefix}2026-0104</span>
+                  <span className="font-mono text-orange-500 font-bold">{invoicePrefix}2026-0104</span>
                 </div>
                 <input
                   type="text"

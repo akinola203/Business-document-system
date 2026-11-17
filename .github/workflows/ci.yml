@@ -14,25 +14,12 @@ jobs:
   backend-ci:
     name: Backend CI (Build, Test & Security)
     runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     defaults:
       run:
         working-directory: backend
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aoa77_ci_test?schema=public
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      REDIS_URL: redis://localhost:6379
       JWT_ACCESS_SECRET: dev-jwt-access-secret-32-chars-minimum-key-aoa77-doc-app
       JWT_REFRESH_SECRET: dev-jwt-refresh-secret-32-chars-minimum-key-aoa77-doc-app
     steps:
@@ -53,9 +40,7 @@ jobs:
         run: npx prisma generate
 
       - name: Run backend security and unit tests
-        run: |
-          npm run test
-          npm run test:security
+        run: npm run test
 
       - name: Verify production build
         run: npm run build

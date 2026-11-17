@@ -111,7 +111,7 @@ export const LiveA4LayoutCanvas: React.FC<LiveA4LayoutCanvasProps> = ({
           <div>
             <h2 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
               <span>Live A4 Layout Canvas</span>
-              <span className="text-[#5847F6] font-mono">•</span>
+              <span className="text-orange-500 font-mono">•</span>
               <span className="text-slate-300 font-bold">{documentType}</span>
             </h2>
             <p className="text-[10px] text-slate-400 font-medium">
@@ -127,7 +127,7 @@ export const LiveA4LayoutCanvas: React.FC<LiveA4LayoutCanvasProps> = ({
             onClick={() => setZoomMode('fit')}
             className={`px-2.5 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
               zoomMode === 'fit'
-                ? 'bg-[#5847F6] text-white shadow-sm'
+                ? 'bg-orange-500 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
             title="Auto-Fit Page (Full A4 Visible at Once)"
@@ -139,7 +139,7 @@ export const LiveA4LayoutCanvas: React.FC<LiveA4LayoutCanvasProps> = ({
             onClick={() => setZoomMode('fit-width')}
             className={`px-2.5 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
               zoomMode === 'fit-width'
-                ? 'bg-[#5847F6] text-white shadow-sm'
+                ? 'bg-orange-500 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
             title="Fit Width (Maximize Horizontal Reading)"
@@ -151,7 +151,7 @@ export const LiveA4LayoutCanvas: React.FC<LiveA4LayoutCanvasProps> = ({
             onClick={() => setZoomMode(1.0)}
             className={`px-2.5 py-1 text-[11px] font-bold rounded-full transition-all cursor-pointer ${
               zoomMode === 1.0
-                ? 'bg-[#5847F6] text-white shadow-sm'
+                ? 'bg-orange-500 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
             title="100% Full Print Scale"

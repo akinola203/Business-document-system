@@ -291,13 +291,13 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
         ===================================================================== */}
         <div className="p-4 md:px-6 md:py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/80 rounded-t-3xl no-print">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5847F6]">
+            <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <span>Customer Statement of Account</span>
-                <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-[10px] font-mono font-bold text-[#5847F6] border border-indigo-200">
+                <span className="px-2 py-0.5 rounded-full bg-orange-500/10 text-[10px] font-mono font-bold text-orange-500 border border-orange-500/30">
                   {statementNumber}
                 </span>
               </h2>
@@ -333,7 +333,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
             {/* Print Button */}
             <button
               onClick={handlePrint}
-              className="px-4 py-2 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
+              className="px-4 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold flex items-center gap-2 shadow-sm transition-all cursor-pointer active:scale-95"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Statement</span>
@@ -357,7 +357,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
           <div className="flex flex-col sm:flex-row justify-between items-start pb-6 border-b-2 border-slate-900 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-[#5847F6] text-white font-black text-lg flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-orange-500 text-white font-black text-lg flex items-center justify-center shadow-md">
                   {(company?.name ?? 'AO').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
@@ -427,15 +427,15 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
                 Tax ID (TIN): <strong className="font-mono text-slate-900">{client.taxNumber || '10294821-0001'}</strong>
               </p>
               <p className="text-slate-700">
-                Standard Credit Terms: <strong className="text-[#5847F6]">Net {client.paymentTermsDays || 30} Days</strong>
+                Standard Credit Terms: <strong className="text-orange-500">Net {client.paymentTermsDays || 30} Days</strong>
               </p>
             </div>
           </div>
 
           {/* 3. Top Financial Metrics (Bento Ledger Summary) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
-              <div className="flex items-center justify-between text-indigo-700">
+            <div className="p-4 rounded-2xl bg-orange-500/10/60 border border-orange-500/20">
+              <div className="flex items-center justify-between text-orange-500">
                 <span className="text-xs font-bold uppercase tracking-wider">Total Invoiced (Debits)</span>
                 <ArrowDownLeft className="w-4 h-4" />
               </div>
@@ -522,7 +522,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileSpreadsheet className="w-4 h-4 text-[#5847F6]" />
+                <FileSpreadsheet className="w-4 h-4 text-orange-500" />
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
                   Chronological Transaction Ledger ({filteredLedger.length})
                 </h3>
@@ -580,7 +580,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
                           <span
                             className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                               entry.type === 'INVOICE'
-                                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                ? 'bg-orange-500/10 text-orange-500 border border-orange-500/30'
                                 : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             }`}
                           >
@@ -617,7 +617,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
                     <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700">
                       {formatCurrency(totalPaid, 'NGN')}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono text-sm font-black text-[#5847F6]">
+                    <td className="py-3 px-3 text-right font-mono text-sm font-black text-orange-500">
                       {formatCurrency(closingBalance, 'NGN')}
                     </td>
                   </tr>
@@ -640,7 +640,7 @@ export const ClientStatementModal: React.FC<ClientStatementModalProps> = ({
                   Account Name: <strong className="text-slate-900 font-bold">{defaultBank.accountName}</strong>
                 </p>
                 <p className="text-slate-700">
-                  NUBAN Account Number: <strong className="font-mono text-base font-black text-[#5847F6] tracking-wider">{defaultBank.accountNumber}</strong>
+                  NUBAN Account Number: <strong className="font-mono text-base font-black text-orange-500 tracking-wider">{defaultBank.accountNumber}</strong>
                 </p>
               </div>
             </div>

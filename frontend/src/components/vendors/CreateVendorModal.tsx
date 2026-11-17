@@ -182,7 +182,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5847F6]">
+            <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -229,7 +229,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. NNPC Retail Logistics Limited"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -238,7 +238,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as VendorCategory)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="RAW_MATERIALS">Raw Materials & Commodities</option>
                   <option value="LOGISTICS_HAULAGE">Logistics & Haulage</option>
@@ -256,7 +256,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={contactPerson}
                   onChange={(e) => setContactPerson(e.target.value)}
                   placeholder="e.g. Engr. Farouk Ahmed"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="procurement@supplier.com"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -278,7 +278,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+234 803 123 4567"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -289,7 +289,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={registrationNumber}
                   onChange={(e) => setRegistrationNumber(e.target.value)}
                   placeholder="RC-129480"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -300,7 +300,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={taxId}
                   onChange={(e) => setTaxId(e.target.value)}
                   placeholder="10094820-0001"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -320,7 +320,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Plot 12 Commercial Way, Industrial Estate"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -330,7 +330,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -340,7 +340,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   type="text"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -370,7 +370,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                   placeholder="e.g. Zenith Bank Plc"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -381,7 +381,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={bankAccountNumber}
                   onChange={(e) => setBankAccountNumber(e.target.value)}
                   placeholder="e.g. 1012984733"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -392,7 +392,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   value={bankAccountName}
                   onChange={(e) => setBankAccountName(e.target.value)}
                   placeholder="Beneficiary Account Name"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -402,7 +402,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   <select
                     value={paymentTerms}
                     onChange={(e) => setPaymentTerms(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="NET 14">NET 14 Days</option>
                     <option value="NET 30">NET 30 Days</option>
@@ -416,7 +416,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="NGN">NGN (₦)</option>
                     <option value="USD">USD ($)</option>
@@ -440,7 +440,7 @@ export const CreateVendorModal: React.FC<CreateVendorModalProps> = ({
             <button
               type="submit"
               disabled={saveMutation.isPending}
-              className="px-6 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {saveMutation.isPending
                 ? (vendorToEdit ? 'Saving Changes...' : 'Creating Profile...')

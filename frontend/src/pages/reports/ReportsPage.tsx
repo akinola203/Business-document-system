@@ -176,7 +176,7 @@ export const ReportsPage: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Executive Reports & Analytics</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#5847F6]/10 text-[#5847F6] border border-[#5847F6]/20">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-500/10 text-orange-500 border border-orange-500/20">
               Live Audited
             </span>
           </div>
@@ -240,7 +240,7 @@ export const ReportsPage: React.FC = () => {
         <div className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Gross Invoiced</span>
-            <div className="w-8 h-8 rounded-full bg-[#5847F6]/10 flex items-center justify-center text-[#5847F6]">
+            <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
@@ -267,11 +267,11 @@ export const ReportsPage: React.FC = () => {
           <div className="mt-2 space-y-1">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
               <span>Settlement Rate</span>
-              <span className="text-[#5847F6] tabular-nums">{summary.revenueAndCashflow.recoveryRate}%</span>
+              <span className="text-orange-500 tabular-nums">{summary.revenueAndCashflow.recoveryRate}%</span>
             </div>
             <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#5847F6] rounded-full transition-all duration-500"
+                className="h-full bg-orange-500 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, summary.revenueAndCashflow.recoveryRate)}%` }}
               />
             </div>
@@ -334,7 +334,7 @@ export const ReportsPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-4 text-xs font-bold">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-sm bg-[#5847F6]" />
+                    <span className="w-3 h-3 rounded-sm bg-orange-500" />
                     <span className="text-slate-300">Billed</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -362,7 +362,7 @@ export const ReportsPage: React.FC = () => {
                       {/* Bar Pair */}
                       <div className="w-full flex items-end justify-center gap-1 h-48">
                         <div
-                          className="w-1/2 bg-[#5847F6] rounded-t-md transition-all duration-500 hover:brightness-110"
+                          className="w-1/2 bg-orange-500 rounded-t-md transition-all duration-500 hover:brightness-110"
                           style={{ height: `${billedHeight}%` }}
                         />
                         <div
@@ -549,7 +549,7 @@ export const ReportsPage: React.FC = () => {
                   <h4 className="text-base font-black text-white">VAT (7.5%) Compliance & FIRS Reconciliation</h4>
                   <p className="text-xs text-slate-400">Authoritative statutory tax tracking for Nigerian Federal Inland Revenue Service</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#5847F6]/20 text-[#5847F6] border border-[#5847F6]/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-500/20 text-orange-500 border border-orange-500/30">
                   Value Added Tax Act 2020
                 </span>
               </div>
@@ -593,7 +593,7 @@ export const ReportsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/documents/waybills')}
-                className="text-xs font-bold text-[#5847F6] hover:text-[#7B6EFA] flex items-center gap-1 transition-colors"
+                className="text-xs font-bold text-orange-500 hover:text-[#7B6EFA] flex items-center gap-1 transition-colors"
               >
                 <span>Waybills Workspace</span>
                 <ChevronRight className="w-4 h-4" />
@@ -665,7 +665,7 @@ export const ReportsPage: React.FC = () => {
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-400">
                   <span>Invoices</span>
-                  <span className="text-indigo-400">Commercial</span>
+                  <span className="text-orange-400">Commercial</span>
                 </div>
                 <div className="text-3xl font-black text-white tabular-nums">
                   {summary.documentVelocity.byType.INVOICE || 0}

@@ -130,7 +130,7 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] dark:bg-[#181B26] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:bg-white dark:focus:bg-[#1E2230] transition-all"
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] dark:bg-[#181B26] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#1E2230] transition-all"
               />
             </div>
           </div>
@@ -143,7 +143,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsForgotModalOpen(true)}
-                className="text-xs font-semibold text-[#5847F6] hover:text-[#4939E3] dark:text-indigo-400 dark:hover:text-indigo-300 hover:underline transition-colors cursor-pointer"
+                className="text-xs font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-indigo-300 hover:underline transition-colors cursor-pointer"
               >
                 Forgot Password?
               </button>
@@ -156,7 +156,7 @@ export const LoginPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] dark:bg-[#181B26] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#5847F6] focus:bg-white dark:focus:bg-[#1E2230] transition-all"
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] dark:bg-[#181B26] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white dark:focus:bg-[#1E2230] transition-all"
               />
             </div>
           </div>
@@ -168,7 +168,7 @@ export const LoginPage: React.FC = () => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded-md border-slate-300 dark:border-slate-700 text-[#5847F6] focus:ring-[#5847F6] dark:bg-slate-800 transition cursor-pointer accent-[#5847F6]"
+                className="w-4 h-4 rounded-md border-slate-300 dark:border-slate-700 text-orange-500 focus:ring-orange-500 dark:bg-slate-800 transition cursor-pointer accent-[#5847F6]"
               />
               <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
                 Remember me
@@ -179,7 +179,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-2 py-3.5 px-6 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-sm font-bold shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
+            className="w-full mt-2 py-3.5 px-6 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

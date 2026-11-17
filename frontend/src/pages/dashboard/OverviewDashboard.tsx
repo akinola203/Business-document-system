@@ -115,14 +115,14 @@ export const OverviewDashboard: React.FC = () => {
   return (
     <div className="space-y-7 md:space-y-8 max-w-full overflow-hidden">
       {/* 1. Personalized Owner Greeting Header (Monochrome HorizonX Glassmorphism) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-[#0F1117] via-[#161922] to-[#1E222D] text-white border border-white/10 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-[#0B132B] via-[#0F172A] to-[#1E293B] text-white border border-white/10 shadow-xl">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
               Welcome back, Akindeji Akinlade
             </h1>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white backdrop-blur-md border border-white/15">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
               AOA 77 Supports &bull; Managing Director
             </span>
           </div>
@@ -133,42 +133,42 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. One-Click Quick Actions Bar (4 Large, Unmistakable Primary Action Buttons) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* 2. One-Click Quick Actions Bar (Sleek Dark Glassmorphic Action Buttons with Safety Orange Accents) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
         <button
           type="button"
           onClick={() => navigate('/documents/invoices/new')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#0F1117] hover:bg-slate-800 text-white text-base font-extrabold shadow-lg border border-slate-700/80 transition-all cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <Plus className="w-5 h-5 stroke-[2.5]" />
-          <span>+ Create New Invoice</span>
+          <Plus className="w-5 h-5 text-orange-500 stroke-[2.5] group-hover:scale-110 transition-transform shrink-0" />
+          <span className="text-sm md:text-base font-bold text-white tracking-tight">Create New Invoice</span>
         </button>
 
         <button
           type="button"
           onClick={() => navigate('/documents/waybills/new')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#1A1D26] hover:bg-slate-800 text-white text-base font-extrabold shadow-lg border border-slate-700/80 transition-all cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <Truck className="w-5 h-5 stroke-[2.2]" />
-          <span>+ Generate Waybill</span>
+          <Truck className="w-5 h-5 text-orange-500 stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
+          <span className="text-sm md:text-base font-bold text-white tracking-tight">Generate Waybill</span>
         </button>
 
         <button
           type="button"
           onClick={() => navigate('/payments')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-base font-extrabold shadow-lg shadow-indigo-500/20 transition-all cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <CreditCard className="w-5 h-5 stroke-[2.2]" />
-          <span>+ Record Payment</span>
+          <CreditCard className="w-5 h-5 text-orange-500 stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
+          <span className="text-sm md:text-base font-bold text-white tracking-tight">Record Payment</span>
         </button>
 
         <button
           type="button"
           onClick={() => navigate('/documents/letters/new')}
-          className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 text-base font-extrabold shadow-md border border-slate-300 transition-all cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <Mail className="w-5 h-5 stroke-[2.2]" />
-          <span>+ Write Official Letter</span>
+          <Mail className="w-5 h-5 text-orange-500 stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
+          <span className="text-sm md:text-base font-bold text-white tracking-tight">Write Official Letter</span>
         </button>
       </div>
 
@@ -206,14 +206,14 @@ export const OverviewDashboard: React.FC = () => {
         {/* Card 2: Drafts & Pending Documents */}
         <div
           onClick={() => navigate('/documents/invoices?filter=draft')}
-          className="bg-[#F8F9FC] dark:bg-[#1E2029] rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:border-indigo-400 hover:shadow-md transition-all cursor-pointer group"
+          className="bg-[#F8F9FC] dark:bg-[#1E2029] rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:border-orange-500/50 hover:shadow-md transition-all cursor-pointer group"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 Drafts & Pending Sign-Off
               </span>
-              <span className="p-2.5 rounded-2xl bg-indigo-50 text-[#5847F6]">
+              <span className="p-2.5 rounded-2xl bg-orange-500/10 text-orange-500">
                 <Clock className="w-5 h-5" />
               </span>
             </div>
@@ -226,7 +226,7 @@ export const OverviewDashboard: React.FC = () => {
           </div>
           <div className="pt-4 mt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-semibold">
             <span>Total documents: {allDocuments.length}</span>
-            <span className="font-bold text-[#5847F6] group-hover:underline">
+            <span className="font-bold text-orange-500 group-hover:underline">
               Review Drafts &rarr;
             </span>
           </div>
@@ -306,7 +306,7 @@ export const OverviewDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => navigate('/documents/invoices')}
-              className="text-sm font-bold text-[#5847F6] hover:text-[#4939E3] flex items-center gap-1"
+              className="text-sm font-bold text-orange-500 hover:text-orange-400 flex items-center gap-1"
             >
               <span>View All</span>
               <ArrowUpRight className="w-4 h-4" />
@@ -324,7 +324,7 @@ export const OverviewDashboard: React.FC = () => {
             </div>
           ) : recentDocuments.length === 0 ? (
             <div className="text-center py-12 px-6 bg-white dark:bg-[#16181F] rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700">
-              <FileCheck2 className="w-12 h-12 text-[#5847F6] mx-auto mb-3" />
+              <FileCheck2 className="w-12 h-12 text-orange-500 mx-auto mb-3" />
               <p className="text-base font-extrabold text-slate-900 dark:text-white">
                 No documents created yet. Click below to create your first client invoice.
               </p>
@@ -336,10 +336,10 @@ export const OverviewDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/documents/invoices/new')}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5847F6] hover:bg-[#4939E3] text-white text-sm font-extrabold shadow-md transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-extrabold shadow-md transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ Create New Invoice</span>
+                  <span>Create New Invoice</span>
                 </button>
                 <button
                   type="button"
@@ -367,7 +367,7 @@ export const OverviewDashboard: React.FC = () => {
                     className="group flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#16181F] hover:bg-slate-50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 transition-all cursor-pointer shadow-sm"
                   >
                     <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-xl bg-[#F8F9FC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-[#5847F6] group-hover:text-white transition-colors">
+                      <div className="w-11 h-11 rounded-xl bg-[#F8F9FC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-orange-500 group-hover:text-white transition-colors">
                         {isInvoice && <FileText className="w-5 h-5" />}
                         {isWaybill && <Truck className="w-5 h-5" />}
                         {!isInvoice && !isWaybill && <Mail className="w-5 h-5" />}
@@ -382,7 +382,7 @@ export const OverviewDashboard: React.FC = () => {
                               doc.status === 'ISSUED'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : doc.status === 'APPROVED'
-                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                  ? 'bg-orange-500/10 text-orange-500 border border-orange-500/30'
                                   : 'bg-slate-100 text-slate-700'
                             }`}
                           >
@@ -417,7 +417,7 @@ export const OverviewDashboard: React.FC = () => {
         </div>
 
         {/* Right Pane (5 cols): Plain-English Business Settings & Signatory Summary */}
-        <div className="lg:col-span-5 bg-[#16181F] text-white rounded-3xl p-7 shadow-xl border border-slate-800 flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-[#0B132B] text-white rounded-3xl p-7 shadow-xl border border-slate-800 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
@@ -432,7 +432,7 @@ export const OverviewDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-3.5">
-              <div className="p-4 rounded-2xl bg-[#1E2029] border border-[#282B37] flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800/80 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
                     Authorized Signatory / Issued By
@@ -441,12 +441,12 @@ export const OverviewDashboard: React.FC = () => {
                     Akindeji Akinlade (Managing Director)
                   </span>
                 </div>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300">
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
                   Auto-Filled
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#1E2029] border border-[#282B37] flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800/80 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
                     Primary Currency & Exchange Rate
@@ -457,13 +457,13 @@ export const OverviewDashboard: React.FC = () => {
                 </div>
                 <button
                   onClick={() => navigate('/settings/company')}
-                  className="text-xs font-bold text-[#5847F6] hover:underline"
+                  className="text-xs font-bold text-orange-400 hover:underline cursor-pointer"
                 >
                   Settings
                 </button>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#1E2029] border border-[#282B37] flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#0F172A] border border-slate-800/80 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
                     Convert Invoice to Waybill
@@ -472,7 +472,7 @@ export const OverviewDashboard: React.FC = () => {
                     1-click conversion between invoices and delivery waybills
                   </span>
                 </div>
-                <ArrowLeftRight className="w-5 h-5 text-sky-400 shrink-0" />
+                <ArrowLeftRight className="w-5 h-5 text-orange-400 shrink-0" />
               </div>
             </div>
           </div>
@@ -480,14 +480,14 @@ export const OverviewDashboard: React.FC = () => {
           <div className="pt-6 mt-6 border-t border-slate-800 grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate('/settings/company')}
-              className="py-3 px-4 rounded-xl bg-white text-[#16181F] text-sm font-extrabold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              className="py-3 px-4 rounded-xl bg-orange-500 text-white text-sm font-extrabold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               <Settings className="w-4 h-4" />
               <span>Company Settings</span>
             </button>
             <button
               onClick={() => navigate('/settings/templates')}
-              className="py-3 px-4 rounded-xl bg-[#252834] text-white text-sm font-bold hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
+              className="py-3 px-4 rounded-xl bg-[#0F172A] text-white text-sm font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
             >
               <span>PDF Styles</span>
               <ArrowUpRight className="w-4 h-4" />

@@ -51,18 +51,18 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
     <div className="h-full flex flex-col justify-between space-y-6">
       <div className="space-y-6">
         {/* =====================================================================
-            TOP HEADER: ROYAL INDIGO GLASSMORPHIC ITEM INSPECTOR (#5B58B6)
+            TOP HEADER: DEEP NAVY BLUE GLASSMORPHIC ITEM INSPECTOR
         ===================================================================== */}
-        <div className="rounded-[28px] bg-gradient-to-br from-[#5B58B6] to-[#45429B] p-6 text-white shadow-xl shadow-indigo-950/20 relative overflow-hidden border border-indigo-400/20">
+        <div className="rounded-[28px] bg-gradient-to-br from-[#0B132B] to-[#1E293B] p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
           <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-mono text-xs font-black text-indigo-100 bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/20 backdrop-blur-md">
+                <span className="font-mono text-xs font-black text-orange-400 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/30 backdrop-blur-md">
                   {item.sku}
                 </span>
-                <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   {item.category?.replace('_', ' ')}
                 </span>
               </div>
@@ -70,7 +70,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
                 {item.name}
               </h1>
               {item.description && (
-                <p className="text-xs text-indigo-200 mt-1 max-w-sm line-clamp-2">
+                <p className="text-xs text-slate-300 mt-1 max-w-sm line-clamp-2">
                   {item.description}
                 </p>
               )}
@@ -91,13 +91,13 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 text-xs">
             <div>
-              <span className="text-indigo-200 text-[11px]">Warehouse Stock</span>
+              <span className="text-slate-400 text-[11px]">Warehouse Stock</span>
               <p className="text-xl font-black text-white tabular-nums mt-0.5">
-                {Number(item.currentStock).toLocaleString()} <span className="text-xs font-normal text-indigo-200">{item.unit}</span>
+                {Number(item.currentStock).toLocaleString()} <span className="text-xs font-normal text-slate-400">{item.unit}</span>
               </p>
             </div>
             <div>
-              <span className="text-indigo-200 text-[11px]">Default Invoice Price</span>
+              <span className="text-slate-400 text-[11px]">Default Invoice Price</span>
               <p className="text-xl font-black text-emerald-300 tabular-nums mt-0.5">
                 {formatCurrency(price, 'NGN')}
               </p>
@@ -149,7 +149,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
         <div className="p-4 rounded-2xl bg-[#191B22] border border-slate-800 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-400" />
+              <Layers className="w-4 h-4 text-orange-400" />
               <h2 className="text-xs font-bold text-white tracking-tight">
                 Inventory Stock Telemetry
               </h2>
@@ -224,7 +224,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
         <div className="pt-4 border-t border-slate-800">
           <button
             onClick={() => onAdjustStock(item)}
-            className="w-full py-2.5 px-4 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 transition-all cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 transition-all cursor-pointer"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Adjust Inventory Stock</span>

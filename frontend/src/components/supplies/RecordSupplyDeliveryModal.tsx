@@ -172,7 +172,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
       <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-slate-200/80 max-h-[90vh] overflow-y-auto space-y-6">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5847F6]">
+            <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
               <Truck className="w-5 h-5" />
             </div>
             <div>
@@ -207,7 +207,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
                 required
                 value={vendorId}
                 onChange={(e) => setVendorId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="">Select a supplier...</option>
                 {vendors.map((v) => (
@@ -227,7 +227,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
                 value={deliveryRef}
                 onChange={(e) => setDeliveryRef(e.target.value)}
                 placeholder="e.g. WAYBILL-NNPC-9941"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
@@ -237,7 +237,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
                 type="date"
                 value={supplyDate}
                 onChange={(e) => setSupplyDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
@@ -246,7 +246,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as SupplyOrderStatus)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="RECEIVED">RECEIVED (Discharged & Stock Updated)</option>
                 <option value="ORDERED">ORDERED (Pending Physical Arrival)</option>
@@ -263,7 +263,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
               <button
                 type="button"
                 onClick={addRow}
-                className="text-xs font-bold text-[#5847F6] hover:text-[#4939E3] flex items-center gap-1 cursor-pointer"
+                className="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Item</span>
@@ -328,7 +328,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
           </div>
 
           {/* Financial Totals */}
-          <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex items-center justify-between text-xs">
+          <div className="p-4 rounded-2xl bg-orange-500/10/60 border border-orange-500/20 flex items-center justify-between text-xs">
             <div>
               <span className="text-slate-500 block">Subtotal: {formatCurrency(subtotal, 'NGN')}</span>
               <span className="text-slate-500 block">VAT (7.5%): {formatCurrency(taxTotal, 'NGN')}</span>
@@ -351,7 +351,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Discharged at central yard warehouse. Driver S. Babangida."
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -366,7 +366,7 @@ export const RecordSupplyDeliveryModal: React.FC<RecordSupplyDeliveryModalProps>
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-6 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {createMutation.isPending ? 'Logging Delivery...' : 'Confirm Supply Delivery'}
             </button>

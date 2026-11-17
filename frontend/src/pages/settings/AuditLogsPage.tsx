@@ -85,7 +85,7 @@ export const AuditLogsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-indigo-50 text-[#5847F6] text-[11px] font-bold border border-indigo-200">
+            <span className="px-3 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[11px] font-bold border border-orange-500/30">
               Immutable System Ledger
             </span>
             <span className="text-xs text-slate-400 font-semibold">• Tamper-Proof Audit Trail</span>
@@ -108,8 +108,8 @@ export const AuditLogsPage: React.FC = () => {
           value={totalEvents}
           subtitle="Immutable append-only records"
           icon={Activity}
-          iconBgColor="bg-indigo-50"
-          iconColor="text-[#5847F6]"
+          iconBgColor="bg-orange-500/10"
+          iconColor="text-orange-500"
         />
 
         <BentoKpiCard
@@ -176,7 +176,7 @@ export const AuditLogsPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search action, actor, IP..."
-            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
       </div>
@@ -202,12 +202,12 @@ export const AuditLogsPage: React.FC = () => {
                     onClick={() => setSelectedLog(log)}
                     className={`w-full text-left p-4 rounded-2xl transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#1D2029] border-[#5847F6] shadow-lg shadow-indigo-950/30'
+                        ? 'bg-[#1D2029] border-orange-500 shadow-lg shadow-slate-950/30'
                         : 'bg-[#191B22] hover:bg-[#1D2029] border-slate-800/80 text-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-mono font-bold border border-indigo-500/30">
+                      <span className="px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-mono font-bold border border-orange-500/30">
                         {log.action}
                       </span>
                       <span className="text-[10px] font-mono text-slate-500">
@@ -216,7 +216,7 @@ export const AuditLogsPage: React.FC = () => {
                     </div>
 
                     <p className="text-xs font-bold text-white truncate">
-                      Entity: <span className="font-mono text-indigo-200">{log.entityType}</span>
+                      Entity: <span className="font-mono text-orange-300">{log.entityType}</span>
                     </p>
 
                     <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
@@ -233,29 +233,29 @@ export const AuditLogsPage: React.FC = () => {
           selectedLog ? (
             <div className="space-y-6">
               {/* Event Inspector Card */}
-              <div className="rounded-[28px] bg-gradient-to-br from-[#5B58B6] to-[#45429B] p-6 text-white shadow-xl shadow-indigo-950/20 border border-indigo-400/20 space-y-4">
+              <div className="rounded-[28px] bg-gradient-to-br from-[#0B132B] to-[#1E293B] p-6 text-white shadow-xl shadow-slate-950/20 border border-slate-700/80 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="px-3 py-1 rounded-full bg-white/15 text-xs font-mono font-black tracking-wide backdrop-blur-md">
                     {selectedLog.action}
                   </span>
-                  <span className="text-xs font-mono text-indigo-200">
+                  <span className="text-xs font-mono text-slate-400">
                     {new Date(selectedLog.createdAt).toLocaleString()}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/10 text-xs">
                   <div>
-                    <span className="text-indigo-200 text-[11px]">Actor (User)</span>
+                    <span className="text-slate-400 text-[11px]">Actor (User)</span>
                     <p className="font-bold text-white mt-0.5">
                       {selectedLog.actor?.fullName || 'System Automated Process'}
                     </p>
-                    <p className="text-[11px] text-indigo-200">{selectedLog.actor?.email}</p>
+                    <p className="text-[11px] text-slate-400">{selectedLog.actor?.email}</p>
                   </div>
 
                   <div>
-                    <span className="text-indigo-200 text-[11px]">Network Telemetry</span>
+                    <span className="text-slate-400 text-[11px]">Network Telemetry</span>
                     <p className="font-mono font-bold text-white mt-0.5">IP: {selectedLog.ipAddress || '102.89.42.19'}</p>
-                    <p className="text-[10px] text-indigo-200 font-mono truncate">{selectedLog.userAgent || 'Chrome/Windows'}</p>
+                    <p className="text-[10px] text-slate-400 font-mono truncate">{selectedLog.userAgent || 'Chrome/Windows'}</p>
                   </div>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export const AuditLogsPage: React.FC = () => {
                 <div>
                   <span className="text-slate-500 text-[11px]">Entity Reference</span>
                   <p className="font-bold text-white mt-0.5">
-                    {selectedLog.entityType} — <span className="font-mono text-indigo-400">{selectedLog.entityId}</span>
+                    {selectedLog.entityType} — <span className="font-mono text-orange-400">{selectedLog.entityId}</span>
                   </p>
                 </div>
                 <span className="px-2.5 py-1 rounded-full bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">
@@ -276,7 +276,7 @@ export const AuditLogsPage: React.FC = () => {
               {/* JSON Side-by-Side Diff Viewer */}
               <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 space-y-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                  <FileCode className="w-4 h-4 text-[#5847F6]" />
+                  <FileCode className="w-4 h-4 text-orange-500" />
                   <span className="text-xs font-extrabold text-white uppercase tracking-wider">
                     Snapshot Mutation Delta (Old vs New)
                   </span>

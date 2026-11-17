@@ -190,7 +190,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
               <span>Live 60fps Sync</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold">
               <Server className="w-3.5 h-3.5" />
               <span>Phase-7 Headless Renderer</span>
             </div>
@@ -247,7 +247,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
                 type="button"
                 onClick={() => setServerPreviewType('HTML')}
                 className={`px-2.5 py-1 rounded-full font-bold transition-all ${
-                  serverPreviewType === 'HTML' ? 'bg-[#5847F6] text-white' : 'text-slate-400 hover:text-white'
+                  serverPreviewType === 'HTML' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 HTML
@@ -256,7 +256,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
                 type="button"
                 onClick={() => setServerPreviewType('PDF')}
                 className={`px-2.5 py-1 rounded-full font-bold transition-all ${
-                  serverPreviewType === 'PDF' ? 'bg-[#5847F6] text-white' : 'text-slate-400 hover:text-white'
+                  serverPreviewType === 'PDF' ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 PDF
@@ -332,7 +332,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
           <div className="w-full flex flex-col items-center justify-center min-h-[600px]">
             {!documentId ? (
               <div className="max-w-md p-8 rounded-3xl bg-white/5 border border-white/10 text-center space-y-4 backdrop-blur-md">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
                   <Server className="w-7 h-7" />
                 </div>
                 <div>
@@ -345,7 +345,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
                   <button
                     type="button"
                     onClick={onSaveDraft}
-                    className="px-5 py-2 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all inline-flex items-center gap-2"
+                    className="px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold shadow-lg shadow-orange-500/25 transition-all inline-flex items-center gap-2"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>Save Draft Now</span>
@@ -354,7 +354,7 @@ export const A4StageContainer: React.FC<A4StageContainerProps> = ({
               </div>
             ) : isServerLoading ? (
               <div className="flex flex-col items-center justify-center gap-3 py-20 text-slate-400">
-                <RefreshCw className="w-8 h-8 animate-spin text-[#5847F6]" />
+                <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
                 <span className="text-xs font-semibold">Compiling Server-Side Document Layout...</span>
               </div>
             ) : serverError ? (

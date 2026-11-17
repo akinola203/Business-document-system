@@ -93,7 +93,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#5B58B6] rounded-[28px] p-6 text-white flex flex-col justify-between shadow-xl space-y-6">
+    <div className="w-full bg-gradient-to-br from-[#0B132B] to-[#1E293B] border border-slate-700/80 rounded-[28px] p-6 text-white flex flex-col justify-between shadow-xl space-y-6">
       {/* 1. Header: Document Meta & Consignee */}
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/15">
@@ -317,7 +317,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                 onClick={() => onActionClick('SUBMIT')}
                 className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
               >
-                <Send className="w-4 h-4 text-[#5847F6]" />
+                <Send className="w-4 h-4 text-orange-500" />
                 <span>Submit for Approval</span>
               </button>
             )}
@@ -358,7 +358,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                   onClick={() => onActionClick('ISSUE')}
                   className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
                 >
-                  <FileCheck className="w-4 h-4 text-[#5847F6]" />
+                  <FileCheck className="w-4 h-4 text-orange-500" />
                   <span>Issue Waybill</span>
                 </button>
               ) : (
@@ -390,7 +390,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                     onClick={() => onWaybillStateTransition('DISPATCH')}
                     className="px-5 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-1.5 transition-all"
                   >
-                    <Truck className="w-4 h-4 text-[#5847F6]" />
+                    <Truck className="w-4 h-4 text-orange-500" />
                     <span>Dispatch Consignment</span>
                   </button>
                 )}

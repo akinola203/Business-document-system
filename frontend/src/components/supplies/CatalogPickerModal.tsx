@@ -72,7 +72,7 @@ export const CatalogPickerModal: React.FC<CatalogPickerModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[#5847F6]">
+            <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
               <Package className="w-5 h-5" />
             </div>
             <div>
@@ -102,7 +102,7 @@ export const CatalogPickerModal: React.FC<CatalogPickerModalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by SKU code (e.g. SUP-CEM-001) or item name..."
-              className="w-full pl-9 pr-3.5 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+              className="w-full pl-9 pr-3.5 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -143,14 +143,14 @@ export const CatalogPickerModal: React.FC<CatalogPickerModalProps> = ({
                     onSelectItem(item);
                     onClose();
                   }}
-                  className="p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 border border-slate-200/80 hover:border-indigo-300 transition-all cursor-pointer flex items-center justify-between group"
+                  className="p-3.5 rounded-2xl bg-slate-50 hover:bg-orange-500/10/60 border border-slate-200/80 hover:border-orange-500/40 transition-all cursor-pointer flex items-center justify-between group"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-black text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-200 shadow-2xs">
+                      <span className="font-mono text-[10px] font-black text-orange-500 bg-white px-2 py-0.5 rounded border border-orange-500/30 shadow-2xs">
                         {item.sku}
                       </span>
-                      <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-[#5847F6] transition-colors">
+                      <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-orange-500 transition-colors">
                         {item.name}
                       </h4>
                     </div>
@@ -180,7 +180,7 @@ export const CatalogPickerModal: React.FC<CatalogPickerModalProps> = ({
                       </span>
                     </div>
 
-                    <div className="w-8 h-8 rounded-full bg-white group-hover:bg-[#5847F6] group-hover:text-white border border-slate-200 group-hover:border-[#5847F6] flex items-center justify-center text-slate-400 transition-all shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-white group-hover:bg-orange-500 group-hover:text-white border border-slate-200 group-hover:border-orange-500 flex items-center justify-center text-slate-400 transition-all shadow-sm">
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   </div>

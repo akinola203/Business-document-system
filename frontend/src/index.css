@@ -90,10 +90,10 @@
 }
 
 /* =========================================================================
-   GLOBAL DARK MODE OVERRIDES (Preserves crisp white A4 paper sheets)
+   GLOBAL DARK MODE OVERRIDES (Deep Navy Blue & Crisp White A4 Paper)
 ========================================================================= */
 html.dark body {
-  background-color: #0D0F14;
+  background-color: #070C1E;
   color: #F1F5F9;
 }
 
@@ -103,11 +103,11 @@ html.dark * {
 
 /* Surface & Container Overrides (excluding A4 paper sheets) */
 html.dark .bg-\[\#F4F5F9\] {
-  background-color: #0D0F14 !important;
+  background-color: #070C1E !important;
 }
 
 html.dark .bg-white:not(.print-receipt-sheet):not(.print-statement-sheet):not([style*="210mm"]):not([style*="794px"]) {
-  background-color: #161923 !important;
+  background-color: #0B132B !important;
   color: #F1F5F9;
 }
 
@@ -116,12 +116,12 @@ html.dark .bg-slate-50,
 html.dark .bg-slate-50\/50,
 html.dark .bg-slate-50\/60,
 html.dark .bg-slate-50\/80 {
-  background-color: #1D2130 !important;
+  background-color: #0F172A !important;
 }
 
 html.dark .bg-slate-100,
 html.dark .bg-slate-100\/80 {
-  background-color: #252A3C !important;
+  background-color: #1E293B !important;
 }
 
 /* Typography Overrides (excluding A4 paper sheets) */

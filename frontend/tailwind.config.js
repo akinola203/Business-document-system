@@ -8,14 +8,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: {
+          navy: "#0B132B",
+          "navy-dark": "#070C1E",
+          "navy-surface": "#0F172A",
+          orange: "#F97316",
+          "orange-hover": "#EA580C",
+          silver: "#E2E8F0",
+        },
         finnova: {
           canvas: "#F4F5F9",
           obsidian: "#16181F",
           "obsidian-card": "#1E2029",
           "obsidian-border": "#282B37",
-          indigo: "#5847F6",
-          "indigo-hover": "#4939E3",
-          "royal-indigo": "#5B58B6",
+          indigo: "#F97316",
+          "indigo-hover": "#EA580C",
+          "royal-indigo": "#0B132B",
           "card-bg": "#F8F9FC",
         },
       },
@@ -28,7 +36,8 @@ export default {
         '4xl': '32px',
       },
       boxShadow: {
-        'glow-indigo': '0 0 20px -3px rgba(88, 71, 246, 0.35)',
+        'glow-indigo': '0 0 20px -3px rgba(249, 115, 22, 0.35)',
+        'glow-orange': '0 0 20px -3px rgba(249, 115, 22, 0.35)',
         'pill': '0 4px 18px 0 rgba(0, 0, 0, 0.12)',
       },
     },

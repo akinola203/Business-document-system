@@ -48,7 +48,7 @@ export const ClientDemoModal: React.FC<ClientDemoModalProps> = ({ isOpen, onClos
 
         {/* Modal Header */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#16181F] border border-slate-800 flex items-center justify-center text-white shadow-xl shadow-indigo-500/10 shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-[#16181F] border border-slate-800 flex items-center justify-center text-white shadow-xl shadow-orange-500/10 shrink-0">
             <Sparkles className="w-7 h-7 text-amber-400 fill-amber-400" />
           </div>
           <div>
@@ -71,7 +71,7 @@ export const ClientDemoModal: React.FC<ClientDemoModalProps> = ({ isOpen, onClos
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#5847F6]" />
+              <Sparkles className="w-3.5 h-3.5 text-orange-500" />
               <span>Instant Document Studios (Pre-Filled Nigerian B2B Samples)</span>
             </h3>
           </div>
@@ -80,20 +80,20 @@ export const ClientDemoModal: React.FC<ClientDemoModalProps> = ({ isOpen, onClos
             {/* Invoice Preset Card */}
             <div
               onClick={() => handleLaunchPreset('/documents/invoices/new?preset=diesel')}
-              className="group p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-white border border-indigo-100 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer flex flex-col justify-between"
+              className="group p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-white border border-orange-500/20 hover:border-orange-500/40 hover:shadow-lg hover:shadow-orange-500/10 transition-all cursor-pointer flex flex-col justify-between"
             >
               <div>
-                <div className="w-9 h-9 rounded-xl bg-[#5847F6] text-white flex items-center justify-center mb-3 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center mb-3 shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
                   <FileText className="w-4 h-4" />
                 </div>
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#5847F6] transition-colors leading-tight">
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-orange-500 transition-colors leading-tight">
                   AGO Diesel Bulk Supply
                 </h4>
                 <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
                   45,000L Industrial Diesel, Tanker Haulage, Globus Bank NUBAN, 7.5% VAT.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-indigo-100/60 flex items-center justify-between text-xs font-bold text-[#5847F6]">
+              <div className="mt-4 pt-3 border-t border-orange-500/20/60 flex items-center justify-between text-xs font-bold text-orange-500">
                 <span>Load Invoice Preset</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -211,7 +211,7 @@ export const ClientDemoModal: React.FC<ClientDemoModalProps> = ({ isOpen, onClos
               <button
                 type="button"
                 onClick={() => handleLaunchPreset('/overview')}
-                className="px-3 py-1.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-[11px] font-bold shadow-md shadow-indigo-500/25 flex items-center gap-1"
+                className="px-3 py-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-bold shadow-md shadow-orange-500/25 flex items-center gap-1"
               >
                 <span>Dashboard</span>
                 <ArrowRight className="w-3 h-3" />

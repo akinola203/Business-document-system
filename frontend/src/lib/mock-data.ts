@@ -97,7 +97,7 @@ export const DEMO_TEMPLATES: DocumentTemplate[] = [
     description: 'Corporate high-contrast invoice layout with Akindeji Akinlade signatory block and bank settlement strip',
     isDefault: true,
     config: {
-      primaryColor: '#5847F6',
+      primaryColor: '#F97316',
       accentColor: '#4939E3',
       fontFamily: 'Inter',
       logoPosition: 'left',

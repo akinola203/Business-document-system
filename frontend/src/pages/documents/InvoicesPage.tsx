@@ -297,7 +297,7 @@ export const InvoicesPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Invoices</h1>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-[#5847F6] border border-indigo-100">
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20">
                 Accounts Receivable
               </span>
             </div>
@@ -319,7 +319,7 @@ export const InvoicesPage: React.FC = () => {
           </button>
           <button
             onClick={() => navigate('/documents/invoices/new')}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#5847F6] hover:bg-[#4939E3] text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs md:text-sm font-bold shadow-lg shadow-orange-500/25 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>+ Create an invoice</span>
@@ -348,8 +348,8 @@ export const InvoicesPage: React.FC = () => {
           value={`${pendingCount} Drafts`}
           subtitle="Invoices awaiting manager review"
           icon={Clock}
-          iconBgColor="bg-indigo-50"
-          iconColor="text-[#5847F6]"
+          iconBgColor="bg-orange-500/10"
+          iconColor="text-orange-500"
           footerLabel="Anti-self-approval rule active"
           footerAction="Review Drafts"
           onFooterClick={() => setActiveTab('PENDING_APPROVAL')}
@@ -358,8 +358,8 @@ export const InvoicesPage: React.FC = () => {
             <div className="w-2.5 bg-indigo-200 rounded-t h-3" />
             <div className="w-2.5 bg-indigo-300 rounded-t h-5" />
             <div className="w-2.5 bg-indigo-400 rounded-t h-4" />
-            <div className="w-2.5 bg-indigo-500 rounded-t h-7" />
-            <div className="w-2.5 bg-[#5847F6] rounded-t h-8" />
+            <div className="w-2.5 bg-orange-500 rounded-t h-7" />
+            <div className="w-2.5 bg-orange-500 rounded-t h-8" />
           </div>
         </BentoKpiCard>
 

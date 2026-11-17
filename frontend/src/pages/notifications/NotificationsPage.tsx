@@ -132,7 +132,7 @@ export const NotificationsPage: React.FC = () => {
       case 'INVOICE_PAID':
         return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
       case 'WAYBILL_DISPATCHED':
-        return <Truck className="w-5 h-5 text-indigo-400" />;
+        return <Truck className="w-5 h-5 text-orange-400" />;
       case 'WAYBILL_FAILED':
         return <AlertTriangle className="w-5 h-5 text-rose-400" />;
       case 'DOCUMENT_APPROVED':
@@ -153,7 +153,7 @@ export const NotificationsPage: React.FC = () => {
       case 'INVOICE_PAID':
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">Settled Payment</span>;
       case 'WAYBILL_DISPATCHED':
-        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300">Transit Dispatch</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-indigo-300">Transit Dispatch</span>;
       case 'WAYBILL_FAILED':
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">Delivery Exception</span>;
       case 'DOCUMENT_APPROVED':
@@ -201,7 +201,7 @@ export const NotificationsPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Notifications Center</h1>
             {unreadCount > 0 ? (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#5847F6] text-white shadow-sm tabular-nums">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-500 text-white shadow-sm tabular-nums">
                 {unreadCount} Unread
               </span>
             ) : (
@@ -306,7 +306,7 @@ export const NotificationsPage: React.FC = () => {
                   >
                     {/* Unread Electric Indigo Dot */}
                     {!notif.isRead && (
-                      <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-[#5847F6] ring-2 ring-[#16181F]" />
+                      <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-[#16181F]" />
                     )}
 
                     <div className="flex items-start gap-3">
@@ -430,7 +430,7 @@ export const NotificationsPage: React.FC = () => {
                     <span>
                       {selectedItem.type === 'APPROVAL_REQUEST' ? 'Review & Sign Off Now' : 'Open in Workspace'}
                     </span>
-                    <ArrowRight className="w-4 h-4 text-[#5847F6]" />
+                    <ArrowRight className="w-4 h-4 text-orange-500" />
                   </button>
 
                   {!selectedItem.isRead && (

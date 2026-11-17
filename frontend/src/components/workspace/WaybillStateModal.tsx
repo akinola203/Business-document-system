@@ -81,7 +81,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
           title: 'Stage Consignment as Ready for Pickup',
           subtitle: `Flag ${waybillNumber} as packaged, verified in warehouse, and staged for carrier loading.`,
           icon: PackageCheck,
-          btnColor: 'bg-[#5847F6] text-white',
+          btnColor: 'bg-orange-500 text-white',
           btnText: 'Stage as Ready',
         };
       case 'DISPATCH':
@@ -89,7 +89,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
           title: 'Dispatch Cargo (In Transit)',
           subtitle: `Hand over ${waybillNumber} to the carrier driver. The consignment will transition to IN_TRANSIT.`,
           icon: Truck,
-          btnColor: 'bg-[#5847F6] text-white',
+          btnColor: 'bg-orange-500 text-white',
           btnText: 'Confirm Dispatch',
         };
       case 'COMPLETE':
@@ -119,7 +119,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
       <div className="w-full max-w-lg bg-white rounded-[32px] p-7 md:p-8 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-[#5847F6] flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
               <Icon className="w-6 h-6" />
             </div>
             <div>
@@ -154,7 +154,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Staged at Bay 4, wrapped on 2 wooden pallets ready for pickup."
                 rows={3}
-                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6] transition-all"
+                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
               />
             </div>
           )}
@@ -171,7 +171,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
                   value={vehicleNumber}
                   onChange={(e) => setVehicleNumber(e.target.value)}
                   placeholder="e.g. AAA-123-XY or KJA-994-LG"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -185,7 +185,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
                   value={driverName}
                   onChange={(e) => setDriverName(e.target.value)}
                   placeholder="e.g. Ibrahim Musa"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -198,7 +198,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
                   value={driverPhone}
                   onChange={(e) => setDriverPhone(e.target.value)}
                   placeholder="e.g. +234 803 000 0000"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -216,7 +216,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
                   value={receivedByName}
                   onChange={(e) => setReceivedByName(e.target.value)}
                   placeholder="e.g. Chinedu Okafor (Site Supervisor)"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -229,7 +229,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
                   required
                   value={receivedDate}
                   onChange={(e) => setReceivedDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -246,7 +246,7 @@ export const WaybillStateModal: React.FC<WaybillStateModalProps> = ({
                 onChange={(e) => setFailureReason(e.target.value)}
                 placeholder="e.g. Consignee warehouse closed on arrival, or access road flooded."
                 rows={3}
-                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5847F6]"
+                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
           )}
