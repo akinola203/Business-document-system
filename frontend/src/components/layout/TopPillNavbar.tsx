@@ -128,36 +128,19 @@ export const TopPillNavbar: React.FC = () => {
 
   return (
     <header className="w-full flex flex-wrap items-center justify-between gap-3 py-2 px-3 rounded-3xl bg-white/80 dark:bg-[#11131A]/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-sm">
-      {/* 1. Left: AOA 77 Supports Circular Badge Logo & Identity */}
+      {/* 1. Left: Compact Header Logo & Title */}
       <Link
         to="/overview"
         title="Go to Dashboard"
-        className="flex items-center gap-3 order-1 cursor-pointer hover:opacity-90 transition-opacity"
+        className="flex items-center gap-2.5 py-1 order-1 cursor-pointer hover:opacity-90 transition-opacity"
       >
-        {customLogoUrl ? (
-          <img
-            src={customLogoUrl}
-            alt="AOA 77 Supports Logo"
-            className="w-11 h-11 rounded-full object-contain bg-white border-2 border-slate-900 dark:border-white/20 shadow-md shrink-0"
-          />
-        ) : (
-          <div className="w-11 h-11 rounded-full bg-[#0F1117] text-white flex flex-col items-center justify-center shadow-md border-2 border-slate-700/80 shrink-0 select-none">
-            <span className="text-[10px] font-black tracking-tighter leading-none">AOA</span>
-            <span className="text-[9px] font-extrabold text-slate-300 leading-none mt-0.5">77</span>
-          </div>
-        )}
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm md:text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
-              AOA 77 Supports
-            </h1>
-            <span className="text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full bg-slate-900 text-white dark:bg-white/15 dark:text-white">
-              MD
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {user?.companyName || 'AOA 77 COMPANY LTD'}
-          </p>
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-800 border border-neutral-700/80 shadow-sm flex flex-col items-center justify-center p-0.5 text-center shrink-0">
+          <span className="text-[9px] font-bold tracking-wider text-white leading-none">AOA</span>
+          <span className="text-[10px] font-extrabold tracking-tight text-orange-500 leading-none mt-0.5">77</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs font-bold tracking-tight text-slate-900 dark:text-white leading-tight">AOA 77 Supports</span>
+          <span className="text-[9px] font-medium text-slate-500 dark:text-neutral-400 tracking-wider uppercase leading-none">Business Management</span>
         </div>
       </Link>
 
