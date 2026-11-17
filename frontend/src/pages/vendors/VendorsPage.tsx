@@ -283,7 +283,7 @@ export const VendorsPage: React.FC = () => {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/30 text-indigo-300 font-extrabold text-xs flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/30 text-orange-400 font-extrabold text-xs flex items-center justify-center">
                           {initials}
                         </div>
                         <div>

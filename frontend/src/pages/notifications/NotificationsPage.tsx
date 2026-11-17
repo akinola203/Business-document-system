@@ -153,7 +153,7 @@ export const NotificationsPage: React.FC = () => {
       case 'INVOICE_PAID':
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">Settled Payment</span>;
       case 'WAYBILL_DISPATCHED':
-        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-indigo-300">Transit Dispatch</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-300">Transit Dispatch</span>;
       case 'WAYBILL_FAILED':
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">Delivery Exception</span>;
       case 'DOCUMENT_APPROVED':
@@ -337,8 +337,8 @@ export const NotificationsPage: React.FC = () => {
             )}
           </div>
 
-          {/* Right Pane (7 Columns / 58%): Royal Indigo Action Inspector */}
-          <div className="lg:col-span-7 bg-[#5B58B6] rounded-[24px] p-6 md:p-8 text-white shadow-xl border border-white/10 flex flex-col justify-between">
+          {/* Right Pane (7 Columns / 58%): Deep Navy Action Inspector */}
+          <div className="lg:col-span-7 bg-[#0B132B] rounded-[24px] p-6 md:p-8 text-white shadow-xl border border-white/10 flex flex-col justify-between">
             {selectedItem ? (
               <div className="space-y-6">
                 <div>

@@ -370,7 +370,7 @@ export const WaybillsPage: React.FC = () => {
           footerLabel="Direct haulage routes"
         >
           <div className="my-1">
-            <svg className="w-full h-6 stroke-[#5847F6] fill-none" viewBox="0 0 100 25">
+            <svg className="w-full h-6 stroke-[#F97316] fill-none" viewBox="0 0 100 25">
               <path d="M0 18 Q 30 2, 60 12 T 100 4" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>

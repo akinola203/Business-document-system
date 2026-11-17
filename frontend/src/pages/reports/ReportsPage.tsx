@@ -299,7 +299,7 @@ export const ReportsPage: React.FC = () => {
         <div className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Fulfillment Rate</span>
-            <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-500 flex items-center justify-center">
               <Truck className="w-4 h-4" />
             </div>
           </div>
@@ -307,7 +307,7 @@ export const ReportsPage: React.FC = () => {
             {summary.logisticsTelemetry.onTimeDeliveryRate}%
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-slate-500">
-            <Clock className="w-3.5 h-3.5 text-purple-500" />
+            <Clock className="w-3.5 h-3.5 text-orange-500" />
             <span>Avg. Turnaround: <strong className="text-slate-800 tabular-nums">{summary.logisticsTelemetry.averageTransitDays} Days</strong></span>
           </div>
         </div>
@@ -355,7 +355,7 @@ export const ReportsPage: React.FC = () => {
                       {/* Tooltip */}
                       <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-700 p-2 rounded-lg text-[10px] whitespace-nowrap z-20 pointer-events-none shadow-xl">
                         <div className="font-bold text-white">{m.month} 2026</div>
-                        <div className="text-indigo-300">Billed: {formatShortNaira(m.invoicedTotal)}</div>
+                        <div className="text-orange-300">Billed: {formatShortNaira(m.invoicedTotal)}</div>
                         <div className="text-emerald-300">Collected: {formatShortNaira(m.collectedTotal)}</div>
                       </div>
 
@@ -399,8 +399,8 @@ export const ReportsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Right 5 Columns: Royal Indigo Glassmorphic Client Leaderboard */}
-            <div className="lg:col-span-5 bg-[#5B58B6] rounded-[24px] p-6 text-white shadow-xl border border-white/10 flex flex-col justify-between">
+            {/* Right 5 Columns: Deep Navy Blue Glassmorphic Client Leaderboard */}
+            <div className="lg:col-span-5 bg-[#0B132B] rounded-[24px] p-6 text-white shadow-xl border border-white/10 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -614,7 +614,7 @@ export const ReportsPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center">
                     <Truck className="w-5 h-5" />
                   </div>
                   <div>
@@ -676,7 +676,7 @@ export const ReportsPage: React.FC = () => {
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-400">
                   <span>Waybills</span>
-                  <span className="text-purple-400">Fulfillment</span>
+                  <span className="text-orange-400">Fulfillment</span>
                 </div>
                 <div className="text-3xl font-black text-white tabular-nums">
                   {summary.documentVelocity.byType.WAYBILL || 0}

@@ -544,7 +544,7 @@ export const LetterBuilderPage: React.FC = () => {
           {/* Card 3: Executive Letter Body Editor */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
                 <PenTool className="w-4 h-4" />
               </div>
               <div>

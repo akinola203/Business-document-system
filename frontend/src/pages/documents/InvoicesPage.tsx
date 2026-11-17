@@ -355,9 +355,9 @@ export const InvoicesPage: React.FC = () => {
           onFooterClick={() => setActiveTab('PENDING_APPROVAL')}
         >
           <div className="flex items-end gap-1.5 h-8 mt-2">
-            <div className="w-2.5 bg-indigo-200 rounded-t h-3" />
-            <div className="w-2.5 bg-indigo-300 rounded-t h-5" />
-            <div className="w-2.5 bg-indigo-400 rounded-t h-4" />
+            <div className="w-2.5 bg-orange-200 dark:bg-orange-500/20 rounded-t h-3" />
+            <div className="w-2.5 bg-orange-300 dark:bg-orange-500/30 rounded-t h-5" />
+            <div className="w-2.5 bg-orange-400 dark:bg-orange-500/40 rounded-t h-4" />
             <div className="w-2.5 bg-orange-500 rounded-t h-7" />
             <div className="w-2.5 bg-orange-500 rounded-t h-8" />
           </div>
@@ -375,7 +375,7 @@ export const InvoicesPage: React.FC = () => {
           footerLabel="Standard Net-30 credit policy"
         >
           <div className="my-1">
-            <svg className="w-full h-6 stroke-[#5847F6] fill-none" viewBox="0 0 100 25">
+            <svg className="w-full h-6 stroke-[#F97316] fill-none" viewBox="0 0 100 25">
               <path d="M0 20 Q 25 5, 50 14 T 100 6" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>

@@ -266,7 +266,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-bold text-indigo-300 bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-500/20">
+                      <span className="font-mono text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-500/20">
                         {item.sku}
                       </span>
                       <span className="font-bold text-slate-200">{item.name}</span>

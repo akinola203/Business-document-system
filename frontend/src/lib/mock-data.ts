@@ -98,7 +98,7 @@ export const DEMO_TEMPLATES: DocumentTemplate[] = [
     isDefault: true,
     config: {
       primaryColor: '#F97316',
-      accentColor: '#4939E3',
+      accentColor: '#0B132B',
       fontFamily: 'Inter',
       logoPosition: 'left',
       showBankDetails: true,

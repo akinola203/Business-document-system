@@ -143,7 +143,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsForgotModalOpen(true)}
-                className="text-xs font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-indigo-300 hover:underline transition-colors cursor-pointer"
+                className="text-xs font-semibold text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 hover:underline transition-colors cursor-pointer"
               >
                 Forgot Password?
               </button>
@@ -168,7 +168,7 @@ export const LoginPage: React.FC = () => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded-md border-slate-300 dark:border-slate-700 text-orange-500 focus:ring-orange-500 dark:bg-slate-800 transition cursor-pointer accent-[#5847F6]"
+                className="w-4 h-4 rounded-md border-slate-300 dark:border-slate-700 text-orange-500 focus:ring-orange-500 dark:bg-slate-800 transition cursor-pointer accent-orange-500"
               />
               <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
                 Remember me

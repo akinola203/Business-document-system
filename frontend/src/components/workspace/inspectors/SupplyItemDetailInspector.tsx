@@ -191,7 +191,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
         ===================================================================== */}
         <div className="p-4 rounded-2xl bg-[#191B22] border border-slate-800 space-y-2">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-            <Building2 className="w-4 h-4 text-purple-400" />
+            <Building2 className="w-4 h-4 text-orange-400" />
             <h2 className="text-xs font-bold text-white tracking-tight">
               Preferred Sourcing Supplier
             </h2>
@@ -205,7 +205,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
                   Code: {item.preferredVendor.vendorCode}
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 text-[10px] font-bold border border-purple-500/20">
+              <span className="px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/20">
                 Primary Contractor
               </span>
             </div>

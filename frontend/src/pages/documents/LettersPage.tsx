@@ -259,9 +259,9 @@ export const LettersPage: React.FC = () => {
           onFooterClick={() => setActiveTab('PENDING_APPROVAL')}
         >
           <div className="flex items-end gap-1.5 h-8 mt-2">
-            <div className="w-2.5 bg-indigo-200 rounded-t h-4" />
-            <div className="w-2.5 bg-indigo-300 rounded-t h-3" />
-            <div className="w-2.5 bg-indigo-400 rounded-t h-6" />
+            <div className="w-2.5 bg-orange-200 dark:bg-orange-500/20 rounded-t h-4" />
+            <div className="w-2.5 bg-orange-300 dark:bg-orange-500/30 rounded-t h-3" />
+            <div className="w-2.5 bg-orange-400 dark:bg-orange-500/40 rounded-t h-6" />
             <div className="w-2.5 bg-orange-500 rounded-t h-5" />
             <div className="w-2.5 bg-orange-500 rounded-t h-8" />
           </div>
@@ -279,7 +279,7 @@ export const LettersPage: React.FC = () => {
           footerLabel="Same-day dispatch target"
         >
           <div className="my-1">
-            <svg className="w-full h-6 stroke-[#5847F6] fill-none" viewBox="0 0 100 25">
+            <svg className="w-full h-6 stroke-[#F97316] fill-none" viewBox="0 0 100 25">
               <path d="M0 16 Q 35 2, 70 10 T 100 4" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>
@@ -290,8 +290,8 @@ export const LettersPage: React.FC = () => {
           value="Corporate Executive"
           subtitle="Standard letterhead layout"
           icon={Palette}
-          iconBgColor="bg-purple-50"
-          iconColor="text-purple-600"
+          iconBgColor="bg-orange-500/10"
+          iconColor="text-orange-500"
           footerLabel="AOA 77 Registered Letterhead"
           footerAction="Templates"
           onFooterClick={() => navigate('/settings/templates')}

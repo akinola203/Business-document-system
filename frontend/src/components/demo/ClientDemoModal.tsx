@@ -80,7 +80,7 @@ export const ClientDemoModal: React.FC<ClientDemoModalProps> = ({ isOpen, onClos
             {/* Invoice Preset Card */}
             <div
               onClick={() => handleLaunchPreset('/documents/invoices/new?preset=diesel')}
-              className="group p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-white border border-orange-500/20 hover:border-orange-500/40 hover:shadow-lg hover:shadow-orange-500/10 transition-all cursor-pointer flex flex-col justify-between"
+              className="group p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-orange-500/20 hover:border-orange-500/40 hover:shadow-lg hover:shadow-orange-500/10 transition-all cursor-pointer flex flex-col justify-between"
             >
               <div>
                 <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center mb-3 shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">

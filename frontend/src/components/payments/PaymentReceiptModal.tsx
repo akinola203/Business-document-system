@@ -68,7 +68,7 @@ export const PaymentReceiptModal: React.FC<PaymentReceiptModalProps> = ({
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-200">
               Official Payment Voucher & Receipt
             </span>
-            <span className="font-mono text-xs text-indigo-300 font-bold">
+            <span className="font-mono text-xs text-orange-400 font-bold">
               {payment.paymentNumber}
             </span>
           </div>

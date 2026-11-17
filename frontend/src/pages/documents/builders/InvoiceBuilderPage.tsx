@@ -450,7 +450,7 @@ export const InvoiceBuilderPage: React.FC = () => {
   if (isEdit && isDocLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] text-slate-500">
-        <div className="w-10 h-10 border-4 border-orange-500/30 border-t-[#5847F6] rounded-full animate-spin mb-4" />
+        <div className="w-10 h-10 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mb-4" />
         <p className="text-sm font-semibold">Loading invoice studio...</p>
       </div>
     );
@@ -612,7 +612,7 @@ export const InvoiceBuilderPage: React.FC = () => {
             {/* Card 2: Document Context & Settlement Terms */}
             <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-                <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
