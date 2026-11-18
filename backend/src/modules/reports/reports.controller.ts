@@ -24,4 +24,17 @@ export class ReportsController {
   ) {
     return this.reportsService.getSummary(user.companyId, query);
   }
+
+  @Get('backup-export')
+  @RequirePermissions('settings:manage')
+  @ApiOperation({ summary: 'Export complete tenant data snapshot (JSON/CSV) for business continuity and PITR verification' })
+  @ApiResponse({ status: 200, description: 'Backup snapshot exported with SHA-256 checksum.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. User lacks settings:manage permission.' })
+  async exportBackup(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('format') format?: string,
+  ) {
+    const normalizedFormat = format?.toLowerCase() === 'csv' ? 'csv' : 'json';
+    return this.reportsService.exportBackupSnapshot(user.companyId, normalizedFormat, user.id);
+  }
 }

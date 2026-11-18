@@ -223,7 +223,7 @@ export const App: React.FC = () => {
               <Route
                 path="/settings/users"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="users:view">
                     <UsersPage />
                   </ProtectedRoute>
                 }

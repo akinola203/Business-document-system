@@ -21,7 +21,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredPermission && !isAdmin && !hasPermission(requiredPermission)) {
+  const isSelfProfileEdit =
+    requiredPermission === 'users:view' &&
+    location.search.includes('edit=me');
+
+  if (requiredPermission && !isAdmin && !isSelfProfileEdit && !hasPermission(requiredPermission)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
         <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-4 shadow-sm border border-rose-200">

@@ -9,7 +9,11 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
-import { CompaniesService, UploadedBrandingFiles } from './companies.service';
+import {
+  CompaniesService,
+  UploadedBrandingFiles,
+  MAX_BRANDING_FILE_SIZE_BYTES,
+} from './companies.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
@@ -61,7 +65,7 @@ export class CompaniesController {
   @RequirePermissions('settings:manage')
   @UseInterceptors(
     FileFieldsInterceptor(BRANDING_FILE_FIELDS, {
-      limits: { fileSize: 10 * 1024 * 1024 },
+      limits: { fileSize: MAX_BRANDING_FILE_SIZE_BYTES },
     }),
   )
   @ApiConsumes('multipart/form-data')
@@ -93,7 +97,7 @@ export class SettingsBrandingController {
   @RequirePermissions('settings:manage')
   @UseInterceptors(
     FileFieldsInterceptor(BRANDING_FILE_FIELDS, {
-      limits: { fileSize: 10 * 1024 * 1024 },
+      limits: { fileSize: MAX_BRANDING_FILE_SIZE_BYTES },
     }),
   )
   @ApiConsumes('multipart/form-data')

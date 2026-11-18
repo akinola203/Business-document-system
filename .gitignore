@@ -36,6 +36,8 @@ Thumbs.db
 # Local storage and test uploads
 storage/secure-uploads/
 storage/temp/
+backups/
+backend/backups/
 *.pdf
 
 # Prisma

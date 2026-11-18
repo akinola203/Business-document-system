@@ -143,8 +143,12 @@ export class AuthService {
       );
     }
 
-    // Verify password with Argon2id
-    const isPasswordValid = await argon2.verify(user.passwordHash, loginDto.password);
+    // Verify password with Argon2id (reject empty/whitespace passwords or missing hash)
+    const candidatePassword = typeof loginDto.password === 'string' ? loginDto.password : '';
+    const isPasswordValid =
+      candidatePassword.trim().length > 0 &&
+      Boolean(user.passwordHash) &&
+      (await argon2.verify(user.passwordHash, candidatePassword));
 
     if (!isPasswordValid) {
       const updatedUser = await this.prisma.user.update({
@@ -154,6 +158,25 @@ export class AuthService {
         },
         select: { id: true, email: true, failedLoginAttempts: true },
       });
+
+      const primaryCompanyId = user.companyUsers?.[0]?.companyId;
+      if (primaryCompanyId && this.auditService && updatedUser.failedLoginAttempts < 5) {
+        await this.auditService
+          .logAction({
+            companyId: primaryCompanyId,
+            actorId: user.id,
+            action: 'USER_LOGIN_FAILED',
+            entityType: 'User',
+            entityId: user.id,
+            newValues: {
+              email: user.email,
+              failedLoginAttempts: updatedUser.failedLoginAttempts,
+            },
+            ipAddress,
+            userAgent,
+          })
+          .catch((err) => this.logger.warn(`Failed to write failed login audit log: ${err.message}`));
+      }
 
       if (updatedUser.failedLoginAttempts >= 5) {
         const lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes lockout
@@ -231,6 +254,25 @@ export class AuthService {
         lastLoginAt: new Date(),
       },
     });
+
+    if (this.auditService) {
+      await this.auditService
+        .logAction({
+          companyId: membership.companyId,
+          actorId: user.id,
+          action: 'USER_LOGIN_SUCCESS',
+          entityType: 'User',
+          entityId: user.id,
+          newValues: {
+            email: user.email,
+            role: membership.role.name,
+            rememberMe: Boolean(loginDto.rememberMe),
+          },
+          ipAddress,
+          userAgent,
+        })
+        .catch((err) => this.logger.warn(`Failed to write login success audit log: ${err.message}`));
+    }
 
     const permissions = membership.role.rolePermissions.map((rp) => rp.permission.slug);
 

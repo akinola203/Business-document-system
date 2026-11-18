@@ -51,7 +51,17 @@ export interface PoolTuningOptions {
   connectionLimit: number;
   poolTimeout: number;
   overrideExisting?: boolean;
+  enforceSsl?: boolean;
 }
+
+const LOCAL_DB_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '::1',
+  'postgres',
+  'postgres-replica',
+  'db',
+]);
 
 export interface PrismaRoutingContext {
   insideTransaction?: boolean;
@@ -74,7 +84,7 @@ export const prismaRoutingContextStorage = new AsyncLocalStorage<PrismaRoutingCo
 
 /**
  * Appends or updates Prisma connection pooling query parameters (`connection_limit`, `pool_timeout`)
- * on a PostgreSQL connection string to prevent pool exhaustion under concurrent enterprise workloads.
+ * and enforces TLS (`sslmode=require`) for remote/cloud PostgreSQL hosts (e.g., Neon, Render, RDS).
  */
 export function tuneConnectionPoolUrl(
   rawUrl: string | undefined,
@@ -92,6 +102,14 @@ export function tuneConnectionPoolUrl(
     }
     if (options.overrideExisting || !parsed.searchParams.has('pool_timeout')) {
       parsed.searchParams.set('pool_timeout', String(options.poolTimeout));
+    }
+    const hostname = parsed.hostname.toLowerCase();
+    const isRemoteHost = Boolean(hostname) && !LOCAL_DB_HOSTS.has(hostname);
+    if (isRemoteHost || options.enforceSsl) {
+      const currentSslMode = parsed.searchParams.get('sslmode')?.toLowerCase();
+      if (!currentSslMode || currentSslMode === 'disable' || currentSslMode === 'allow' || currentSslMode === 'prefer') {
+        parsed.searchParams.set('sslmode', 'require');
+      }
     }
     return parsed.toString();
   } catch {

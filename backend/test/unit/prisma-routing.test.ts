@@ -40,6 +40,18 @@ test('Connection Pool Tuning Tests', async (t) => {
     assert.strictEqual(new URL(overridden!).searchParams.get('connection_limit'), '40');
     assert.strictEqual(new URL(overridden!).searchParams.get('pool_timeout'), '60');
   });
+
+  await t.test('automatically enforces sslmode=require for remote cloud PostgreSQL hosts (e.g. Neon)', () => {
+    const neonUrl = 'postgresql://user:pass@ep-cool-lake-123456.eu-central-1.aws.neon.tech:5432/aoa77?schema=public';
+    const tuned = tuneConnectionPoolUrl(neonUrl, {
+      connectionLimit: 20,
+      poolTimeout: 30,
+    });
+    assert.ok(tuned);
+    const parsed = new URL(tuned!);
+    assert.strictEqual(parsed.searchParams.get('sslmode'), 'require');
+    assert.strictEqual(parsed.searchParams.get('connection_limit'), '20');
+  });
 });
 
 test('PrismaService Primary-Replica Read/Write Splitting Tests', async (t) => {

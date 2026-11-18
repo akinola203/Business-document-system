@@ -43,20 +43,36 @@ export class SentryExceptionFilter implements ExceptionFilter {
       statusCode = HttpStatus.CONFLICT;
       error = 'Conflict';
       const target = (exception as any)?.meta?.target;
-      message = target
-        ? `Unique constraint violation on field: ${Array.isArray(target) ? target.join(', ') : target}`
-        : 'Unique constraint violation. A record with this identifier already exists.';
+      this.logger.warn(`Prisma P2002 unique constraint conflict on: ${JSON.stringify(target)}`);
+      message =
+        process.env.NODE_ENV === 'production'
+          ? 'Unique constraint violation. A record with this identifier already exists.'
+          : target
+            ? `Unique constraint violation on field: ${Array.isArray(target) ? target.join(', ') : target}`
+            : 'Unique constraint violation. A record with this identifier already exists.';
     } else if ((exception as any)?.code === 'P2003') {
       statusCode = HttpStatus.BAD_REQUEST;
       error = 'Bad Request';
       const fieldName = (exception as any)?.meta?.field_name;
-      message = fieldName
-        ? `Foreign key constraint failed on field: ${fieldName}`
-        : 'Foreign key constraint violation. Referenced record does not exist.';
+      this.logger.warn(`Prisma P2003 foreign key violation on: ${fieldName}`);
+      message =
+        process.env.NODE_ENV === 'production'
+          ? 'Foreign key constraint violation. Referenced record does not exist.'
+          : fieldName
+            ? `Foreign key constraint failed on field: ${fieldName}`
+            : 'Foreign key constraint violation. Referenced record does not exist.';
     } else if ((exception as any)?.code === 'P2025') {
       statusCode = HttpStatus.NOT_FOUND;
       error = 'Not Found';
-      message = (exception as any)?.meta?.cause || 'Record not found.';
+      message =
+        process.env.NODE_ENV === 'production'
+          ? 'Record not found.'
+          : (exception as any)?.meta?.cause || 'Record not found.';
+    } else if (typeof (exception as any)?.code === 'string' && /^P\d{4}$/.test((exception as any).code)) {
+      this.logger.error(`Prisma Database Error (${(exception as any).code}): ${(exception as any).message}`);
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+      error = 'Internal Server Error';
+      message = 'An unexpected database error occurred.';
     } else if (exception instanceof Error) {
       this.logger.error(`Unhandled Server Exception: ${exception.message}`, exception.stack);
       if (process.env.NODE_ENV !== 'production') {

@@ -1,7 +1,12 @@
 import { test } from 'node:test';
 import * as assert from 'node:assert';
-import { NotFoundException } from '@nestjs/common';
-import { CompaniesService } from '../../src/modules/companies/companies.service';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  CompaniesService,
+  MAX_BRANDING_FILE_SIZE_BYTES,
+  sanitizeBrandingFilename,
+  verifyBrandingMagicBytes,
+} from '../../src/modules/companies/companies.service';
 
 test('CompaniesService Unit Tests', async (t) => {
   let mockCompanyDb: any = null;
@@ -114,5 +119,76 @@ test('CompaniesService Unit Tests', async (t) => {
     assert.equal(updatedSettings.defaultPaymentTermsDays, 45);
     assert.equal(auditLogs.length, 1);
     assert.equal(auditLogs[0].action, 'COMPANY_SETTINGS_UPDATED');
+  });
+
+  await t.test('uploadBrandingAssets enforces 2MB limit, magic bytes, MIME allowlist, and filename sanitization', async () => {
+    mockCompanyDb = { id: 'comp-1', name: 'AOA 77 Supports' };
+    mockSettingsDb = { id: 'sett-1', companyId: 'comp-1', metadata: {} };
+
+    // 1. Path traversal sanitization
+    assert.equal(sanitizeBrandingFilename('../../etc/passwd.png'), 'passwd.png');
+    assert.equal(sanitizeBrandingFilename('..\\..\\windows\\system32\\cmd.png'), 'cmd.png');
+
+    // 2. Valid PNG magic bytes check
+    const validPngBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00]);
+    assert.equal(verifyBrandingMagicBytes(validPngBuffer, 'image/png'), true);
+    assert.equal(verifyBrandingMagicBytes(Buffer.from('<?php echo 1; ?>'), 'image/png'), false);
+
+    const validUpload = await service.uploadBrandingAssets(
+      'comp-1',
+      {
+        logo: [
+          {
+            originalname: '../../aoa77-badge.png',
+            mimetype: 'image/png',
+            buffer: validPngBuffer,
+          } as any,
+        ],
+      },
+      {},
+      'usr-admin-1',
+    );
+    assert.ok(validUpload.logoUrl?.startsWith('data:image/png;base64,'));
+
+    // 3. Rejects spoofed MIME / invalid magic bytes
+    await assert.rejects(
+      async () =>
+        service.uploadBrandingAssets(
+          'comp-1',
+          {
+            logo: [
+              {
+                originalname: 'malicious.png',
+                mimetype: 'image/png',
+                buffer: Buffer.from('<script>alert(1)</script>'),
+              } as any,
+            ],
+          },
+          {},
+          'usr-admin-1',
+        ),
+      BadRequestException,
+    );
+
+    // 4. Rejects files exceeding 2MB limit
+    const oversizedBuffer = Buffer.alloc(MAX_BRANDING_FILE_SIZE_BYTES + 1024, 0x89);
+    await assert.rejects(
+      async () =>
+        service.uploadBrandingAssets(
+          'comp-1',
+          {
+            logo: [
+              {
+                originalname: 'huge.png',
+                mimetype: 'image/png',
+                buffer: oversizedBuffer,
+              } as any,
+            ],
+          },
+          {},
+          'usr-admin-1',
+        ),
+      BadRequestException,
+    );
   });
 });

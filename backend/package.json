@@ -18,6 +18,7 @@
     "prisma:studio": "prisma studio",
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
+    "backup:db": "ts-node -T scripts/backup-db.ts",
     "test:integration": "ts-node test/integration/cross-tenant.test.ts"
   },
   "prisma": {

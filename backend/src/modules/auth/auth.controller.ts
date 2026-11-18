@@ -40,10 +40,10 @@ export class AuthController {
     const rawSameSite = (
       process.env.COOKIE_SAMESITE ||
       process.env.REFRESH_COOKIE_SAME_SITE ||
-      'lax'
+      'strict'
     ).toLowerCase();
     const sameSiteConfig = (
-      ['strict', 'lax', 'none'].includes(rawSameSite) ? rawSameSite : 'lax'
+      ['strict', 'lax', 'none'].includes(rawSameSite) ? rawSameSite : 'strict'
     ) as 'strict' | 'lax' | 'none';
 
     const maxAge = rememberMe

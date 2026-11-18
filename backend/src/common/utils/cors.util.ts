@@ -1,3 +1,8 @@
+export const DEFAULT_PRODUCTION_WEB_ORIGINS = [
+  'https://businesssdocsystem.netlify.app',
+  'https://businessdocsystem.netlify.app',
+];
+
 export function buildAllowedCorsOrigins(options: {
   corsOrigin?: string;
   frontendUrl?: string;
@@ -5,7 +10,7 @@ export function buildAllowedCorsOrigins(options: {
   nodeEnv?: string;
 }): Set<string> {
   const isProduction = options.nodeEnv === 'production';
-  const rawList: string[] = [];
+  const rawList: string[] = [...DEFAULT_PRODUCTION_WEB_ORIGINS];
 
   if (options.corsOrigin) {
     rawList.push(...options.corsOrigin.split(',').map((o) => o.trim()).filter(Boolean));
@@ -43,7 +48,7 @@ export function buildAllowedCorsOrigins(options: {
 export function isOriginAllowed(
   origin: string | undefined,
   allowedOrigins: Set<string>,
-  isProduction: boolean,
+  _isProduction: boolean,
 ): boolean {
   if (!origin) {
     return true;
@@ -55,7 +60,8 @@ export function isOriginAllowed(
   if (allowedOrigins.has(normalized)) {
     return true;
   }
-  if (!isProduction && normalized.startsWith('file://')) {
+  // Allow packaged Electron desktop origins (file:// and app://.)
+  if (normalized.startsWith('file://') || normalized === 'app://.') {
     return true;
   }
   return false;

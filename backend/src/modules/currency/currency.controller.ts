@@ -3,8 +3,12 @@ import {
   Controller,
   Get,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 import {
   CURRENCY_METADATA,
   CurrencyService,
@@ -13,6 +17,9 @@ import {
 
 @ApiTags('Currency')
 @ApiBearerAuth()
+@UseGuards(RateLimitGuard)
+@RateLimit({ limit: 30, ttl: 60 })
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 @Controller('currency')
 export class CurrencyController {
   constructor(private readonly currencyService: CurrencyService) {}

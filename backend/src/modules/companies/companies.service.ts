@@ -5,12 +5,68 @@ import {
   Logger,
   Optional,
 } from '@nestjs/common';
+import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { TenantCacheService } from '../cache/tenant-cache.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateCompanySettingsDto } from './dto/update-company-settings.dto';
 import { Prisma } from '@prisma/client';
 import { DEFAULT_AOA77_LOGO_DATA_URI } from '../../assets/aoa77-logo';
+
+export const MAX_BRANDING_FILE_SIZE_BYTES = 2 * 1024 * 1024; // Strict 2MB file size limit
+export const ALLOWED_BRANDING_MIMES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+]);
+export const ALLOWED_BRANDING_EXTENSIONS = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+]);
+
+/**
+ * Sanitizes an uploaded filename to strip path traversal (`..`, `/`, `\`, null bytes)
+ * and block executable/script extensions.
+ */
+export function sanitizeBrandingFilename(rawFilename: string | undefined): string {
+  const fallback = 'branding-asset.png';
+  if (!rawFilename || typeof rawFilename !== 'string') {
+    return fallback;
+  }
+  const withoutNull = rawFilename.replace(/\0/g, '').replace(/\\/g, '/');
+  const base = path.posix.basename(withoutNull).trim();
+  const safe = base.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.{2,}/g, '.');
+  return safe || fallback;
+}
+
+/**
+ * Verifies binary magic bytes for allowed raster image formats (`.png`, `.jpg`/`.jpeg`, `.webp`).
+ */
+export function verifyBrandingMagicBytes(buffer: Buffer, mime: string): boolean {
+  if (!buffer || buffer.length === 0) return false;
+  const normalizedMime = mime.toLowerCase().trim();
+
+  if (normalizedMime === 'image/png') {
+    return (
+      buffer.length >= 8 &&
+      buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+    );
+  }
+  if (normalizedMime === 'image/jpeg' || normalizedMime === 'image/jpg') {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (normalizedMime === 'image/webp') {
+    return (
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+    );
+  }
+  return false;
+}
 
 export interface UploadedBrandingFiles {
   logo?: Express.Multer.File[];
@@ -296,18 +352,71 @@ export class CompaniesService {
   ) {
     const fileToDataUri = (file?: Express.Multer.File): string | undefined => {
       if (!file || !file.buffer || file.buffer.length === 0) return undefined;
-      const mime = file.mimetype || 'image/png';
-      if (!mime.startsWith('image/')) {
-        throw new BadRequestException(`Uploaded branding asset "${file.originalname}" must be an image.`);
+
+      if (file.buffer.length > MAX_BRANDING_FILE_SIZE_BYTES) {
+        throw new BadRequestException(
+          'Uploaded branding asset exceeds the maximum allowed size of 2MB.',
+        );
       }
-      return `data:${mime};base64,${file.buffer.toString('base64')}`;
+
+      const safeFilename = sanitizeBrandingFilename(file.originalname);
+      const ext = path.posix.extname(safeFilename).toLowerCase();
+      if (ext && !ALLOWED_BRANDING_EXTENSIONS.has(ext)) {
+        throw new BadRequestException(
+          `Invalid file extension "${ext}". Only .png, .jpg, and .webp branding images are permitted.`,
+        );
+      }
+
+      const rawMime = (file.mimetype || '').toLowerCase().trim();
+      if (!ALLOWED_BRANDING_MIMES.has(rawMime)) {
+        throw new BadRequestException(
+          `Unsupported MIME type "${rawMime || 'unknown'}". Only image/png, image/jpeg, and image/webp are permitted.`,
+        );
+      }
+
+      if (!verifyBrandingMagicBytes(file.buffer, rawMime)) {
+        throw new BadRequestException(
+          `Branding file "${safeFilename}" failed binary signature (magic bytes) verification for ${rawMime}.`,
+        );
+      }
+
+      const canonicalMime = rawMime === 'image/jpg' ? 'image/jpeg' : rawMime;
+      return `data:${canonicalMime};base64,${file.buffer.toString('base64')}`;
     };
 
-    const logoUrl = fileToDataUri(files.logo?.[0]) ?? bodyUrls.logoUrl;
+    const validateBodyBrandingUrl = (rawUrl?: string): string | undefined => {
+      if (rawUrl === undefined) return undefined;
+      const trimmed = rawUrl.trim();
+      if (!trimmed) return '';
+      if (trimmed === DEFAULT_AOA77_LOGO_DATA_URI || trimmed === '/aoa77-logo.svg') {
+        return trimmed;
+      }
+      const dataMatch = /^data:(image\/(?:png|jpeg|jpg|webp));base64,([A-Za-z0-9+/=\s]+)$/i.exec(trimmed);
+      if (dataMatch) {
+        const declaredMime = dataMatch[1].toLowerCase();
+        const decoded = Buffer.from(dataMatch[2], 'base64');
+        if (decoded.length > MAX_BRANDING_FILE_SIZE_BYTES) {
+          throw new BadRequestException('Branding image data URI exceeds the 2MB maximum size limit.');
+        }
+        if (!verifyBrandingMagicBytes(decoded, declaredMime)) {
+          throw new BadRequestException('Branding image data URI failed binary magic bytes verification.');
+        }
+        const canonicalMime = declaredMime === 'image/jpg' ? 'image/jpeg' : declaredMime;
+        return `data:${canonicalMime};base64,${decoded.toString('base64')}`;
+      }
+      if (/^https:\/\//i.test(trimmed)) {
+        return trimmed;
+      }
+      throw new BadRequestException(
+        'Invalid branding URL. Only verified .png, .jpg, or .webp image uploads or HTTPS URLs are permitted.',
+      );
+    };
+
+    const logoUrl = fileToDataUri(files.logo?.[0]) ?? validateBodyBrandingUrl(bodyUrls.logoUrl);
     const signatureSpecimenUrl =
-      fileToDataUri(files.signatureSpecimen?.[0]) ?? bodyUrls.signatureSpecimenUrl;
+      fileToDataUri(files.signatureSpecimen?.[0]) ?? validateBodyBrandingUrl(bodyUrls.signatureSpecimenUrl);
     const corporateSealUrl =
-      fileToDataUri(files.corporateSeal?.[0]) ?? bodyUrls.corporateSealUrl;
+      fileToDataUri(files.corporateSeal?.[0]) ?? validateBodyBrandingUrl(bodyUrls.corporateSealUrl);
 
     if (
       logoUrl === undefined &&
