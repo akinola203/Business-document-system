@@ -190,5 +190,21 @@ test('CompaniesService Unit Tests', async (t) => {
         ),
       BadRequestException,
     );
+
+    // 5. Blocks SSRF vectors (private IPs, localhost, AWS/GCP cloud metadata, file://)
+    for (const ssrfUrl of [
+      'https://127.0.0.1/logo.png',
+      'https://localhost/logo.png',
+      'https://169.254.169.254/latest/meta-data/',
+      'https://192.168.1.10/internal.png',
+      'https://10.0.0.5/secret.png',
+      'file:///etc/passwd',
+    ]) {
+      await assert.rejects(
+        async () =>
+          service.uploadBrandingAssets('comp-1', {}, { logoUrl: ssrfUrl }, 'usr-admin-1'),
+        BadRequestException,
+      );
+    }
   });
 });

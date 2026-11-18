@@ -17,7 +17,11 @@ import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
         signOptions: {
+          algorithm: 'HS256',
           expiresIn: configService.get<string>('JWT_ACCESS_EXPIRATION', '15m'),
+        },
+        verifyOptions: {
+          algorithms: ['HS256'],
         },
       }),
       inject: [ConfigService],

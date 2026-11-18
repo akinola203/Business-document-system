@@ -61,7 +61,12 @@
       "dist/**/*",
       "electron/**/*",
       "package.json",
-      "!node_modules/**/*"
+      "!node_modules/**/*",
+      "!.git/**/*",
+      "!**/.git/**/*",
+      "!.env*",
+      "!**/.env*",
+      "!**/*.map"
     ],
     "win": {
       "target": [

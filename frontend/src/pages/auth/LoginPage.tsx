@@ -30,7 +30,22 @@ export const LoginPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
-  const from = location.state?.from?.pathname || '/overview';
+  const sanitizeInternalRedirect = (rawTarget: unknown): string => {
+    if (typeof rawTarget !== 'string') return '/overview';
+    const trimmed = rawTarget.trim();
+    if (
+      !trimmed.startsWith('/') ||
+      trimmed.startsWith('//') ||
+      trimmed.startsWith('/\\') ||
+      trimmed.includes('://') ||
+      trimmed.toLowerCase().startsWith('/login')
+    ) {
+      return '/overview';
+    }
+    return trimmed;
+  };
+
+  const from = sanitizeInternalRedirect(location.state?.from?.pathname);
   const successMessage = location.state?.successMessage;
 
   const handleSubmit = async (e: React.FormEvent) => {

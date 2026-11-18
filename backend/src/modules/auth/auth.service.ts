@@ -444,8 +444,14 @@ export class AuthService {
       where: { email },
     });
 
-    // Anti-enumeration: Return generic success response even if account does not exist
+    // Anti-enumeration: Normalize timing and return generic success response even if account does not exist
     if (!user || !user.isActive) {
+      await argon2
+        .verify(
+          '$argon2id$v=19$m=65536,t=3,p=4$dHVtbXlzYWx0MTIzNDU2Nw$dHVtbXloYXNoMTIzNDU2Nzg5MDEyMzQ1Njc4OTA=',
+          email,
+        )
+        .catch(() => false);
       this.logger.warn(
         `[AuthService] Password reset requested for non-existent or inactive email: "${email}". No email will be sent. (If this is your personal account, ensure the user record exists in the database!)`,
       );

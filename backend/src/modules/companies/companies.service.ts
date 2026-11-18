@@ -405,7 +405,35 @@ export class CompaniesService {
         return `data:${canonicalMime};base64,${decoded.toString('base64')}`;
       }
       if (/^https:\/\//i.test(trimmed)) {
-        return trimmed;
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(trimmed);
+        } catch {
+          throw new BadRequestException('Malformed external branding URL.');
+        }
+        const host = parsedUrl.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+        const isPrivateOrLoopback =
+          host === 'localhost' ||
+          host === '0.0.0.0' ||
+          host === '::1' ||
+          host === '169.254.169.254' ||
+          host === 'metadata.google.internal' ||
+          host.endsWith('.local') ||
+          host.endsWith('.internal') ||
+          host.endsWith('.localhost') ||
+          /^127\./.test(host) ||
+          /^10\./.test(host) ||
+          /^192\.168\./.test(host) ||
+          /^169\.254\./.test(host) ||
+          /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
+          /^100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\./.test(host);
+
+        if (parsedUrl.protocol !== 'https:' || isPrivateOrLoopback) {
+          throw new BadRequestException(
+            'SSRF protection: Branding URL cannot reference private, loopback, or cloud metadata addresses.',
+          );
+        }
+        return parsedUrl.toString();
       }
       throw new BadRequestException(
         'Invalid branding URL. Only verified .png, .jpg, or .webp image uploads or HTTPS URLs are permitted.',

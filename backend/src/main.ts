@@ -49,13 +49,47 @@ async function bootstrap() {
   // Global Exception Filter capturing 500s in Sentry while omitting 4xx client errors
   app.useGlobalFilters(new SentryExceptionFilter());
 
-  // Trust reverse proxy for client IP resolution and rate limiters
-  (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
+  // Trust reverse proxy for client IP resolution and rate limiters, and disable x-powered-by fingerprint header
+  const expressApp = app.getHttpAdapter().getInstance() as any;
+  expressApp.set('trust proxy', 1);
+  if (typeof expressApp.disable === 'function') {
+    expressApp.disable('x-powered-by');
+  }
 
-  // Security Middleware: Helmet with cross-origin resource support for native app and web previews
+  // Strip spoofable internal proxy/middleware headers and block direct access to dotfiles (.git, .env)
+  app.use((req: any, res: any, next: () => void) => {
+    delete req.headers['x-middleware-subrequest'];
+    delete req.headers['x-forwarded-user'];
+    delete req.headers['x-original-url'];
+    delete req.headers['x-rewrite-url'];
+
+    const reqPath = String(req.path || req.url || '').toLowerCase();
+    if (
+      reqPath.startsWith('/.git') ||
+      reqPath.includes('/.git/') ||
+      reqPath.startsWith('/.env') ||
+      reqPath.includes('/.env')
+    ) {
+      return res.status(403).json({
+        statusCode: 403,
+        error: 'Forbidden',
+        message: 'Access to hidden configuration or repository metadata is forbidden.',
+      });
+    }
+    next();
+  });
+
+  // Security Middleware: Helmet with anti-clickjacking (X-Frame-Options: DENY & frame-ancestors 'none')
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
+      frameguard: { action: 'deny' },
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          frameAncestors: ["'none'"],
+        },
+      },
     }),
   );
 
