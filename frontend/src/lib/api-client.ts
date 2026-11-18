@@ -79,17 +79,19 @@ apiClient.interceptors.request.use(
 
     const method = (config.method || 'get').toLowerCase();
     const url = config.url || '';
+    const isMutating =
+      method === 'post' || method === 'put' || method === 'patch' || method === 'delete';
     if (
-      method === 'post' &&
+      isMutating &&
       config.headers &&
       !config.headers['Idempotency-Key'] &&
       !config.headers['idempotency-key'] &&
-      (url.includes('/invoices') ||
-        url.includes('/waybills') ||
-        url.includes('/payments') ||
-        url.includes('/letters'))
+      !url.includes('/auth/')
     ) {
-      config.headers['Idempotency-Key'] = resolveIdempotencyKeyForPost(url, config.data);
+      config.headers['Idempotency-Key'] =
+        method === 'post'
+          ? resolveIdempotencyKeyForPost(url, config.data)
+          : generateUuidV4();
     }
 
     return config;

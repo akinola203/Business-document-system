@@ -231,23 +231,33 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
       });
 
       await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
-      await page.setContent(html, {
-        waitUntil: ['load', 'domcontentloaded'],
-        timeout: 30000,
-      });
+      const pdfUint8Array = await Promise.race([
+        (async () => {
+          await page!.setContent(html, {
+            waitUntil: ['load', 'domcontentloaded'],
+            timeout: 30000,
+          });
+          return page!.pdf({
+            format: 'A4',
+            printBackground: true,
+            preferCSSPageSize: true,
+            margin: {
+              top: '0mm',
+              bottom: '0mm',
+              left: '0mm',
+              right: '0mm',
+            },
+          });
+        })(),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Puppeteer render exceeded hard 35s timeout guard.')),
+            35000,
+          ),
+        ),
+      ]);
 
-      const pdfUint8Array = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        preferCSSPageSize: true,
-        margin: {
-          top: '0mm',
-          bottom: '0mm',
-          left: '0mm',
-          right: '0mm',
-        },
-      });
-
+      this.recordRenderSuccess();
       return Buffer.from(pdfUint8Array);
     } catch (err: any) {
       this.recordRenderFailure();

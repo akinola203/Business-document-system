@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, MutationCache } from '@tanstack/react-query';
 import { AppShell } from './components/layout/AppShell';
 import { ProtectedRoute } from './components/guards/ProtectedRoute';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -39,7 +39,16 @@ const RouteLoadingFallback: React.FC = () => (
   </div>
 );
 
-const queryClient = new QueryClient({
+const queryClient: QueryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onSuccess: () => {
+      // Ensure immediate UI consistency across Overview Dashboard KPI cards after any mutation
+      queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
+    },
+  }),
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,

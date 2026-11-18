@@ -17,7 +17,7 @@ export function formatCurrency(amount: number | string | undefined | null, curre
 }
 
 /**
- * Format dates into friendly short corporate format (e.g. 24 Oct 2026)
+ * Format dates into friendly short corporate format in West Africa Time (Africa/Lagos, e.g. 24 Oct 2026)
  */
 export function formatDate(date: string | Date | undefined | null): string {
   if (!date) return '—';
@@ -27,6 +27,24 @@ export function formatDate(date: string | Date | undefined | null): string {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Africa/Lagos',
+  });
+}
+
+/**
+ * Format full timestamp in West Africa Time (Africa/Lagos, UTC+1)
+ */
+export function formatDateTimeWat(date: string | Date | undefined | null): string {
+  if (!date) return '—';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Lagos',
   });
 }
 
