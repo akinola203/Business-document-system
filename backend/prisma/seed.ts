@@ -219,14 +219,16 @@ async function main() {
     { slug: 'supplies:manage', name: 'Manage Supplies Catalog & Orders', category: 'SUPPLIES' },
   ];
 
+  await prisma.permission.createMany({
+    data: permissionsList,
+    skipDuplicates: true,
+  });
+  const allPerms = await prisma.permission.findMany({
+    where: { slug: { in: permissionsList.map((p) => p.slug) } },
+  });
   const dbPermissions: { [key: string]: string } = {};
-  for (const perm of permissionsList) {
-    const record = await prisma.permission.upsert({
-      where: { slug: perm.slug },
-      update: { name: perm.name, category: perm.category },
-      create: perm,
-    });
-    dbPermissions[perm.slug] = record.id;
+  for (const record of allPerms) {
+    dbPermissions[record.slug] = record.id;
   }
 
   // 7. Roles & RolePermission Mappings
@@ -294,35 +296,17 @@ async function main() {
     },
   });
 
+  const rolePermBatch: { roleId: string; permissionId: string }[] = [];
   for (const slug of Object.keys(dbPermissions)) {
-    await prisma.rolePermission.upsert({
-      where: {
-        roleId_permissionId: {
-          roleId: roleManagingDirector.id,
-          permissionId: dbPermissions[slug],
-        },
-      },
-      update: {},
-      create: {
-        roleId: roleManagingDirector.id,
-        permissionId: dbPermissions[slug],
-      },
-    });
-
-    await prisma.rolePermission.upsert({
-      where: {
-        roleId_permissionId: {
-          roleId: roleAdmin.id,
-          permissionId: dbPermissions[slug],
-        },
-      },
-      update: {},
-      create: {
-        roleId: roleAdmin.id,
-        permissionId: dbPermissions[slug],
-      },
-    });
+    rolePermBatch.push(
+      { roleId: roleManagingDirector.id, permissionId: dbPermissions[slug] },
+      { roleId: roleAdmin.id, permissionId: dbPermissions[slug] },
+    );
   }
+  await prisma.rolePermission.createMany({
+    data: rolePermBatch,
+    skipDuplicates: true,
+  });
 
   // 8. Seed Primary Owner Account for Akindeji Akinlade
   console.log('Seeding Primary Super Admin Account: Akindeji Akinlade (dejakinlade@gmail.com)...');
