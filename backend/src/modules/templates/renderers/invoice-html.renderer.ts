@@ -68,7 +68,14 @@ export function renderInvoiceHtml(ctx: InvoiceRenderContext): string {
   const formatDate = (d?: string | Date | null) => {
     if (!d) return '—';
     const date = new Date(d);
-    return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return isNaN(date.getTime())
+      ? '—'
+      : date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'Africa/Lagos',
+        });
   };
 
   const formatCurrency = (val: string | number) => {

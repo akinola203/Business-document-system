@@ -474,6 +474,8 @@ model Document {
   @@index([companyId, documentType, status])
   @@index([companyId, documentType, createdAt])
   @@index([companyId, status])
+  @@index([clientId, status])
+  @@index([companyId, isArchived, deletedAt, createdAt])
   @@index([companyId, issueDate])
   @@index([companyId, dueDate])
   @@index([companyId, clientId])
@@ -528,7 +530,7 @@ model DocumentNumberSequence {
   documentType  DocumentType
   prefix        String // e.g. "INV", "WB", "AOA/LET"
   currentNumber Int          @default(0)
-  padding       Int          @default(6) // Result: 000001
+  padding       Int          @default(4) // Result: 0001
   resetYear     Int // e.g. 2026 (0 if non-annual reset)
   lastResetAt   DateTime     @default(now())
   createdAt     DateTime     @default(now())
@@ -565,6 +567,8 @@ model Invoice {
   waybills Waybill[]     @relation("InvoiceWaybills")
 
   @@index([companyId, currency])
+  @@index([companyId, paymentStatus])
+  @@index([companyId, createdAt])
   @@index([paymentStatus])
   @@index([paymentStatus, createdAt])
   @@index([documentId, paymentStatus])
@@ -643,7 +647,7 @@ model PaymentNumberSequence {
   company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   prefix        String   @default("PAY")
   currentNumber Int      @default(0)
-  padding       Int      @default(6)
+  padding       Int      @default(4)
   resetYear     Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -710,6 +714,8 @@ model Waybill {
 
   @@index([companyId, masterWaybillId])
   @@index([companyId, currency])
+  @@index([companyId, deliveryStatus])
+  @@index([companyId, createdAt])
   @@index([deliveryStatus])
   @@index([deliveryStatus, createdAt])
   @@index([invoiceId, deliveryStatus])
@@ -961,6 +967,7 @@ model Vendor {
   @@index([companyId, status])
   @@index([companyId, category])
   @@index([companyId, name])
+  @@index([companyId, createdAt])
   @@map("vendors")
 }
 

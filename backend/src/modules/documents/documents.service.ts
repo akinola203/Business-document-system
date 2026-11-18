@@ -836,7 +836,7 @@ export class DocumentsService {
         data: {
           status: DocumentStatus.ISSUED,
           currentVersionId: version.id,
-          issueDate: document.issueDate ?? new Date(),
+          issueDate: new Date(),
           versionCounter: { increment: 1 },
         },
       });

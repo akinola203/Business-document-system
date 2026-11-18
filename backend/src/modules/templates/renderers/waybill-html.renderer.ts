@@ -68,7 +68,12 @@ export function renderWaybillHtml(ctx: WaybillRenderContext): string {
     const date = new Date(d);
     return isNaN(date.getTime())
       ? '—'
-      : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      : date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'Africa/Lagos',
+        });
   };
 
   const items = wb.items || [];

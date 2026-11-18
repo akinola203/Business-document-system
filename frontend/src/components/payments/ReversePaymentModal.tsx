@@ -36,8 +36,12 @@ export const ReversePaymentModal: React.FC<ReversePaymentModalProps> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-payments'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
       if (payment?.invoiceId) {
         queryClient.invalidateQueries({ queryKey: ['invoice-ledger', payment.invoiceId] });
       }

@@ -148,6 +148,79 @@ export async function runDatabaseBackup(options?: {
   }
 }
 
+/**
+ * Restores a JSON backup snapshot produced by `runDatabaseBackup` inside an interactive transaction.
+ */
+export async function restoreDatabaseBackup(
+  backupFilePath: string,
+  options?: { prismaClient?: any; expectedSha256?: string },
+) {
+  const rawJson = fs.readFileSync(backupFilePath, 'utf8');
+  if (options?.expectedSha256) {
+    const actualSha256 = crypto.createHash('sha256').update(rawJson).digest('hex');
+    if (actualSha256 !== options.expectedSha256) {
+      throw new Error(
+        `Backup integrity check failed: expected SHA-256 ${options.expectedSha256}, got ${actualSha256}`,
+      );
+    }
+  }
+
+  const parsed = JSON.parse(rawJson);
+  const data = parsed?.data || parsed;
+  const prisma = options?.prismaClient || new PrismaClient();
+  const shouldDisconnect = !options?.prismaClient;
+
+  try {
+    await prisma.$transaction(async (tx: any) => {
+      for (const comp of data.companies || []) {
+        await tx.company.upsert({
+          where: { id: comp.id },
+          update: comp,
+          create: comp,
+        });
+      }
+      for (const setting of data.companySettings || []) {
+        await tx.companySetting.upsert({
+          where: { id: setting.id },
+          update: setting,
+          create: setting,
+        });
+      }
+      for (const client of data.clients || []) {
+        await tx.client.upsert({
+          where: { id: client.id },
+          update: client,
+          create: client,
+        });
+      }
+      for (const vendor of data.vendors || []) {
+        await tx.vendor.upsert({
+          where: { id: vendor.id },
+          update: vendor,
+          create: vendor,
+        });
+      }
+      for (const item of data.supplyItems || []) {
+        await tx.supplyItem.upsert({
+          where: { id: item.id },
+          update: item,
+          create: item,
+        });
+      }
+    });
+
+    return {
+      restored: true,
+      restoredAt: new Date().toISOString(),
+      sourceFile: backupFilePath,
+    };
+  } finally {
+    if (shouldDisconnect && typeof prisma.$disconnect === 'function') {
+      await prisma.$disconnect();
+    }
+  }
+}
+
 if (require.main === module) {
   runDatabaseBackup()
     .then((res) => {

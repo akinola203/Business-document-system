@@ -53,7 +53,12 @@ export function renderLetterHtml(ctx: LetterRenderContext): string {
     const date = new Date(d);
     return isNaN(date.getTime())
       ? '—'
-      : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+      : date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          timeZone: 'Africa/Lagos',
+        });
   };
 
   const cleanBodyHtml = sanitizeRichHtml(letData.bodyHtml || '');

@@ -556,9 +556,28 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     );
   }
 
+  private async connectWithBackoff(client: PrismaClient, label: string, maxRetries = 3): Promise<void> {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        await client.$connect();
+        return;
+      } catch (err: any) {
+        if (attempt >= maxRetries || !isReplicaConnectionError(err)) {
+          throw err;
+        }
+        const jitter = Math.floor(Math.random() * 200);
+        const delayMs = Math.min(4000, 300 * Math.pow(2, attempt) + jitter);
+        this.logger.warn(
+          `Transient cold-start/connection error on ${label} (attempt ${attempt + 1}/${maxRetries}): ${err?.message}. Retrying in ${delayMs}ms...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+
   async onModuleInit() {
     try {
-      await this.$connect();
+      await this.connectWithBackoff(this, 'Primary PostgreSQL');
       this.logger.log('Successfully connected to Primary PostgreSQL database via Prisma.');
     } catch (error) {
       this.logger.error('Failed to connect to Primary PostgreSQL database:', error);

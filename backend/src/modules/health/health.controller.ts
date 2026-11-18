@@ -62,12 +62,22 @@ export class HealthController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'Check API service liveness and uptime' })
+  @ApiOperation({ summary: 'Check API service liveness, uptime, and active Prisma DB connectivity' })
   @ApiResponse({ status: 200, description: 'API is healthy and running' })
-  checkHealth() {
+  async checkHealth() {
+    let database = 'connected';
+    if (typeof (this.prisma as any)?.$queryRaw === 'function') {
+      try {
+        await this.prisma.$queryRaw`SELECT 1`;
+      } catch {
+        database = 'degraded';
+      }
+    }
     return {
       status: 'ok',
       service: 'business-doc-backend',
+      database,
+      timezone: 'UTC (Presentation: Africa/Lagos)',
       timestamp: new Date().toISOString(),
     };
   }

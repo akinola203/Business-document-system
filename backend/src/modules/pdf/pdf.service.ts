@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ServiceUnavailableException,
   Logger,
   OnModuleInit,
   OnModuleDestroy,
@@ -21,19 +22,74 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
   private isLaunching = false;
   private activePageCount = 0;
   private readonly maxConcurrentPages = 3;
+  private readonly maxQueueDepth = 25;
+  private readonly slotAcquireTimeoutMs = 20000;
   private readonly waitingQueue: Array<() => void> = [];
+
+  // Circuit breaker state for Puppeteer rendering resilience
+  private consecutiveFailures = 0;
+  private readonly circuitFailureThreshold = 5;
+  private readonly circuitCooldownMs = 30000;
+  private circuitOpenUntil = 0;
+
   private readonly generatingPdfs = new Map<
     string,
     Promise<{ fileId: string; filename: string; buffer?: Buffer; storageKey?: string }>
   >();
 
+  private assertCircuitClosed(): void {
+    if (this.circuitOpenUntil > Date.now()) {
+      const retrySeconds = Math.ceil((this.circuitOpenUntil - Date.now()) / 1000);
+      throw new ServiceUnavailableException(
+        `PDF rendering circuit breaker is open due to recent engine failures. Please retry in ${retrySeconds}s.`,
+      );
+    }
+  }
+
+  private recordRenderSuccess(): void {
+    this.consecutiveFailures = 0;
+    this.circuitOpenUntil = 0;
+  }
+
+  private recordRenderFailure(): void {
+    this.consecutiveFailures += 1;
+    if (this.consecutiveFailures >= this.circuitFailureThreshold) {
+      this.circuitOpenUntil = Date.now() + this.circuitCooldownMs;
+      this.logger.warn(
+        `PDF circuit breaker tripped OPEN for ${this.circuitCooldownMs}ms after ${this.consecutiveFailures} consecutive failures.`,
+      );
+    }
+  }
+
   private async acquirePageSlot(): Promise<void> {
+    this.assertCircuitClosed();
     if (this.activePageCount < this.maxConcurrentPages) {
       this.activePageCount++;
       return;
     }
-    await new Promise<void>((resolve) => {
-      this.waitingQueue.push(resolve);
+    if (this.waitingQueue.length >= this.maxQueueDepth) {
+      throw new ServiceUnavailableException(
+        'PDF rendering queue is at capacity (backpressure limit reached). Please retry momentarily.',
+      );
+    }
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const idx = this.waitingQueue.indexOf(onReady);
+        if (idx !== -1) {
+          this.waitingQueue.splice(idx, 1);
+        }
+        reject(
+          new ServiceUnavailableException(
+            'Timed out waiting for an available PDF rendering worker slot.',
+          ),
+        );
+      }, this.slotAcquireTimeoutMs);
+
+      const onReady = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      this.waitingQueue.push(onReady);
     });
     this.activePageCount++;
   }
@@ -194,6 +250,7 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
 
       return Buffer.from(pdfUint8Array);
     } catch (err: any) {
+      this.recordRenderFailure();
       this.logger.error(`Puppeteer PDF compilation failed: ${err.message}`, err.stack);
       throw new BadRequestException(`Failed to compile document PDF: ${err.message}`);
     } finally {
@@ -356,7 +413,29 @@ export class PdfService implements OnModuleInit, OnModuleDestroy {
 
     this.generatingPdfs.set(generationKey, generationTask);
     try {
-      return await generationTask;
+      const res = await generationTask;
+      this.recordRenderSuccess();
+      return res;
+    } catch (err: any) {
+      // Dead-Letter / Failure Audit Logging for retry visibility
+      if (this.auditService) {
+        await this.auditService
+          .logAction({
+            companyId,
+            actorId: actorId || doc.createdById,
+            action: 'PDF_GENERATION_FAILED_DLQ',
+            entityType: 'Document',
+            entityId: doc.id,
+            newValues: {
+              documentNumber: doc.documentNumber,
+              versionNumber: targetVersion.versionNumber,
+              error: err?.message || 'Unknown PDF compilation failure',
+              failedAt: new Date().toISOString(),
+            },
+          })
+          .catch(() => {});
+      }
+      throw err;
     } finally {
       this.generatingPdfs.delete(generationKey);
     }

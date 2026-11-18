@@ -169,6 +169,10 @@ export const CompanySettingsPage: React.FC = () => {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['company-current'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['waybills'] });
+      queryClient.invalidateQueries({ queryKey: ['letters'] });
       const label =
         type === 'LOGO'
           ? 'Official Company Logo'
@@ -226,6 +230,10 @@ export const CompanySettingsPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-current'] });
+      queryClient.invalidateQueries({ queryKey: ['overview-recent-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['waybills'] });
+      queryClient.invalidateQueries({ queryKey: ['letters'] });
       setFeedback('✓ Company profile and settings updated successfully.');
       setErrorMessage(null);
     },

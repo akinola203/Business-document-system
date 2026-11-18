@@ -1,1 +1,1 @@
-export { runDatabaseBackup } from '../backend/scripts/backup-db';
+export { runDatabaseBackup, restoreDatabaseBackup } from '../backend/scripts/backup-db';

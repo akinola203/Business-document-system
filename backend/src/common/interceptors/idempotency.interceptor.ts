@@ -17,12 +17,15 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const req = http.getRequest();
     const res = http.getResponse();
 
+    const method = (req.method || 'GET').toUpperCase();
+    const isMutating = method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE';
+
     const idempotencyKey =
       (req.headers['idempotency-key'] as string) ||
       (req.headers['x-idempotency-key'] as string);
 
-    // If no idempotency header is provided, proceed with normal execution
-    if (!idempotencyKey || !req.user || !req.user.companyId) {
+    // If not a mutating request or no idempotency header is provided, proceed with normal execution
+    if (!isMutating || !idempotencyKey || !req.user || !req.user.companyId) {
       return next.handle();
     }
 
@@ -37,6 +40,8 @@ export class IdempotencyInterceptor implements NestInterceptor {
           // Replay cached response
           res.status(lockResult.status || 200);
           res.setHeader('X-Cache-Lookup', 'HIT');
+          res.setHeader('X-Idempotency-Key', idempotencyKey);
+          res.setHeader('X-Idempotency-Replayed', 'true');
           return of(lockResult.body);
         }
 

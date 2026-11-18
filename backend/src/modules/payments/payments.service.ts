@@ -478,14 +478,18 @@ export class PaymentsService {
   }
 
   /**
-   * Allocates PAY-YYYY-NNNNNN with a single atomic INSERT ... ON CONFLICT DO UPDATE statement, so
+   * Allocates PAY-YYYY-NNNN with a single atomic INSERT ... ON CONFLICT DO UPDATE statement, so
    * concurrent first-of-year allocations cannot collide or abort the surrounding transaction.
    */
   private async allocatePaymentNumber(tx: Prisma.TransactionClient, companyId: string): Promise<string> {
-    const year = new Date().getFullYear();
+    const lagosYearString = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Africa/Lagos',
+      year: 'numeric',
+    }).format(new Date());
+    const year = parseInt(lagosYearString, 10) || new Date().getFullYear();
     const rows = await tx.$queryRaw<Array<{ prefix: string; currentNumber: number; padding: number }>>`
-      INSERT INTO "payment_number_sequences" ("id", "companyId", "resetYear", "currentNumber", "updatedAt")
-      VALUES (gen_random_uuid()::text, ${companyId}, ${year}, 1, NOW())
+      INSERT INTO "payment_number_sequences" ("id", "companyId", "resetYear", "currentNumber", "padding", "updatedAt")
+      VALUES (gen_random_uuid()::text, ${companyId}, ${year}, 1, 4, NOW())
       ON CONFLICT ("companyId", "resetYear")
       DO UPDATE SET "currentNumber" = "payment_number_sequences"."currentNumber" + 1, "updatedAt" = NOW()
       RETURNING "prefix", "currentNumber", "padding"`;
@@ -494,7 +498,7 @@ export class PaymentsService {
     if (!seq) {
       throw new Error('Payment number allocation returned no row.');
     }
-    return `${seq.prefix}-${year}-${String(seq.currentNumber).padStart(seq.padding, '0')}`;
+    return `${seq.prefix}-${year}-${String(seq.currentNumber).padStart(seq.padding || 4, '0')}`;
   }
 
   /** Rewrites the cached balance/status fields from the authoritative ledger summary. */
