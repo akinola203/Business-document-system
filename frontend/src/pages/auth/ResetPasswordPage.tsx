@@ -95,8 +95,8 @@ export const ResetPasswordPage: React.FC = () => {
       <div className="w-full max-w-md bg-white rounded-[32px] p-8 md:p-10 shadow-xl shadow-slate-900/5 border border-slate-200/80">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-[#16181F] flex items-center justify-center text-white shadow-lg shadow-indigo-/10 mb-4 border border-slate-800">
-            <Sparkles className="w-7 h-7 text-indigo-" />
+          <div className="w-14 h-14 rounded-2xl bg-[#16181F] flex items-center justify-center text-white shadow-lg shadow-black/20 mb-4 border border-slate-800">
+            <Sparkles className="w-7 h-7 text-neutral-500" />
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Set New Password</h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
@@ -114,7 +114,7 @@ export const ResetPasswordPage: React.FC = () => {
             </p>
             <Link
               to="/login"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo- hover:underline pt-2"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:underline pt-2"
             >
               <span>Return to Sign In</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -145,7 +145,7 @@ export const ResetPasswordPage: React.FC = () => {
             <div className="pt-2">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 py-2.5 px-5 rounded-full bg-indigo- text-white text-xs font-bold shadow-md shadow-indigo-/20 hover:bg-indigo- transition-all"
+                className="inline-flex items-center gap-2 py-2.5 px-5 rounded-full bg-neutral-900 text-white text-xs font-bold shadow-md shadow-black/20 hover:bg-neutral-800 transition-all"
               >
                 <span>Sign In Immediately</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -168,7 +168,7 @@ export const ResetPasswordPage: React.FC = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new secure password"
-                    className="w-full pl-11 pr-11 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo- focus:bg-white transition-all"
+                    className="w-full pl-11 pr-11 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:bg-white transition-all"
                   />
                   <button
                     type="button"
@@ -193,7 +193,7 @@ export const ResetPasswordPage: React.FC = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat new secure password"
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo- focus:bg-white transition-all"
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
@@ -201,7 +201,7 @@ export const ResetPasswordPage: React.FC = () => {
               {/* Requirement Checklist */}
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
                 <div className="text-[11px] font-semibold text-slate-600 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-neutral-500" />
                   <span>Password Requirements:</span>
                 </div>
                 <div className="space-y-1 text-xs">
@@ -220,7 +220,7 @@ export const ResetPasswordPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="w-full mt-2 py-3.5 px-6 rounded-full bg-indigo- hover:bg-indigo- text-white text-sm font-bold shadow-lg shadow-indigo-/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full mt-2 py-3.5 px-6 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-bold shadow-lg shadow-black/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

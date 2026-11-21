@@ -52,7 +52,7 @@ export const PaymentInspector: React.FC<PaymentInspectorProps> = ({
     <div className="h-full flex flex-col justify-between space-y-6">
       <div className="space-y-6">
         {/* Top Header Card */}
-        <div className="rounded-[28px] bg-gradient-to-br from-[#0B132B] to-[#1E293B] p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
+        <div className="rounded-[28px] bg-gradient-to-br from-neutral-950 to-neutral-900 p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
           <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-center justify-between mb-4">
@@ -121,13 +121,13 @@ export const PaymentInspector: React.FC<PaymentInspectorProps> = ({
         <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 text-slate-300 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-" />
+              <FileText className="w-4 h-4 text-neutral-500" />
               <span className="text-xs font-bold text-white uppercase tracking-wider">Linked Invoice</span>
             </div>
             {payment.invoiceId && (
               <Link
                 to={`/documents/invoices`}
-                className="text-[11px] font-bold text-indigo- hover:text-indigo- flex items-center gap-1 transition-colors"
+                className="text-[11px] font-bold text-neutral-300 hover:text-neutral-300 flex items-center gap-1 transition-colors"
               >
                 <span>View Workspace</span>
                 <ExternalLink className="w-3 h-3" />

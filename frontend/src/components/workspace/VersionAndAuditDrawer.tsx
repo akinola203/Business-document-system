@@ -201,7 +201,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
           {/* 1. Drawer Header */}
           <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-[#F8F9FC]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo- shadow-sm">
+              <div className="w-10 h-10 rounded-2xl bg-neutral-500/10 border border-neutral-500/20 flex items-center justify-center text-neutral-500 shadow-sm">
                 <History className="w-5 h-5" />
               </div>
               <div>
@@ -213,7 +213,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
                     v{document?.version || versions.length || 1}
                   </span>
                 </div>
-                <p className="text-xs font-mono font-bold text-indigo- tabular-nums mt-0.5">
+                <p className="text-xs font-mono font-bold text-neutral-500 tabular-nums mt-0.5">
                   {documentNumber} {document?.title ? `• ${document.title}` : ''}
                 </p>
               </div>
@@ -234,7 +234,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
               onClick={() => setActiveTab('versions')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'versions'
-                  ? 'bg-indigo- text-white shadow-sm'
+                  ? 'bg-neutral-900 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -245,7 +245,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
               onClick={() => setActiveTab('audit')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'audit'
-                  ? 'bg-indigo- text-white shadow-sm'
+                  ? 'bg-neutral-900 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -301,13 +301,13 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
                     {/* Toggle to inspect live items picked */}
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                       <span className="font-bold text-slate-600 flex items-center gap-1.5 text-[11px]">
-                        <Package className="w-3.5 h-3.5 text-indigo-" />
+                        <Package className="w-3.5 h-3.5 text-neutral-500" />
                         <span>{liveItems.length} line items currently in record</span>
                       </span>
 
                       <button
                         onClick={() => setShowLiveDraftDetails(!showLiveDraftDetails)}
-                        className="text-indigo- font-bold hover:underline flex items-center gap-1 text-[11px]"
+                        className="text-neutral-500 font-bold hover:underline flex items-center gap-1 text-[11px]"
                       >
                         {showLiveDraftDetails ? (
                           <>
@@ -394,7 +394,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
                             </div>
                             <div className="flex justify-between text-slate-900 font-extrabold pt-1 border-t border-slate-200">
                               <span>Grand Total:</span>
-                              <span className="tabular-nums text-indigo-">
+                              <span className="tabular-nums text-neutral-500">
                                 {formatCurrency(document.totalAmount, document.currency)}
                               </span>
                             </div>
@@ -445,7 +445,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
                           <div className="p-4 space-y-2.5">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="font-extrabold text-xs px-2.5 py-1 rounded-full bg-indigo-/10 text-indigo- border border-indigo-/20">
+                                <span className="font-extrabold text-xs px-2.5 py-1 rounded-full bg-neutral-500/10 text-neutral-500 border border-neutral-500/20">
                                   Version {v.versionNumber}
                                 </span>
                                 <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
@@ -495,7 +495,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
 
                               <button
                                 onClick={() => setExpandedVersionId(isExpanded ? null : v.id)}
-                                className="px-3 py-1.5 rounded-full bg-indigo-/10 hover:bg-indigo-/20 text-indigo- font-extrabold text-[11px] flex items-center gap-1.5 transition-all"
+                                className="px-3 py-1.5 rounded-full bg-neutral-500/10 hover:bg-neutral-500/20 text-neutral-500 font-extrabold text-[11px] flex items-center gap-1.5 transition-all"
                               >
                                 {isExpanded ? (
                                   <>
@@ -638,7 +638,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
                                   </div>
                                   <div className="flex justify-between text-slate-900 font-extrabold pt-2 border-t border-slate-200">
                                     <span>Frozen Grand Total:</span>
-                                    <span className="tabular-nums text-sm text-indigo-">
+                                    <span className="tabular-nums text-sm text-neutral-500">
                                       {formatCurrency(meta.totalAmount, meta.currency)}
                                     </span>
                                   </div>
@@ -766,7 +766,7 @@ export const VersionAndAuditDrawer: React.FC<VersionAndAuditDrawerProps> = ({
                   <div className="relative pl-5 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
                     {auditLogs.map((log: any) => (
                       <div key={log.id} className="relative text-xs">
-                        <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo- ring-4 ring-white" />
+                        <div className="absolute -left-[17px] top-1.5 w-2.5 h-2.5 rounded-full bg-neutral-900 ring-4 ring-white" />
                         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all">
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">

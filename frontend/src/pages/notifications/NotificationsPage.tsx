@@ -132,7 +132,7 @@ export const NotificationsPage: React.FC = () => {
       case 'INVOICE_PAID':
         return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
       case 'WAYBILL_DISPATCHED':
-        return <Truck className="w-5 h-5 text-indigo-" />;
+        return <Truck className="w-5 h-5 text-neutral-300" />;
       case 'WAYBILL_FAILED':
         return <AlertTriangle className="w-5 h-5 text-rose-400" />;
       case 'DOCUMENT_APPROVED':
@@ -140,7 +140,7 @@ export const NotificationsPage: React.FC = () => {
       case 'DOCUMENT_REJECTED':
         return <AlertCircle className="w-5 h-5 text-rose-400" />;
       case 'PAYMENT_REVERSED':
-        return <RefreshCw className="w-5 h-5 text-indigo-" />;
+        return <RefreshCw className="w-5 h-5 text-neutral-300" />;
       default:
         return <Bell className="w-5 h-5 text-slate-300" />;
     }
@@ -153,7 +153,7 @@ export const NotificationsPage: React.FC = () => {
       case 'INVOICE_PAID':
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">Settled Payment</span>;
       case 'WAYBILL_DISPATCHED':
-        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-/20 text-indigo-">Transit Dispatch</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-500/20 text-neutral-300">Transit Dispatch</span>;
       case 'WAYBILL_FAILED':
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">Delivery Exception</span>;
       case 'DOCUMENT_APPROVED':
@@ -161,7 +161,7 @@ export const NotificationsPage: React.FC = () => {
       case 'DOCUMENT_REJECTED':
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300">Returned for Revision</span>;
       case 'PAYMENT_REVERSED':
-        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-/20 text-indigo-">Reversal Audit</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-500/20 text-neutral-300">Reversal Audit</span>;
       default:
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white">System Notification</span>;
     }
@@ -201,7 +201,7 @@ export const NotificationsPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Notifications Center</h1>
             {unreadCount > 0 ? (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo- text-white shadow-sm tabular-nums">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-neutral-900 text-white shadow-sm tabular-nums">
                 {unreadCount} Unread
               </span>
             ) : (
@@ -306,7 +306,7 @@ export const NotificationsPage: React.FC = () => {
                   >
                     {/* Unread Electric Indigo Dot */}
                     {!notif.isRead && (
-                      <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-indigo- ring-2 ring-[#16181F]" />
+                      <span className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-neutral-900 ring-2 ring-[#16181F]" />
                     )}
 
                     <div className="flex items-start gap-3">
@@ -338,7 +338,7 @@ export const NotificationsPage: React.FC = () => {
           </div>
 
           {/* Right Pane (7 Columns / 58%): Deep Navy Action Inspector */}
-          <div className="lg:col-span-7 bg-[#0B132B] rounded-[24px] p-6 md:p-8 text-white shadow-xl border border-white/10 flex flex-col justify-between">
+          <div className="lg:col-span-7 bg-neutral-950 rounded-[24px] p-6 md:p-8 text-white shadow-xl border border-white/10 flex flex-col justify-between">
             {selectedItem ? (
               <div className="space-y-6">
                 <div>
@@ -430,7 +430,7 @@ export const NotificationsPage: React.FC = () => {
                     <span>
                       {selectedItem.type === 'APPROVAL_REQUEST' ? 'Review & Sign Off Now' : 'Open in Workspace'}
                     </span>
-                    <ArrowRight className="w-4 h-4 text-indigo-" />
+                    <ArrowRight className="w-4 h-4 text-neutral-500" />
                   </button>
 
                   {!selectedItem.isRead && (

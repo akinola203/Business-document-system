@@ -63,10 +63,10 @@ export const TemplatesPage: React.FC = () => {
 
   // Customizer state tokens
   const [primaryColor, setPrimaryColor] = useState<string>(
-    currentTemplate.config?.primaryColor || '#6366F1'
+    currentTemplate.config?.primaryColor || '#18181B'
   );
   const [accentColor, setAccentColor] = useState<string>(
-    currentTemplate.config?.accentColor || '#0B132B'
+    currentTemplate.config?.accentColor || '#121318'
   );
   const [fontFamily, setFontFamily] = useState<string>(
     currentTemplate.config?.fontFamily || 'Inter'
@@ -103,8 +103,8 @@ export const TemplatesPage: React.FC = () => {
       if (match.config.showQrCode !== undefined) setShowQrCode(match.config.showQrCode);
     } else {
       if (selectedType === 'INVOICE') {
-        setPrimaryColor('#6366F1');
-        setAccentColor('#0B132B');
+        setPrimaryColor('#18181B');
+        setAccentColor('#121318');
       } else if (selectedType === 'WAYBILL') {
         setPrimaryColor('#0284C7');
         setAccentColor('#0369A1');
@@ -130,8 +130,8 @@ export const TemplatesPage: React.FC = () => {
       setShowQrCode(match.config.showQrCode);
     } else {
       if (type === 'INVOICE') {
-        setPrimaryColor('#6366F1');
-        setAccentColor('#0B132B');
+        setPrimaryColor('#18181B');
+        setAccentColor('#121318');
       } else if (type === 'WAYBILL') {
         setPrimaryColor('#0284C7');
         setAccentColor('#0369A1');
@@ -287,7 +287,7 @@ export const TemplatesPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-indigo-/10 text-indigo- text-[11px] font-bold border border-indigo-/30">
+            <span className="px-3 py-0.5 rounded-full bg-neutral-500/10 text-neutral-500 text-[11px] font-bold border border-neutral-500/30">
               Printable Typography & Styling
             </span>
             <span className="text-xs text-slate-400 font-semibold">• Phase 8D Active</span>
@@ -303,7 +303,7 @@ export const TemplatesPage: React.FC = () => {
         <button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
-          className="px-6 py-3 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold shadow-lg shadow-indigo-/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-60"
+          className="px-6 py-3 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-extrabold shadow-lg shadow-black/20 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-60"
         >
           {saveMutation.isPending ? (
             <>
@@ -333,7 +333,7 @@ export const TemplatesPage: React.FC = () => {
           {/* 1. Document Type Switcher */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
+              <div className="w-8 h-8 rounded-xl bg-neutral-500/10 border border-neutral-500/20 flex items-center justify-center text-neutral-500">
                 <Layout className="w-4 h-4" />
               </div>
               <div>
@@ -357,7 +357,7 @@ export const TemplatesPage: React.FC = () => {
                     onClick={() => handleTypeChange(item.type)}
                     className={`p-3 rounded-2xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-2 cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#16181F] text-white border-slate-800 shadow-md ring-2 ring-indigo-/30'
+                        ? 'bg-[#16181F] text-white border-slate-800 shadow-md ring-2 ring-neutral-500/30'
                         : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200/80'
                     }`}
                   >
@@ -372,7 +372,7 @@ export const TemplatesPage: React.FC = () => {
           {/* 2. Color Palette Customizer */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
+              <div className="w-8 h-8 rounded-xl bg-neutral-500/10 border border-neutral-500/20 flex items-center justify-center text-neutral-500">
                 <Palette className="w-4 h-4" />
               </div>
               <div>
@@ -401,7 +401,7 @@ export const TemplatesPage: React.FC = () => {
                   />
                   {/* Preset color pills */}
                   <div className="flex items-center gap-1.5">
-                    {['#6366F1', '#0284C7', '#059669', '#0F172A', '#D97706'].map((hex) => (
+                    {['#18181B', '#0284C7', '#059669', '#0F172A', '#D97706'].map((hex) => (
                       <button
                         key={hex}
                         type="button"
@@ -421,7 +421,7 @@ export const TemplatesPage: React.FC = () => {
                 <select
                   value={fontFamily}
                   onChange={(e) => setFontFamily(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                 >
                   <option value="Inter">Inter (Clean Modern Sans)</option>
                   <option value="Plus Jakarta Sans">Plus Jakarta Sans (Corporate Executive)</option>
@@ -457,7 +457,7 @@ export const TemplatesPage: React.FC = () => {
                       onClick={() => setLogoPosition(pos)}
                       className={`py-2 rounded-xl text-xs font-bold capitalize transition-all border cursor-pointer ${
                         logoPosition === pos
-                          ? 'bg-indigo- text-white border-indigo-'
+                          ? 'bg-neutral-900 text-white border-neutral-500'
                           : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
@@ -472,7 +472,7 @@ export const TemplatesPage: React.FC = () => {
                 {selectedType === 'INVOICE' && (
                   <label className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200/80 cursor-pointer">
                     <div className="flex items-center gap-2.5">
-                      <Landmark className="w-4 h-4 text-indigo-" />
+                      <Landmark className="w-4 h-4 text-neutral-500" />
                       <div>
                         <span className="font-bold text-slate-900">Settlement Bank Strip</span>
                         <p className="text-[11px] text-slate-400">Globus Bank NUBAN details printed at footer</p>
@@ -482,7 +482,7 @@ export const TemplatesPage: React.FC = () => {
                       type="checkbox"
                       checked={showBankDetails}
                       onChange={(e) => setShowBankDetails(e.target.checked)}
-                      className="w-4 h-4 rounded text-indigo- focus:ring-indigo-"
+                      className="w-4 h-4 rounded text-neutral-500 focus:ring-neutral-500"
                     />
                   </label>
                 )}
@@ -499,7 +499,7 @@ export const TemplatesPage: React.FC = () => {
                     type="checkbox"
                     checked={showStamp}
                     onChange={(e) => setShowStamp(e.target.checked)}
-                    className="w-4 h-4 rounded text-indigo- focus:ring-indigo-"
+                    className="w-4 h-4 rounded text-neutral-500 focus:ring-neutral-500"
                   />
                 </label>
 
@@ -515,7 +515,7 @@ export const TemplatesPage: React.FC = () => {
                     type="checkbox"
                     checked={showQrCode}
                     onChange={(e) => setShowQrCode(e.target.checked)}
-                    className="w-4 h-4 rounded text-indigo- focus:ring-indigo-"
+                    className="w-4 h-4 rounded text-neutral-500 focus:ring-neutral-500"
                   />
                 </label>
               </div>

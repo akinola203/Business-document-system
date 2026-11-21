@@ -311,7 +311,7 @@ export const WaybillsPage: React.FC = () => {
               <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                 Waybills & Delivery Notes
               </h1>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-indigo-/10 text-indigo- border border-indigo-/20">
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-neutral-500/10 text-neutral-500 border border-neutral-500/20">
                 Logistics Dispatch
               </span>
             </div>
@@ -323,7 +323,7 @@ export const WaybillsPage: React.FC = () => {
 
         <button
           onClick={() => navigate('/documents/waybills/new')}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-/25 transition-all"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs md:text-sm font-bold shadow-lg shadow-black/20 transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>+ Create waybill</span>
@@ -363,14 +363,14 @@ export const WaybillsPage: React.FC = () => {
           value="24 hours"
           subtitle="Average dispatch to receipt"
           icon={TrendingUp}
-          iconBgColor="bg-indigo-/10"
-          iconColor="text-indigo-"
+          iconBgColor="bg-neutral-500/10"
+          iconColor="text-neutral-500"
           trendText="98.2% on-time delivery rate"
           trendType="up"
           footerLabel="Direct haulage routes"
         >
           <div className="my-1">
-            <svg className="w-full h-6 stroke-[#6366F1] fill-none" viewBox="0 0 100 25">
+            <svg className="w-full h-6 stroke-neutral-400 fill-none" viewBox="0 0 100 25">
               <path d="M0 18 Q 30 2, 60 12 T 100 4" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>

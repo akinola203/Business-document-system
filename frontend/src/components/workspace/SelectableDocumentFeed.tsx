@@ -59,7 +59,7 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
 
     return (
       <div className="p-10 rounded-2xl bg-[#1E2029] border border-[#282B37] text-center flex flex-col items-center justify-center">
-        <Inbox className="w-12 h-12 text-indigo- mb-3" />
+        <Inbox className="w-12 h-12 text-neutral-500 mb-3" />
         <p className="text-base font-extrabold text-white">
           {emptyMessage || emptyConfig.prompt}
         </p>
@@ -70,7 +70,7 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
         <button
           type="button"
           onClick={() => navigate(emptyConfig.path)}
-          className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo- hover:bg-indigo- text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
+          className="mt-5 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>{emptyConfig.buttonLabel}</span>
@@ -109,7 +109,7 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
             className={cn(
               'group p-4 rounded-2xl cursor-pointer transition-all duration-200 border text-xs',
               isSelected
-                ? 'bg-indigo- text-white border-indigo-/50 shadow-lg shadow-indigo-/30'
+                ? 'bg-neutral-900 text-white border-neutral-500/50 shadow-lg shadow-black/20'
                 : 'bg-[#1E2029] hover:bg-[#252834] text-slate-300 border-[#282B37]',
             )}
           >
@@ -120,7 +120,7 @@ export const SelectableDocumentFeed: React.FC<SelectableDocumentFeedProps> = ({
                   className={cn(
                     'w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-[11px] shrink-0',
                     isSelected
-                      ? 'bg-white text-indigo-'
+                      ? 'bg-white text-neutral-500'
                       : 'bg-[#282B37] text-slate-300 group-hover:bg-slate-700',
                   )}
                 >

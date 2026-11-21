@@ -297,7 +297,7 @@ export const InvoicesPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Invoices</h1>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-indigo-/10 text-indigo- border border-indigo-/20">
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-neutral-500/10 text-neutral-500 border border-neutral-500/20">
                 Accounts Receivable
               </span>
             </div>
@@ -319,7 +319,7 @@ export const InvoicesPage: React.FC = () => {
           </button>
           <button
             onClick={() => navigate('/documents/invoices/new')}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-/25 transition-all"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs md:text-sm font-bold shadow-lg shadow-black/20 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>+ Create an invoice</span>
@@ -348,18 +348,18 @@ export const InvoicesPage: React.FC = () => {
           value={`${pendingCount} Drafts`}
           subtitle="Invoices awaiting manager review"
           icon={Clock}
-          iconBgColor="bg-indigo-/10"
-          iconColor="text-indigo-"
+          iconBgColor="bg-neutral-500/10"
+          iconColor="text-neutral-500"
           footerLabel="Anti-self-approval rule active"
           footerAction="Review Drafts"
           onFooterClick={() => setActiveTab('PENDING_APPROVAL')}
         >
           <div className="flex items-end gap-1.5 h-8 mt-2">
-            <div className="w-2.5 bg-indigo- dark:bg-indigo-/20 rounded-t h-3" />
-            <div className="w-2.5 bg-indigo- dark:bg-indigo-/30 rounded-t h-5" />
-            <div className="w-2.5 bg-indigo- dark:bg-indigo-/40 rounded-t h-4" />
-            <div className="w-2.5 bg-indigo- rounded-t h-7" />
-            <div className="w-2.5 bg-indigo- rounded-t h-8" />
+            <div className="w-2.5 bg-neutral-200 dark:bg-neutral-500/20 rounded-t h-3" />
+            <div className="w-2.5 bg-neutral-300 dark:bg-neutral-500/30 rounded-t h-5" />
+            <div className="w-2.5 bg-neutral-400 dark:bg-neutral-500/40 rounded-t h-4" />
+            <div className="w-2.5 bg-neutral-900 rounded-t h-7" />
+            <div className="w-2.5 bg-neutral-900 rounded-t h-8" />
           </div>
         </BentoKpiCard>
 
@@ -375,7 +375,7 @@ export const InvoicesPage: React.FC = () => {
           footerLabel="Standard Net-30 credit policy"
         >
           <div className="my-1">
-            <svg className="w-full h-6 stroke-[#6366F1] fill-none" viewBox="0 0 100 25">
+            <svg className="w-full h-6 stroke-neutral-400 fill-none" viewBox="0 0 100 25">
               <path d="M0 20 Q 25 5, 50 14 T 100 6" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>

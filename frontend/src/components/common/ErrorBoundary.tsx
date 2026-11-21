@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="px-5 py-2.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-/20 cursor-pointer active:scale-95"
+                className="px-5 py-2.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-black/20 cursor-pointer active:scale-95"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Recover Studio</span>

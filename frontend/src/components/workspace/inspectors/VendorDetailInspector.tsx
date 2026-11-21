@@ -90,12 +90,12 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
         {/* =====================================================================
             TOP HEADER: DEEP NAVY BLUE GLASSMORPHIC INSPECTOR CARD
         ===================================================================== */}
-        <div className="rounded-[28px] bg-gradient-to-br from-[#0B132B] to-[#1E293B] p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
+        <div className="rounded-[28px] bg-gradient-to-br from-neutral-950 to-neutral-900 p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
           <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-/20 border border-indigo-/30 flex items-center justify-center text-indigo- font-black text-base shadow-inner">
+              <div className="w-12 h-12 rounded-2xl bg-neutral-500/20 border border-neutral-500/30 flex items-center justify-center text-neutral-300 font-black text-base shadow-inner">
                 {initials}
               </div>
               <div>
@@ -143,7 +143,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
         <div className="p-4 rounded-2xl bg-[#191B22] border border-slate-800 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-indigo-" />
+              <CreditCard className="w-4 h-4 text-neutral-300" />
               <h2 className="text-xs font-bold text-white tracking-tight">
                 Payout Bank Settlement Details
               </h2>
@@ -214,7 +214,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
             </div>
             <div>
               <span className="text-[11px] text-slate-400">Category</span>
-              <p className="font-bold text-indigo- mt-0.5">{vendor.category.replace('_', ' ')}</p>
+              <p className="font-bold text-neutral-300 mt-0.5">{vendor.category.replace('_', ' ')}</p>
             </div>
           </div>
 
@@ -246,7 +246,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-indigo-" />
+              <Package className="w-4 h-4 text-neutral-300" />
               <h2 className="text-xs font-bold text-white">
                 Catalog Items Supplied ({vendorItems.length})
               </h2>
@@ -266,7 +266,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] font-bold text-indigo- bg-indigo-/10 px-2 py-0.5 rounded-md border border-indigo-/20">
+                      <span className="font-mono text-[10px] font-bold text-neutral-300 bg-neutral-500/10 px-2 py-0.5 rounded-md border border-neutral-500/20">
                         {item.sku}
                       </span>
                       <span className="font-bold text-slate-200">{item.name}</span>
@@ -293,7 +293,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-indigo-" />
+              <Truck className="w-4 h-4 text-neutral-300" />
               <h2 className="text-xs font-bold text-white">
                 Recent Supply Deliveries ({vendorOrders.length})
               </h2>
@@ -345,7 +345,7 @@ export const VendorDetailInspector: React.FC<VendorDetailInspectorProps> = ({
         {onRecordSupply && (
           <button
             onClick={() => onRecordSupply(vendor)}
-            className="flex-1 py-2.5 px-4 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-indigo-/20 transition-all cursor-pointer"
+            className="flex-1 py-2.5 px-4 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-black/20 transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Record Incoming Supply</span>

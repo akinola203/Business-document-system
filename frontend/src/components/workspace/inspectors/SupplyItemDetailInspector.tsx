@@ -53,13 +53,13 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
         {/* =====================================================================
             TOP HEADER: DEEP NAVY BLUE GLASSMORPHIC ITEM INSPECTOR
         ===================================================================== */}
-        <div className="rounded-[28px] bg-gradient-to-br from-[#0B132B] to-[#1E293B] p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
+        <div className="rounded-[28px] bg-gradient-to-br from-neutral-950 to-neutral-900 p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
           <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-mono text-xs font-black text-indigo- bg-indigo-/15 px-2.5 py-0.5 rounded-lg border border-indigo-/30 backdrop-blur-md">
+                <span className="font-mono text-xs font-black text-neutral-300 bg-neutral-500/15 px-2.5 py-0.5 rounded-lg border border-neutral-500/30 backdrop-blur-md">
                   {item.sku}
                 </span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -149,7 +149,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
         <div className="p-4 rounded-2xl bg-[#191B22] border border-slate-800 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-" />
+              <Layers className="w-4 h-4 text-neutral-300" />
               <h2 className="text-xs font-bold text-white tracking-tight">
                 Inventory Stock Telemetry
               </h2>
@@ -191,7 +191,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
         ===================================================================== */}
         <div className="p-4 rounded-2xl bg-[#191B22] border border-slate-800 space-y-2">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-            <Building2 className="w-4 h-4 text-indigo-" />
+            <Building2 className="w-4 h-4 text-neutral-300" />
             <h2 className="text-xs font-bold text-white tracking-tight">
               Preferred Sourcing Supplier
             </h2>
@@ -205,7 +205,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
                   Code: {item.preferredVendor.vendorCode}
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-indigo-/10 text-indigo- text-[10px] font-bold border border-indigo-/20">
+              <span className="px-2 py-0.5 rounded-full bg-neutral-500/10 text-neutral-300 text-[10px] font-bold border border-neutral-500/20">
                 Primary Contractor
               </span>
             </div>
@@ -224,7 +224,7 @@ export const SupplyItemDetailInspector: React.FC<SupplyItemDetailInspectorProps>
         <div className="pt-4 border-t border-slate-800">
           <button
             onClick={() => onAdjustStock(item)}
-            className="w-full py-2.5 px-4 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-indigo-/20 transition-all cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-black/20 transition-all cursor-pointer"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Adjust Inventory Stock</span>

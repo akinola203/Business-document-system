@@ -67,12 +67,12 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
     <div className="h-full flex flex-col justify-between space-y-6">
       <div className="space-y-6">
         {/* Top Header Card */}
-        <div className="rounded-[28px] bg-gradient-to-br from-[#0B132B] to-[#1E293B] p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
+        <div className="rounded-[28px] bg-gradient-to-br from-neutral-950 to-neutral-900 p-6 text-white shadow-xl shadow-slate-950/20 relative overflow-hidden border border-slate-700/80">
           <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-/20 border border-indigo-/30 flex items-center justify-center text-indigo- font-black text-base shadow-inner">
+              <div className="w-12 h-12 rounded-2xl bg-neutral-500/20 border border-neutral-500/30 flex items-center justify-center text-neutral-300 font-black text-base shadow-inner">
                 {initials}
               </div>
               <div>
@@ -116,7 +116,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
             <button
               type="button"
               onClick={() => onOpenStatement(client)}
-              className="px-3.5 py-2 rounded-xl bg-indigo- hover:bg-indigo- text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+              className="px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>Statement of Account</span>
@@ -126,7 +126,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
           <button
             type="button"
             onClick={() => navigate(`/documents/invoices/new?clientId=${client.id}`)}
-            className="px-3.5 py-2 rounded-xl bg-indigo-/80 hover:bg-indigo- text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+            className="px-3.5 py-2 rounded-xl bg-neutral-800/80 hover:bg-neutral-800 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Invoice Client / Customer</span>
@@ -155,7 +155,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
         <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 text-slate-300 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-" />
+              <FileText className="w-4 h-4 text-neutral-300" />
               <span className="text-xs font-bold text-white uppercase tracking-wider">
                 Recent Documents ({clientDocs.length})
               </span>
@@ -164,7 +164,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenStatement(client)}
-                className="text-[11px] text-indigo- hover:text-indigo- font-bold flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-neutral-300 hover:text-neutral-300 font-bold flex items-center gap-1 cursor-pointer"
               >
                 <span>Full Ledger &rarr;</span>
               </button>
@@ -226,7 +226,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
         {/* Corporate Profile & Credentials */}
         <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 text-slate-300 space-y-3">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-            <ShieldCheck className="w-4 h-4 text-indigo-" />
+            <ShieldCheck className="w-4 h-4 text-neutral-500" />
             <span className="text-xs font-bold text-white uppercase tracking-wider">Corporate Credentials</span>
           </div>
 

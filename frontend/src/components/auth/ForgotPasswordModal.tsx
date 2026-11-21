@@ -71,7 +71,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           <div>
             {/* Header */}
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo- mb-3 shadow-inner">
+              <div className="w-12 h-12 rounded-2xl bg-neutral-500/10 border border-neutral-500/20 flex items-center justify-center text-neutral-500 mb-3 shadow-inner">
                 <KeyRound className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -105,7 +105,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="staff@aoa77.com"
                     autoFocus
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo- focus:bg-white transition-all"
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
@@ -121,7 +121,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 py-3 px-5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-bold shadow-md shadow-indigo-/20 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
+                  className="flex-1 py-3 px-5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold shadow-md shadow-black/20 flex items-center justify-center gap-2 transition-all disabled:opacity-60 cursor-pointer"
                 >
                   {isLoading ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

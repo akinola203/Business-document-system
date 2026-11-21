@@ -44,7 +44,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
   templateConfig,
 }) => {
   const currency = formValues?.currency || 'NGN';
-  const primaryColor = templateConfig?.primaryColor || '#6366F1';
+  const primaryColor = templateConfig?.primaryColor || '#18181B';
   const accentColor = templateConfig?.accentColor || '#0F172A';
   const logoPosition = templateConfig?.logoPosition || 'left';
   const showStamp = templateConfig?.showStamp ?? true;
@@ -365,7 +365,7 @@ export const LiveA4InvoiceSheet: React.FC<LiveA4InvoiceSheetProps> = ({
             {showBank && company?.settings?.bankName && (
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-300 space-y-1.5">
                 <div className="flex items-center gap-1.5 pb-1 border-b border-slate-200">
-                  <Landmark className="w-3.5 h-3.5 text-indigo-" />
+                  <Landmark className="w-3.5 h-3.5 text-neutral-500" />
                   <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[10px]">
                     Official Banking Payout Account
                   </span>

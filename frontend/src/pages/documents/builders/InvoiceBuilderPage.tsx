@@ -450,7 +450,7 @@ export const InvoiceBuilderPage: React.FC = () => {
   if (isEdit && isDocLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] text-slate-500">
-        <div className="w-10 h-10 border-4 border-indigo-/30 border-t-indigo- rounded-full animate-spin mb-4" />
+        <div className="w-10 h-10 border-4 border-neutral-500/30 border-t-neutral-800 rounded-full animate-spin mb-4" />
         <p className="text-sm font-semibold">Loading invoice studio...</p>
       </div>
     );
@@ -495,7 +495,7 @@ export const InvoiceBuilderPage: React.FC = () => {
             type="button"
             onClick={() => setMobileViewTab('preview')}
             className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              mobileViewTab === 'preview' ? 'bg-indigo- text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              mobileViewTab === 'preview' ? 'bg-neutral-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -509,7 +509,7 @@ export const InvoiceBuilderPage: React.FC = () => {
             {/* Card 1: Client & Recipient Information */}
             <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-                <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
+                <div className="w-8 h-8 rounded-xl bg-neutral-500/10 border border-neutral-500/20 flex items-center justify-center text-neutral-500">
                   <Building2 className="w-4 h-4" />
                 </div>
                 <div>
@@ -524,7 +524,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     <label className="block text-xs font-bold text-slate-700">
                       Recipient Client / Customer <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-[10px] text-indigo- font-bold bg-indigo-/10 px-2 py-0.5 rounded-full border border-indigo-/30">
+                    <span className="text-[10px] text-neutral-500 font-bold bg-neutral-500/10 px-2 py-0.5 rounded-full border border-neutral-500/30">
                       {clients.length} Clients / Customers Available
                     </span>
                   </div>
@@ -550,8 +550,8 @@ export const InvoiceBuilderPage: React.FC = () => {
                         type="button"
                         onClick={() => handleClientChange(c.id)}
                         className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all border cursor-pointer ${formValues?.clientId === c.id
-                          ? 'bg-indigo- text-white border-indigo- shadow-sm shadow-indigo-/20'
-                          : 'bg-white hover:bg-indigo-/10 hover:border-indigo-/40 text-slate-700 border-slate-200'
+                          ? 'bg-neutral-900 text-white border-neutral-500 shadow-sm shadow-black/20'
+                          : 'bg-white hover:bg-neutral-500/10 hover:border-neutral-500/40 text-slate-700 border-slate-200'
                           }`}
                       >
                         ⚡ {(c.companyName || c.name || 'Client').split(' ')[0]}
@@ -561,7 +561,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                   <select
                     value={formValues?.clientId || ''}
                     onChange={(e) => handleClientChange(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo- cursor-pointer"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-neutral-500 cursor-pointer"
                   >
                     <option value="">Select a Client / Customer from directory...</option>
                     {(Array.isArray(clients) ? clients : []).map((c) => (
@@ -583,7 +583,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     </label>
                     <select
                       {...register('selectedAddressId')}
-                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                     >
                       {selectedClient.addresses.map((addr) => (
                         <option key={addr.id} value={addr.id}>
@@ -603,7 +603,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     {...register('customBillingAddress')}
                     rows={2}
                     placeholder="Leave empty to use client's standard address..."
-                    className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                    className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                   />
                 </div>
               </div>
@@ -612,7 +612,7 @@ export const InvoiceBuilderPage: React.FC = () => {
             {/* Card 2: Document Context & Settlement Terms */}
             <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-                <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
+                <div className="w-8 h-8 rounded-xl bg-neutral-500/10 border border-neutral-500/20 flex items-center justify-center text-neutral-500">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
@@ -630,7 +630,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     type="text"
                     {...register('title')}
                     placeholder="e.g. Commercial Supply of Portland Cement"
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                   />
                   {errors.title && (
                     <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors.title.message}</p>
@@ -642,7 +642,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     <label className="block text-xs font-bold text-slate-700 mb-1">Currency</label>
                     <select
                       {...register('currency')}
-                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                     >
                       <option value="NGN">NGN (Nigerian Naira - ₦)</option>
                       <option value="USD">USD (US Dollar - $)</option>
@@ -656,7 +656,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     <label className="block text-xs font-bold text-slate-700 mb-1">Payment Terms</label>
                     <select
                       {...register('paymentTerms')}
-                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                      className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                     >
                       <option value="Net 30 Days">Net 30 Days</option>
                       <option value="Net 15 Days">Net 15 Days</option>
@@ -673,7 +673,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     <input
                       type="date"
                       {...register('issueDate')}
-                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                     />
                   </div>
 
@@ -682,7 +682,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     <input
                       type="date"
                       {...register('dueDate')}
-                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                     />
                   </div>
                 </div>
@@ -696,7 +696,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                       type="text"
                       {...register('poNumber')}
                       placeholder="e.g. PO-DANGOTE-2026-901"
-                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                     />
                   </div>
 
@@ -704,7 +704,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     <label className="block text-xs font-bold text-slate-700 mb-1">Print Template</label>
                     <select
                       {...register('templateId')}
-                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                      className="w-full px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-neutral-500"
                     >
                       <option value="">Default Clean Corporate</option>
                       {(Array.isArray(templates) ? templates : []).map((tpl: any) => (
@@ -722,7 +722,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     <input
                       type="checkbox"
                       {...register('bankDetailsVisible')}
-                      className="w-4 h-4 rounded text-indigo- focus:ring-indigo- border-slate-300"
+                      className="w-4 h-4 rounded text-neutral-500 focus:ring-neutral-500 border-slate-300"
                     />
                     <span className="text-xs font-bold text-slate-700">
                       Include Company Bank Settlement Instructions on Invoice
@@ -757,7 +757,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                       taxRate: 7.5,
                     })
                   }
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-bold shadow-md shadow-indigo-/20 transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold shadow-md shadow-black/20 transition-all"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Item</span>
@@ -769,14 +769,14 @@ export const InvoiceBuilderPage: React.FC = () => {
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-extrabold text-slate-700 flex items-center gap-1.5">
                     <span>📦 Quick-Add from Supplies Catalog</span>
-                    <span className="text-[10px] text-indigo- font-bold bg-indigo-/10 px-2 py-0.5 rounded-full border border-indigo-/30">
+                    <span className="text-[10px] text-neutral-500 font-bold bg-neutral-500/10 px-2 py-0.5 rounded-full border border-neutral-500/30">
                       {catalogSupplies.length} SKUs
                     </span>
                   </span>
                   <button
                     type="button"
                     onClick={() => setActiveCatalogIndex(fields.length)}
-                    className="text-[11px] font-bold text-indigo- hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-neutral-500 hover:underline cursor-pointer"
                   >
                     Browse Full Catalog →
                   </button>
@@ -797,9 +797,9 @@ export const InvoiceBuilderPage: React.FC = () => {
                           taxRate: Number.isFinite(item?.taxRate) ? Number(item?.taxRate) : 7.5,
                         });
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-/10 hover:border-indigo-/40 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-neutral-500/10 hover:border-neutral-500/40 text-slate-700 border border-slate-200 text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span className="font-mono text-[10px] text-indigo- font-bold">{item.sku}</span>
+                      <span className="font-mono text-[10px] text-neutral-500 font-bold">{item.sku}</span>
                       <span>{(item.name || item.sku || 'Item').split(' ')[0]}</span>
                       <span className="text-[10px] text-emerald-600 font-mono font-bold">
                         {formatCurrency(Number(item.sellingPrice ?? (item as any)?.unitCost ?? 0), 'NGN')}
@@ -837,7 +837,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                               type="text"
                               {...register(`items.${index}.description` as const)}
                               placeholder="Item description or SKU..."
-                              className="w-full h-9 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-/30 focus:border-indigo- transition-all"
+                              className="w-full h-9 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-500/30 focus:border-neutral-500 transition-all"
                             />
                             {errors.items?.[index]?.description && (
                               <p className="text-[10px] text-rose-500 font-medium mt-0.5 leading-tight">
@@ -861,7 +861,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setActiveCatalogIndex(index)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo- hover:bg-indigo-/10 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-neutral-500 hover:bg-neutral-500/10 transition-colors cursor-pointer"
                               title="Pick from Supplies Catalog"
                             >
                               <Package className="w-4 h-4" />
@@ -881,7 +881,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                                   });
                                 }
                               }}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo- hover:bg-indigo-/10 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-neutral-500 hover:bg-neutral-500/10 transition-colors cursor-pointer"
                               title="Duplicate line item"
                             >
                               <Copy className="w-4 h-4" />
@@ -909,7 +909,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                             type="number"
                             step="any"
                             {...register(`items.${index}.quantity` as const)}
-                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold tabular-nums text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-/30 focus:border-indigo- transition-all"
+                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold tabular-nums text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-500/30 focus:border-neutral-500 transition-all"
                           />
                         </div>
 
@@ -921,7 +921,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                             type="text"
                             {...register(`items.${index}.unit` as const)}
                             placeholder="Units"
-                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-/30 focus:border-indigo- transition-all"
+                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-500/30 focus:border-neutral-500 transition-all"
                           />
                         </div>
 
@@ -934,7 +934,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                             step="any"
                             {...register(`items.${index}.unitPrice` as const)}
                             placeholder="0.00"
-                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold tabular-nums text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-/30 focus:border-indigo- transition-all"
+                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold tabular-nums text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-500/30 focus:border-neutral-500 transition-all"
                           />
                         </div>
 
@@ -947,7 +947,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                             step="any"
                             {...register(`items.${index}.taxRate` as const)}
                             placeholder="7.5"
-                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold tabular-nums text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-/30 focus:border-indigo- transition-all"
+                            className="w-full h-9 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold tabular-nums text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-500/30 focus:border-neutral-500 transition-all"
                           />
                         </div>
                       </div>
@@ -970,7 +970,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                       taxRate: 7.5,
                     })
                   }
-                  className="w-full py-2.5 rounded-xl bg-white hover:bg-indigo-/10/60 text-indigo- border-2 border-dashed border-indigo-/30 hover:border-indigo-/50 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-500/10 text-neutral-500 border-2 border-dashed border-neutral-500/30 hover:border-neutral-500/50 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Add Line Item</span>
@@ -991,7 +991,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                     {formatCurrency(summaryCalculations.tax, formValues?.currency || 'NGN')}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm font-black pt-2 border-t border-slate-100 text-indigo-">
+                <div className="flex justify-between text-sm font-black pt-2 border-t border-slate-100 text-neutral-500">
                   <span>Grand Total:</span>
                   <span className="tabular-nums">
                     {formatCurrency(summaryCalculations.total, formValues?.currency || 'NGN')}
@@ -1007,7 +1007,7 @@ export const InvoiceBuilderPage: React.FC = () => {
                 {...register('notes')}
                 rows={3}
                 placeholder="Add payment terms, banking notes, or project milestones..."
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-neutral-500"
               />
             </div>
           </div>

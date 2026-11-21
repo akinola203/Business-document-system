@@ -176,7 +176,7 @@ export const ReportsPage: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Executive Reports & Analytics</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-/10 text-indigo- border border-indigo-/20">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-neutral-500/10 text-neutral-500 border border-neutral-500/20">
               Live Audited
             </span>
           </div>
@@ -240,7 +240,7 @@ export const ReportsPage: React.FC = () => {
         <div className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Gross Invoiced</span>
-            <div className="w-8 h-8 rounded-full bg-indigo-/10 flex items-center justify-center text-indigo-">
+            <div className="w-8 h-8 rounded-full bg-neutral-500/10 flex items-center justify-center text-neutral-500">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
@@ -267,11 +267,11 @@ export const ReportsPage: React.FC = () => {
           <div className="mt-2 space-y-1">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
               <span>Settlement Rate</span>
-              <span className="text-indigo- tabular-nums">{summary.revenueAndCashflow.recoveryRate}%</span>
+              <span className="text-neutral-500 tabular-nums">{summary.revenueAndCashflow.recoveryRate}%</span>
             </div>
             <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-indigo- rounded-full transition-all duration-500"
+                className="h-full bg-neutral-900 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, summary.revenueAndCashflow.recoveryRate)}%` }}
               />
             </div>
@@ -299,7 +299,7 @@ export const ReportsPage: React.FC = () => {
         <div className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Fulfillment Rate</span>
-            <div className="w-8 h-8 rounded-full bg-indigo-/10 text-indigo- flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-neutral-500/10 text-neutral-500 flex items-center justify-center">
               <Truck className="w-4 h-4" />
             </div>
           </div>
@@ -307,7 +307,7 @@ export const ReportsPage: React.FC = () => {
             {summary.logisticsTelemetry.onTimeDeliveryRate}%
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-slate-500">
-            <Clock className="w-3.5 h-3.5 text-indigo-" />
+            <Clock className="w-3.5 h-3.5 text-neutral-500" />
             <span>Avg. Turnaround: <strong className="text-slate-800 tabular-nums">{summary.logisticsTelemetry.averageTransitDays} Days</strong></span>
           </div>
         </div>
@@ -334,7 +334,7 @@ export const ReportsPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-4 text-xs font-bold">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-sm bg-indigo-" />
+                    <span className="w-3 h-3 rounded-sm bg-neutral-900" />
                     <span className="text-slate-300">Billed</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -355,14 +355,14 @@ export const ReportsPage: React.FC = () => {
                       {/* Tooltip */}
                       <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 border border-slate-700 p-2 rounded-lg text-[10px] whitespace-nowrap z-20 pointer-events-none shadow-xl">
                         <div className="font-bold text-white">{m.month} 2026</div>
-                        <div className="text-indigo-">Billed: {formatShortNaira(m.invoicedTotal)}</div>
+                        <div className="text-neutral-300">Billed: {formatShortNaira(m.invoicedTotal)}</div>
                         <div className="text-emerald-300">Collected: {formatShortNaira(m.collectedTotal)}</div>
                       </div>
 
                       {/* Bar Pair */}
                       <div className="w-full flex items-end justify-center gap-1 h-48">
                         <div
-                          className="w-1/2 bg-indigo- rounded-t-md transition-all duration-500 hover:brightness-110"
+                          className="w-1/2 bg-neutral-900 rounded-t-md transition-all duration-500 hover:brightness-110"
                           style={{ height: `${billedHeight}%` }}
                         />
                         <div
@@ -400,7 +400,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Right 5 Columns: Deep Navy Blue Glassmorphic Client Leaderboard */}
-            <div className="lg:col-span-5 bg-[#0B132B] rounded-[24px] p-6 text-white shadow-xl border border-white/10 flex flex-col justify-between">
+            <div className="lg:col-span-5 bg-neutral-950 rounded-[24px] p-6 text-white shadow-xl border border-white/10 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -549,7 +549,7 @@ export const ReportsPage: React.FC = () => {
                   <h4 className="text-base font-black text-white">VAT (7.5%) Compliance & FIRS Reconciliation</h4>
                   <p className="text-xs text-slate-400">Authoritative statutory tax tracking for Nigerian Federal Inland Revenue Service</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-/20 text-indigo- border border-indigo-/30">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-neutral-500/20 text-neutral-500 border border-neutral-500/30">
                   Value Added Tax Act 2020
                 </span>
               </div>
@@ -593,7 +593,7 @@ export const ReportsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/documents/waybills')}
-                className="text-xs font-bold text-indigo- hover:text-[#7B6EFA] flex items-center gap-1 transition-colors"
+                className="text-xs font-bold text-neutral-500 hover:text-[#7B6EFA] flex items-center gap-1 transition-colors"
               >
                 <span>Waybills Workspace</span>
                 <ChevronRight className="w-4 h-4" />
@@ -614,7 +614,7 @@ export const ReportsPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-/20 text-indigo- flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-neutral-500/20 text-neutral-300 flex items-center justify-center">
                     <Truck className="w-5 h-5" />
                   </div>
                   <div>
@@ -665,7 +665,7 @@ export const ReportsPage: React.FC = () => {
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-400">
                   <span>Invoices</span>
-                  <span className="text-indigo-">Commercial</span>
+                  <span className="text-neutral-300">Commercial</span>
                 </div>
                 <div className="text-3xl font-black text-white tabular-nums">
                   {summary.documentVelocity.byType.INVOICE || 0}
@@ -676,7 +676,7 @@ export const ReportsPage: React.FC = () => {
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-400">
                   <span>Waybills</span>
-                  <span className="text-indigo-">Fulfillment</span>
+                  <span className="text-neutral-300">Fulfillment</span>
                 </div>
                 <div className="text-3xl font-black text-white tabular-nums">
                   {summary.documentVelocity.byType.WAYBILL || 0}

@@ -90,25 +90,25 @@
 }
 
 /* =========================================================================
-   GLOBAL DARK MODE OVERRIDES (Deep Navy Blue & Crisp White A4 Paper)
+   GLOBAL DARK MODE OVERRIDES (Spatial Monochrome Obsidian & Crisp White A4 Paper)
 ========================================================================= */
 html.dark body {
-  background-color: #070C1E;
-  color: #F1F5F9;
+  background-color: #090A0D;
+  color: #F4F4F5;
 }
 
 html.dark * {
-  border-color: rgba(51, 65, 85, 0.65);
+  border-color: rgba(63, 63, 70, 0.65);
 }
 
 /* Surface & Container Overrides (excluding A4 paper sheets) */
 html.dark .bg-\[\#F4F5F9\] {
-  background-color: #070C1E !important;
+  background-color: #090A0D !important;
 }
 
 html.dark .bg-white:not(.print-receipt-sheet):not(.print-statement-sheet):not([style*="210mm"]):not([style*="794px"]) {
-  background-color: #0B132B !important;
-  color: #F1F5F9;
+  background-color: #111217 !important;
+  color: #F4F4F5;
 }
 
 html.dark .bg-\[\#F8F9FC\],
@@ -116,12 +116,12 @@ html.dark .bg-slate-50,
 html.dark .bg-slate-50\/50,
 html.dark .bg-slate-50\/60,
 html.dark .bg-slate-50\/80 {
-  background-color: #0F172A !important;
+  background-color: #16181E !important;
 }
 
 html.dark .bg-slate-100,
 html.dark .bg-slate-100\/80 {
-  background-color: #1E293B !important;
+  background-color: #1F222A !important;
 }
 
 /* Typography Overrides (excluding A4 paper sheets) */

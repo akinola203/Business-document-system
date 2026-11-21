@@ -9,7 +9,7 @@ export const AppShell: React.FC = () => {
       <TopPillNavbar />
 
       {/* 2. Framed Crisp Inner Application Shell */}
-      <main className="w-full bg-white dark:bg-[#0B132B] rounded-[32px] p-6 md:p-8 shadow-sm border border-slate-200/70 dark:border-slate-800/80 min-h-[calc(100vh-130px)] flex flex-col transition-colors duration-200">
+      <main className="w-full bg-white dark:bg-neutral-950 rounded-[32px] p-6 md:p-8 shadow-sm border border-slate-200/70 dark:border-slate-800/80 min-h-[calc(100vh-130px)] flex flex-col transition-colors duration-200">
         <Outlet />
       </main>
     </div>
