@@ -122,7 +122,7 @@ export const OverviewDashboard: React.FC = () => {
               Welcome back, Akindeji Akinlade
             </h1>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white backdrop-blur-md border border-white/15">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-indigo- animate-pulse" />
               AOA 77 Supports &bull; Managing Director
             </span>
           </div>
@@ -138,36 +138,36 @@ export const OverviewDashboard: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate('/documents/invoices/new')}
-          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-indigo-/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <Plus className="w-5 h-5 text-orange-500 stroke-[2.5] group-hover:scale-110 transition-transform shrink-0" />
+          <Plus className="w-5 h-5 text-indigo- stroke-[2.5] group-hover:scale-110 transition-transform shrink-0" />
           <span className="text-sm md:text-base font-bold text-white tracking-tight">Create New Invoice</span>
         </button>
 
         <button
           type="button"
           onClick={() => navigate('/documents/waybills/new')}
-          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-indigo-/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <Truck className="w-5 h-5 text-orange-500 stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
+          <Truck className="w-5 h-5 text-indigo- stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
           <span className="text-sm md:text-base font-bold text-white tracking-tight">Generate Waybill</span>
         </button>
 
         <button
           type="button"
           onClick={() => navigate('/payments')}
-          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-indigo-/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <CreditCard className="w-5 h-5 text-orange-500 stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
+          <CreditCard className="w-5 h-5 text-indigo- stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
           <span className="text-sm md:text-base font-bold text-white tracking-tight">Record Payment</span>
         </button>
 
         <button
           type="button"
           onClick={() => navigate('/documents/letters/new')}
-          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-orange-500/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
+          className="group flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-indigo-/50 hover:bg-neutral-800/90 text-white shadow-sm transition-all duration-200 cursor-pointer"
         >
-          <Mail className="w-5 h-5 text-orange-500 stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
+          <Mail className="w-5 h-5 text-indigo- stroke-[2.2] group-hover:scale-110 transition-transform shrink-0" />
           <span className="text-sm md:text-base font-bold text-white tracking-tight">Write Official Letter</span>
         </button>
       </div>
@@ -206,14 +206,14 @@ export const OverviewDashboard: React.FC = () => {
         {/* Card 2: Drafts & Pending Documents */}
         <div
           onClick={() => navigate('/documents/invoices?filter=draft')}
-          className="bg-[#F8F9FC] dark:bg-[#1E2029] rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:border-orange-500/50 hover:shadow-md transition-all cursor-pointer group"
+          className="bg-[#F8F9FC] dark:bg-[#1E2029] rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:border-indigo-/50 hover:shadow-md transition-all cursor-pointer group"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 Drafts & Pending Sign-Off
               </span>
-              <span className="p-2.5 rounded-2xl bg-orange-500/10 text-orange-500">
+              <span className="p-2.5 rounded-2xl bg-indigo-/10 text-indigo-">
                 <Clock className="w-5 h-5" />
               </span>
             </div>
@@ -226,7 +226,7 @@ export const OverviewDashboard: React.FC = () => {
           </div>
           <div className="pt-4 mt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-semibold">
             <span>Total documents: {allDocuments.length}</span>
-            <span className="font-bold text-orange-500 group-hover:underline">
+            <span className="font-bold text-indigo- group-hover:underline">
               Review Drafts &rarr;
             </span>
           </div>
@@ -306,7 +306,7 @@ export const OverviewDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => navigate('/documents/invoices')}
-              className="text-sm font-bold text-orange-500 hover:text-orange-400 flex items-center gap-1"
+              className="text-sm font-bold text-indigo- hover:text-indigo- flex items-center gap-1"
             >
               <span>View All</span>
               <ArrowUpRight className="w-4 h-4" />
@@ -324,7 +324,7 @@ export const OverviewDashboard: React.FC = () => {
             </div>
           ) : recentDocuments.length === 0 ? (
             <div className="text-center py-12 px-6 bg-white dark:bg-[#16181F] rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700">
-              <FileCheck2 className="w-12 h-12 text-orange-500 mx-auto mb-3" />
+              <FileCheck2 className="w-12 h-12 text-indigo- mx-auto mb-3" />
               <p className="text-base font-extrabold text-slate-900 dark:text-white">
                 No documents created yet. Click below to create your first client invoice.
               </p>
@@ -336,7 +336,7 @@ export const OverviewDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/documents/invoices/new')}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-extrabold shadow-md transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo- hover:bg-indigo- text-white text-sm font-extrabold shadow-md transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Create New Invoice</span>
@@ -367,7 +367,7 @@ export const OverviewDashboard: React.FC = () => {
                     className="group flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#16181F] hover:bg-slate-50 border border-slate-200 dark:border-slate-800 hover:border-slate-300 transition-all cursor-pointer shadow-sm"
                   >
                     <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-xl bg-[#F8F9FC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                      <div className="w-11 h-11 rounded-xl bg-[#F8F9FC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 group-hover:bg-indigo- group-hover:text-white transition-colors">
                         {isInvoice && <FileText className="w-5 h-5" />}
                         {isWaybill && <Truck className="w-5 h-5" />}
                         {!isInvoice && !isWaybill && <Mail className="w-5 h-5" />}
@@ -382,7 +382,7 @@ export const OverviewDashboard: React.FC = () => {
                               doc.status === 'ISSUED'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : doc.status === 'APPROVED'
-                                  ? 'bg-orange-500/10 text-orange-500 border border-orange-500/30'
+                                  ? 'bg-indigo-/10 text-indigo- border border-indigo-/30'
                                   : 'bg-slate-100 text-slate-700'
                             }`}
                           >
@@ -441,7 +441,7 @@ export const OverviewDashboard: React.FC = () => {
                     Akindeji Akinlade (Managing Director)
                   </span>
                 </div>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-/10 text-indigo- border border-indigo-/20">
                   Auto-Filled
                 </span>
               </div>
@@ -457,7 +457,7 @@ export const OverviewDashboard: React.FC = () => {
                 </div>
                 <button
                   onClick={() => navigate('/settings/company')}
-                  className="text-xs font-bold text-orange-400 hover:underline cursor-pointer"
+                  className="text-xs font-bold text-indigo- hover:underline cursor-pointer"
                 >
                   Settings
                 </button>
@@ -472,7 +472,7 @@ export const OverviewDashboard: React.FC = () => {
                     1-click conversion between invoices and delivery waybills
                   </span>
                 </div>
-                <ArrowLeftRight className="w-5 h-5 text-orange-400 shrink-0" />
+                <ArrowLeftRight className="w-5 h-5 text-indigo- shrink-0" />
               </div>
             </div>
           </div>
@@ -480,7 +480,7 @@ export const OverviewDashboard: React.FC = () => {
           <div className="pt-6 mt-6 border-t border-slate-800 grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate('/settings/company')}
-              className="py-3 px-4 rounded-xl bg-orange-500 text-white text-sm font-extrabold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              className="py-3 px-4 rounded-xl bg-indigo- text-white text-sm font-extrabold hover:bg-indigo- transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               <Settings className="w-4 h-4" />
               <span>Company Settings</span>

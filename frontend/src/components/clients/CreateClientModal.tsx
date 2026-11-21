@@ -132,7 +132,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -174,7 +174,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as ClientType)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               >
                 <option value="COMPANY">Registered Corporate (LLC / Plc)</option>
                 <option value="INDIVIDUAL">Sole Trader / Individual</option>
@@ -192,7 +192,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Dr. Babatunde Raji"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g. Dangote Industries Limited"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -221,7 +221,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                 value={rcNumber}
                 onChange={(e) => setRcNumber(e.target.value)}
                 placeholder="e.g. RC-124901"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
           </div>
@@ -237,7 +237,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                 value={taxNumber}
                 onChange={(e) => setTaxNumber(e.target.value)}
                 placeholder="e.g. 10023456-0001"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -250,7 +250,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="procurement@client.com"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -263,7 +263,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+234 803 555 1001"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
           </div>
@@ -279,7 +279,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                 value={creditLimit}
                 onChange={(e) => setCreditLimit(e.target.value)}
                 placeholder="e.g. 50000000.00"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-bold tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-bold tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -290,7 +290,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
               <select
                 value={paymentTermsDays}
                 onChange={(e) => setPaymentTermsDays(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
               >
                 <option value="0">Due on Receipt (Immediate)</option>
                 <option value="15">Net 15 Days</option>
@@ -305,7 +305,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
           <div className="pt-2 border-t border-slate-100 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-orange-500" />
+                <MapPin className="w-4 h-4 text-indigo-" />
                 <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                   Registered Addresses & Offloading Sites ({addresses.length})
                 </span>
@@ -313,7 +313,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
               <button
                 type="button"
                 onClick={addAddressField}
-                className="px-3 py-1 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                className="px-3 py-1 rounded-xl bg-indigo-/10 hover:bg-indigo-/20 text-indigo- text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Site</span>
@@ -358,7 +358,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
                   value={addr.line1}
                   onChange={(e) => updateAddressField(idx, 'line1', e.target.value)}
                   placeholder="Plot number, street address, industrial estate..."
-                  className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                 />
 
                 <div className="grid grid-cols-3 gap-2">
@@ -400,7 +400,7 @@ export const CreateClientModal: React.FC<CreateClientModalProps> = ({
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="px-6 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2 disabled:opacity-60 cursor-pointer active:scale-95"
+              className="px-6 py-2.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold shadow-lg shadow-indigo-/25 transition-all flex items-center gap-2 disabled:opacity-60 cursor-pointer active:scale-95"
             >
               {mutation.isPending ? (
                 <>

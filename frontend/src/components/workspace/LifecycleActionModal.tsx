@@ -78,10 +78,10 @@ export const LifecycleActionModal: React.FC<LifecycleActionModalProps> = ({
           title: 'Submit Document for Approval',
           subtitle: `Are you sure you want to submit ${documentNumber} to company managers for formal approval?`,
           icon: Send,
-          iconColor: 'text-orange-500',
-          iconBg: 'bg-orange-500/10',
+          iconColor: 'text-indigo-',
+          iconBg: 'bg-indigo-/10',
           confirmBtnText: 'Submit for Approval',
-          confirmBtnColor: 'bg-orange-500 hover:bg-orange-600 text-white',
+          confirmBtnColor: 'bg-indigo- hover:bg-indigo- text-white',
         };
       case 'APPROVE':
         return {
@@ -108,10 +108,10 @@ export const LifecycleActionModal: React.FC<LifecycleActionModalProps> = ({
           title: 'Issue Official Document',
           subtitle: `Issuing ${documentNumber} permanently freezes an official legal snapshot (Version 1). Once issued, financial ledger balances and delivery notes take legal effect.`,
           icon: FileCheck,
-          iconColor: 'text-orange-500',
-          iconBg: 'bg-orange-500/10',
+          iconColor: 'text-indigo-',
+          iconBg: 'bg-indigo-/10',
           confirmBtnText: 'Issue & Lock Snapshot',
-          confirmBtnColor: 'bg-orange-500 hover:bg-orange-600 text-white',
+          confirmBtnColor: 'bg-indigo- hover:bg-indigo- text-white',
         };
       case 'CANCEL':
         return {
@@ -128,10 +128,10 @@ export const LifecycleActionModal: React.FC<LifecycleActionModalProps> = ({
           title: 'Duplicate Document',
           subtitle: `Clone ${documentNumber} and all its line items into a new DRAFT with a newly allocated number.`,
           icon: Copy,
-          iconColor: 'text-orange-500',
-          iconBg: 'bg-orange-500/10',
+          iconColor: 'text-indigo-',
+          iconBg: 'bg-indigo-/10',
           confirmBtnText: 'Duplicate into Draft',
-          confirmBtnColor: 'bg-orange-500 hover:bg-orange-600 text-white',
+          confirmBtnColor: 'bg-indigo- hover:bg-indigo- text-white',
         };
     }
   };
@@ -190,7 +190,7 @@ export const LifecycleActionModal: React.FC<LifecycleActionModalProps> = ({
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="e.g. Terms verified against PO #1029. Approved for dispatch."
                 rows={3}
-                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo- focus:bg-white transition-all"
               />
             </div>
           )}
@@ -206,7 +206,7 @@ export const LifecycleActionModal: React.FC<LifecycleActionModalProps> = ({
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain why this document is being rejected or cancelled..."
                 rows={3}
-                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+                className="w-full p-3 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo- focus:bg-white transition-all"
               />
             </div>
           )}

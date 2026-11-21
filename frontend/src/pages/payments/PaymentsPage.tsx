@@ -150,7 +150,7 @@ export const PaymentsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setIsRecordModalOpen(true)}
-            className="px-5 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+            className="px-5 py-2.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold shadow-lg shadow-indigo-/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span>Record Payment</span>
@@ -167,8 +167,8 @@ export const PaymentsPage: React.FC = () => {
           value={formatCurrency(totalCollected, 'NGN')}
           subtitle={`${activePayments.length} verified payment receipt(s)`}
           icon={ArrowDownLeft}
-          iconBgColor="bg-orange-500/10"
-          iconColor="text-orange-500"
+          iconBgColor="bg-indigo-/10"
+          iconColor="text-indigo-"
         />
 
         <BentoKpiCard
@@ -241,7 +241,7 @@ export const PaymentsPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search ref #, Client / Customer, amount..."
-            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-"
           />
         </div>
       </div>
@@ -279,7 +279,7 @@ export const PaymentsPage: React.FC = () => {
                     onClick={() => setSelectedPayment(p)}
                     className={`w-full text-left p-4 rounded-2xl transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#1D2029] border-orange-500 shadow-lg shadow-slate-950/30'
+                        ? 'bg-[#1D2029] border-indigo- shadow-lg shadow-slate-950/30'
                         : 'bg-[#191B22] hover:bg-[#1D2029] border-slate-800/80 text-slate-300'
                     }`}
                   >

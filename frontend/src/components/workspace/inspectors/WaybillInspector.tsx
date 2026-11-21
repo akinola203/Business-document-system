@@ -317,7 +317,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                 onClick={() => onActionClick('SUBMIT')}
                 className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
               >
-                <Send className="w-4 h-4 text-orange-500" />
+                <Send className="w-4 h-4 text-indigo-" />
                 <span>Submit for Approval</span>
               </button>
             )}
@@ -358,7 +358,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                   onClick={() => onActionClick('ISSUE')}
                   className="px-6 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-2 transition-all"
                 >
-                  <FileCheck className="w-4 h-4 text-orange-500" />
+                  <FileCheck className="w-4 h-4 text-indigo-" />
                   <span>Issue Waybill</span>
                 </button>
               ) : (
@@ -390,7 +390,7 @@ export const WaybillInspector: React.FC<WaybillInspectorProps> = ({
                     onClick={() => onWaybillStateTransition('DISPATCH')}
                     className="px-5 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-100 text-xs font-black shadow-lg flex items-center gap-1.5 transition-all"
                   >
-                    <Truck className="w-4 h-4 text-orange-500" />
+                    <Truck className="w-4 h-4 text-indigo-" />
                     <span>Dispatch Consignment</span>
                   </button>
                 )}

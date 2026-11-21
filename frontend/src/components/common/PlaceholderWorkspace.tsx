@@ -33,7 +33,7 @@ export const PlaceholderWorkspace: React.FC<PlaceholderWorkspaceProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{title}</h1>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20">
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-indigo-/10 text-indigo- border border-indigo-/20">
                 {badge}
               </span>
             </div>
@@ -44,10 +44,10 @@ export const PlaceholderWorkspace: React.FC<PlaceholderWorkspaceProps> = ({
 
       {/* Finnova Placeholder Bento Card */}
       <div className="bg-[#16181F] text-white rounded-[32px] p-10 md:p-14 text-center shadow-xl border border-slate-800 flex flex-col items-center justify-center min-h-[420px]">
-        <div className="w-16 h-16 rounded-3xl bg-[#1E2029] border border-[#282B37] flex items-center justify-center text-orange-500 shadow-lg shadow-orange-500/10 mb-5">
+        <div className="w-16 h-16 rounded-3xl bg-[#1E2029] border border-[#282B37] flex items-center justify-center text-indigo- shadow-lg shadow-indigo-/10 mb-5">
           <Icon className="w-8 h-8" />
         </div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-500 text-xs font-bold mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-/15 border border-indigo-/30 text-indigo- text-xs font-bold mb-3">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Scheduled for {phase}</span>
         </div>

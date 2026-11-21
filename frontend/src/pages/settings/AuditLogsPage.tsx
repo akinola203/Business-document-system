@@ -85,7 +85,7 @@ export const AuditLogsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[11px] font-bold border border-orange-500/30">
+            <span className="px-3 py-0.5 rounded-full bg-indigo-/10 text-indigo- text-[11px] font-bold border border-indigo-/30">
               Immutable System Ledger
             </span>
             <span className="text-xs text-slate-400 font-semibold">• Tamper-Proof Audit Trail</span>
@@ -108,8 +108,8 @@ export const AuditLogsPage: React.FC = () => {
           value={totalEvents}
           subtitle="Immutable append-only records"
           icon={Activity}
-          iconBgColor="bg-orange-500/10"
-          iconColor="text-orange-500"
+          iconBgColor="bg-indigo-/10"
+          iconColor="text-indigo-"
         />
 
         <BentoKpiCard
@@ -176,7 +176,7 @@ export const AuditLogsPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search action, actor, IP..."
-            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-"
           />
         </div>
       </div>
@@ -202,12 +202,12 @@ export const AuditLogsPage: React.FC = () => {
                     onClick={() => setSelectedLog(log)}
                     className={`w-full text-left p-4 rounded-2xl transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#1D2029] border-orange-500 shadow-lg shadow-slate-950/30'
+                        ? 'bg-[#1D2029] border-indigo- shadow-lg shadow-slate-950/30'
                         : 'bg-[#191B22] hover:bg-[#1D2029] border-slate-800/80 text-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-mono font-bold border border-orange-500/30">
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-/20 text-indigo- text-[10px] font-mono font-bold border border-indigo-/30">
                         {log.action}
                       </span>
                       <span className="text-[10px] font-mono text-slate-500">
@@ -216,7 +216,7 @@ export const AuditLogsPage: React.FC = () => {
                     </div>
 
                     <p className="text-xs font-bold text-white truncate">
-                      Entity: <span className="font-mono text-orange-300">{log.entityType}</span>
+                      Entity: <span className="font-mono text-indigo-">{log.entityType}</span>
                     </p>
 
                     <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
@@ -265,7 +265,7 @@ export const AuditLogsPage: React.FC = () => {
                 <div>
                   <span className="text-slate-500 text-[11px]">Entity Reference</span>
                   <p className="font-bold text-white mt-0.5">
-                    {selectedLog.entityType} — <span className="font-mono text-orange-400">{selectedLog.entityId}</span>
+                    {selectedLog.entityType} — <span className="font-mono text-indigo-">{selectedLog.entityId}</span>
                   </p>
                 </div>
                 <span className="px-2.5 py-1 rounded-full bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">
@@ -276,7 +276,7 @@ export const AuditLogsPage: React.FC = () => {
               {/* JSON Side-by-Side Diff Viewer */}
               <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 space-y-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                  <FileCode className="w-4 h-4 text-orange-500" />
+                  <FileCode className="w-4 h-4 text-indigo-" />
                   <span className="text-xs font-extrabold text-white uppercase tracking-wider">
                     Snapshot Mutation Delta (Old vs New)
                   </span>

@@ -72,7 +72,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
 
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 font-black text-base shadow-inner">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-/20 border border-indigo-/30 flex items-center justify-center text-indigo- font-black text-base shadow-inner">
                 {initials}
               </div>
               <div>
@@ -116,7 +116,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
             <button
               type="button"
               onClick={() => onOpenStatement(client)}
-              className="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+              className="px-3.5 py-2 rounded-xl bg-indigo- hover:bg-indigo- text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>Statement of Account</span>
@@ -126,7 +126,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
           <button
             type="button"
             onClick={() => navigate(`/documents/invoices/new?clientId=${client.id}`)}
-            className="px-3.5 py-2 rounded-xl bg-orange-600/80 hover:bg-orange-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+            className="px-3.5 py-2 rounded-xl bg-indigo-/80 hover:bg-indigo- text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>+ Invoice Client / Customer</span>
@@ -155,7 +155,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
         <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 text-slate-300 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-orange-400" />
+              <FileText className="w-4 h-4 text-indigo-" />
               <span className="text-xs font-bold text-white uppercase tracking-wider">
                 Recent Documents ({clientDocs.length})
               </span>
@@ -164,7 +164,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenStatement(client)}
-                className="text-[11px] text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-indigo- hover:text-indigo- font-bold flex items-center gap-1 cursor-pointer"
               >
                 <span>Full Ledger &rarr;</span>
               </button>
@@ -226,7 +226,7 @@ export const ClientDetailInspector: React.FC<ClientDetailInspectorProps> = ({
         {/* Corporate Profile & Credentials */}
         <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 text-slate-300 space-y-3">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-            <ShieldCheck className="w-4 h-4 text-orange-500" />
+            <ShieldCheck className="w-4 h-4 text-indigo-" />
             <span className="text-xs font-bold text-white uppercase tracking-wider">Corporate Credentials</span>
           </div>
 

@@ -117,7 +117,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
       <div className="bg-white rounded-3xl max-w-xl w-full p-6 md:p-8 shadow-2xl border border-slate-200/80 max-h-[90vh] overflow-y-auto space-y-6">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
               <Package className="w-5 h-5" />
             </div>
             <div>
@@ -154,7 +154,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 placeholder="e.g. SUP-CEM-001"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -163,7 +163,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               >
                 <option value="RAW_MATERIALS">Raw Materials</option>
                 <option value="LOGISTICS_HAULAGE">Logistics & Haulage</option>
@@ -184,7 +184,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Portland Limestone Cement 50kg"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -195,7 +195,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Technical grade or specifications"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -204,7 +204,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               >
                 <option value="Units">Units / Pieces</option>
                 <option value="Bags">Bags</option>
@@ -222,7 +222,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
               <select
                 value={preferredVendorId}
                 onChange={(e) => setPreferredVendorId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               >
                 <option value="">None / Open Sourcing</option>
                 {vendors.map((v) => (
@@ -242,7 +242,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
                 value={unitCost}
                 onChange={(e) => setUnitCost(e.target.value)}
                 placeholder="8500"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -256,7 +256,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(e.target.value)}
                 placeholder="10500"
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-emerald-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-emerald-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -266,7 +266,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
                 type="number"
                 value={currentStock}
                 onChange={(e) => setCurrentStock(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
 
@@ -276,7 +276,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
                 type="number"
                 value={reorderLevel}
                 onChange={(e) => setReorderLevel(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-amber-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-amber-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
               />
             </div>
           </div>
@@ -292,7 +292,7 @@ export const CreateSupplyItemModal: React.FC<CreateSupplyItemModalProps> = ({
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-6 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold shadow-lg shadow-indigo-/25 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {createMutation.isPending ? 'Saving...' : 'Add to Catalog'}
             </button>

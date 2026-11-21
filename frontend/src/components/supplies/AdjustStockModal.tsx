@@ -64,7 +64,7 @@ export const AdjustStockModal: React.FC<AdjustStockModalProps> = ({
       <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200/80 space-y-5">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+            <div className="w-9 h-9 rounded-xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
               <Layers className="w-4 h-4" />
             </div>
             <div>
@@ -103,7 +103,7 @@ export const AdjustStockModal: React.FC<AdjustStockModalProps> = ({
               min="0"
               value={newStock}
               onChange={(e) => setNewStock(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-"
             />
           </div>
 
@@ -118,7 +118,7 @@ export const AdjustStockModal: React.FC<AdjustStockModalProps> = ({
             <button
               type="submit"
               disabled={adjustMutation.isPending}
-              className="px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-md shadow-orange-500/25 flex items-center gap-1.5"
+              className="px-5 py-2 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold shadow-md shadow-indigo-/25 flex items-center gap-1.5"
             >
               {adjustMutation.isPending ? 'Updating...' : 'Save Stock Adjustment'}
             </button>

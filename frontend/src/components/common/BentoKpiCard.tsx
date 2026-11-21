@@ -22,8 +22,8 @@ export const BentoKpiCard: React.FC<BentoKpiCardProps> = ({
   value,
   subtitle,
   icon: Icon,
-  iconBgColor = 'bg-orange-500/10',
-  iconColor = 'text-orange-500',
+  iconBgColor = 'bg-indigo-/10',
+  iconColor = 'text-indigo-',
   trendText,
   trendType = 'neutral',
   children,
@@ -84,7 +84,7 @@ export const BentoKpiCard: React.FC<BentoKpiCardProps> = ({
             <button
               type="button"
               onClick={onFooterClick}
-              className="font-bold text-orange-500 hover:text-orange-600 hover:underline transition-colors"
+              className="font-bold text-indigo- hover:text-indigo- hover:underline transition-colors"
             >
               {footerAction} &rarr;
             </button>

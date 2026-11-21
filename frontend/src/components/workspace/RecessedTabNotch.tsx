@@ -40,7 +40,7 @@ export const RecessedTabNotch: React.FC<RecessedTabNotchProps> = ({
                   className={cn(
                     'px-1.5 py-0.2 rounded-full text-[10px] font-black tabular-nums',
                     isActive
-                      ? 'bg-orange-500 text-white'
+                      ? 'bg-indigo- text-white'
                       : 'bg-white/10 text-slate-400',
                   )}
                 >

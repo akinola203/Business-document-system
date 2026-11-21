@@ -214,7 +214,7 @@ export const LettersPage: React.FC = () => {
               <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                 Business Letters
               </h1>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20">
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-indigo-/10 text-indigo- border border-indigo-/20">
                 Executive Correspondence
               </span>
             </div>
@@ -226,7 +226,7 @@ export const LettersPage: React.FC = () => {
 
         <button
           onClick={() => navigate('/documents/letters/new')}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs md:text-sm font-bold shadow-lg shadow-orange-500/25 transition-all"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-/25 transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>+ Draft letter</span>
@@ -252,18 +252,18 @@ export const LettersPage: React.FC = () => {
           value={`${pendingCount} Letters`}
           subtitle="Awaiting executive sign-off"
           icon={Clock}
-          iconBgColor="bg-orange-500/10"
-          iconColor="text-orange-500"
+          iconBgColor="bg-indigo-/10"
+          iconColor="text-indigo-"
           footerLabel="Director approval workflow"
           footerAction="Review"
           onFooterClick={() => setActiveTab('PENDING_APPROVAL')}
         >
           <div className="flex items-end gap-1.5 h-8 mt-2">
-            <div className="w-2.5 bg-orange-200 dark:bg-orange-500/20 rounded-t h-4" />
-            <div className="w-2.5 bg-orange-300 dark:bg-orange-500/30 rounded-t h-3" />
-            <div className="w-2.5 bg-orange-400 dark:bg-orange-500/40 rounded-t h-6" />
-            <div className="w-2.5 bg-orange-500 rounded-t h-5" />
-            <div className="w-2.5 bg-orange-500 rounded-t h-8" />
+            <div className="w-2.5 bg-indigo- dark:bg-indigo-/20 rounded-t h-4" />
+            <div className="w-2.5 bg-indigo- dark:bg-indigo-/30 rounded-t h-3" />
+            <div className="w-2.5 bg-indigo- dark:bg-indigo-/40 rounded-t h-6" />
+            <div className="w-2.5 bg-indigo- rounded-t h-5" />
+            <div className="w-2.5 bg-indigo- rounded-t h-8" />
           </div>
         </BentoKpiCard>
 
@@ -279,7 +279,7 @@ export const LettersPage: React.FC = () => {
           footerLabel="Same-day dispatch target"
         >
           <div className="my-1">
-            <svg className="w-full h-6 stroke-[#F97316] fill-none" viewBox="0 0 100 25">
+            <svg className="w-full h-6 stroke-[#6366F1] fill-none" viewBox="0 0 100 25">
               <path d="M0 16 Q 35 2, 70 10 T 100 4" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>
@@ -290,8 +290,8 @@ export const LettersPage: React.FC = () => {
           value="Corporate Executive"
           subtitle="Standard letterhead layout"
           icon={Palette}
-          iconBgColor="bg-orange-500/10"
-          iconColor="text-orange-500"
+          iconBgColor="bg-indigo-/10"
+          iconColor="text-indigo-"
           footerLabel="AOA 77 Registered Letterhead"
           footerAction="Templates"
           onFooterClick={() => navigate('/settings/templates')}

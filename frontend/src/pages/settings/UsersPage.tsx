@@ -344,7 +344,7 @@ export const UsersPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[11px] font-bold border border-orange-500/30">
+            <span className="px-3 py-0.5 rounded-full bg-indigo-/10 text-indigo- text-[11px] font-bold border border-indigo-/30">
               Identity & Access Management (IAM)
             </span>
             <span className="text-xs text-slate-400 font-semibold">• RBAC Guardrails</span>
@@ -395,14 +395,14 @@ export const UsersPage: React.FC = () => {
                 }}
                 className="px-4 py-3 rounded-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs font-extrabold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
               >
-                <UserCog className="w-4 h-4 text-orange-500" />
+                <UserCog className="w-4 h-4 text-indigo-" />
                 <span>Edit My Profile</span>
               </button>
             )}
             {isAdmin && (
               <button
                 onClick={() => setIsInviteModalOpen(true)}
-                className="px-5 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                className="px-5 py-3 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-extrabold shadow-lg shadow-indigo-/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Invite Team Member</span>
@@ -483,14 +483,14 @@ export const UsersPage: React.FC = () => {
                     <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 font-extrabold flex items-center justify-center text-xs">
+                          <div className="w-9 h-9 rounded-full bg-indigo-/10 border border-indigo-/20 text-indigo- font-extrabold flex items-center justify-center text-xs">
                             {(userFullName ?? 'US').slice(0, 2).toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <p className="font-bold text-slate-900">{userFullName}</p>
                               {isSelf && (
-                                <span className="px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/30 text-[10px] font-extrabold">
+                                <span className="px-2 py-0.5 rounded-full bg-indigo-/10 text-indigo- border border-indigo-/30 text-[10px] font-extrabold">
                                   You
                                 </span>
                               )}
@@ -503,7 +503,7 @@ export const UsersPage: React.FC = () => {
                       <td className="py-4 px-6">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${u.role?.name === 'Admin'
-                              ? 'bg-orange-500/15 text-orange-600 border-orange-500/30'
+                              ? 'bg-indigo-/15 text-indigo- border-indigo-/30'
                               : u.role?.name === 'Manager'
                                 ? 'bg-sky-50 text-sky-700 border-sky-200'
                                 : 'bg-slate-100 text-slate-700 border-slate-200'
@@ -540,7 +540,7 @@ export const UsersPage: React.FC = () => {
                                 type="button"
                                 onClick={() => openEditProfileModal(u)}
                                 title="Edit Profile & Credentials"
-                                className="px-2.5 py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                                className="px-2.5 py-1.5 rounded-lg bg-indigo-/10 hover:bg-indigo-/20 text-indigo- font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
                               >
                                 <UserCog className="w-3.5 h-3.5" />
                                 <span>Edit Profile</span>
@@ -551,7 +551,7 @@ export const UsersPage: React.FC = () => {
                                 type="button"
                                 onClick={() => setSelectedUserForRole(u)}
                                 title="Change Role"
-                                className="p-1.5 rounded-lg hover:bg-orange-500/10 text-orange-500 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg hover:bg-indigo-/10 text-indigo- transition-colors cursor-pointer"
                               >
                                 <Shield className="w-4 h-4" />
                               </button>
@@ -585,7 +585,7 @@ export const UsersPage: React.FC = () => {
                               type="button"
                               onClick={() => openEditProfileModal(u)}
                               title="Edit My Profile & Password"
-                              className="px-3 py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 font-bold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
+                              className="px-3 py-1.5 rounded-lg bg-indigo-/10 hover:bg-indigo-/20 text-indigo- font-bold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                               <span>Edit My Profile</span>
@@ -619,7 +619,7 @@ export const UsersPage: React.FC = () => {
                 className="p-5 rounded-3xl bg-[#F8F9FC] border border-slate-200/80 shadow-sm space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-extrabold border border-orange-500/30">
+                  <span className="px-3 py-1 rounded-full bg-indigo-/10 text-indigo- text-xs font-extrabold border border-indigo-/30">
                     {role.name}
                   </span>
                   {role.isSystem && (
@@ -641,7 +641,7 @@ export const UsersPage: React.FC = () => {
           {/* Interactive Permissions Grid */}
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-slate-200/60">
-              <ShieldCheck className="w-5 h-5 text-orange-500" />
+              <ShieldCheck className="w-5 h-5 text-indigo-" />
               <h3 className="text-sm font-extrabold text-slate-900">
                 System Security & Permission Matrix
               </h3>
@@ -685,7 +685,7 @@ export const UsersPage: React.FC = () => {
           <div className="w-full max-w-md bg-white rounded-[32px] p-6 md:p-8 shadow-2xl border border-slate-200 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 text-indigo- flex items-center justify-center">
                   <UserPlus className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm font-extrabold text-slate-900">Invite Team Member</h3>
@@ -715,7 +715,7 @@ export const UsersPage: React.FC = () => {
                   value={inviteFullName}
                   onChange={(e) => setInviteFullName(e.target.value)}
                   placeholder="e.g. Chidinma Eze"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                 />
               </div>
 
@@ -729,7 +729,7 @@ export const UsersPage: React.FC = () => {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="name@aoa77.com"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                 />
               </div>
 
@@ -740,7 +740,7 @@ export const UsersPage: React.FC = () => {
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                 >
                   {allRoles.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -759,7 +759,7 @@ export const UsersPage: React.FC = () => {
                   value={invitePhone}
                   onChange={(e) => setInvitePhone(e.target.value)}
                   placeholder="+234 809 444 5566"
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                 />
               </div>
 
@@ -774,7 +774,7 @@ export const UsersPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={inviteMutation.isPending}
-                  className="px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
                 >
                   {inviteMutation.isPending ? 'Sending...' : 'Send Invitation'}
                 </button>
@@ -809,7 +809,7 @@ export const UsersPage: React.FC = () => {
                     changeRoleMutation.mutate({ user: selectedUserForRole, newRoleId: r.id })
                   }
                   className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${selectedUserForRole.roleId === r.id
-                      ? 'bg-orange-500/10 border-orange-500/40 text-orange-500'
+                      ? 'bg-indigo-/10 border-indigo-/40 text-indigo-'
                       : 'bg-[#F8F9FC] hover:bg-slate-100 border-slate-200 text-slate-800'
                     }`}
                 >
@@ -818,7 +818,7 @@ export const UsersPage: React.FC = () => {
                     <p className="text-[11px] text-slate-500 mt-0.5">{r.description}</p>
                   </div>
                   {selectedUserForRole.roleId === r.id && (
-                    <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-indigo- shrink-0" />
                   )}
                 </button>
               ))}
@@ -864,7 +864,7 @@ export const UsersPage: React.FC = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Min 8 characters..."
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                 />
               </div>
 
@@ -879,7 +879,7 @@ export const UsersPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={resetPasswordMutation.isPending || newPassword.length < 8}
-                  className="px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
                 >
                   {resetPasswordMutation.isPending ? 'Resetting...' : 'Confirm Reset'}
                 </button>
@@ -894,7 +894,7 @@ export const UsersPage: React.FC = () => {
           <div className="w-full max-w-md bg-white rounded-[32px] p-6 md:p-8 shadow-2xl border border-slate-200 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 text-indigo- flex items-center justify-center">
                   <UserCog className="w-4 h-4" />
                 </div>
                 <div>
@@ -938,7 +938,7 @@ export const UsersPage: React.FC = () => {
                     value={editFullName}
                     onChange={(e) => setEditFullName(e.target.value)}
                     placeholder="e.g. Adebayo Ogunlesi"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                   />
                 </div>
               </div>
@@ -955,7 +955,7 @@ export const UsersPage: React.FC = () => {
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                     placeholder="name@aoa77.com"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                   />
                 </div>
               </div>
@@ -971,7 +971,7 @@ export const UsersPage: React.FC = () => {
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
                     placeholder="+234 809 444 5566"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                   />
                 </div>
               </div>
@@ -988,7 +988,7 @@ export const UsersPage: React.FC = () => {
                     value={editPassword}
                     onChange={(e) => setEditPassword(e.target.value)}
                     placeholder="Enter new password (min 6 chars)..."
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-[#F8F9FC] border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-"
                   />
                 </div>
               </div>
@@ -1004,7 +1004,7 @@ export const UsersPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={updateProfileMutation.isPending}
-                  className="px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs font-bold shadow-md cursor-pointer disabled:opacity-60"
                 >
                   {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </button>

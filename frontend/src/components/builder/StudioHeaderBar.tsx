@@ -46,8 +46,8 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
   const typeConfig: Record<DocumentType, { label: string; badgeBg: string; badgeText: string }> = {
     INVOICE: {
       label: 'Invoice Studio',
-      badgeBg: 'bg-orange-500/10 border-orange-500/30/80',
-      badgeText: 'text-orange-500',
+      badgeBg: 'bg-indigo-/10 border-indigo-/30/80',
+      badgeText: 'text-indigo-',
     },
     WAYBILL: {
       label: 'Waybill Studio',
@@ -88,7 +88,7 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
               {isEdit ? (
                 <>
                   <span>Editing</span>
-                  <span className="text-orange-500 font-mono font-bold text-lg md:text-xl">
+                  <span className="text-indigo- font-mono font-bold text-lg md:text-xl">
                     #{documentNumber || 'DRAFT'}
                   </span>
                 </>
@@ -144,7 +144,7 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Eye className="w-3.5 h-3.5 text-orange-500" />
+            <Eye className="w-3.5 h-3.5 text-indigo-" />
             <span>Instant A4</span>
           </button>
           <button
@@ -156,7 +156,7 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Server className="w-3.5 h-3.5 text-orange-400" />
+            <Server className="w-3.5 h-3.5 text-indigo-" />
             <span>Server Preview</span>
           </button>
         </div>
@@ -167,7 +167,7 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
             type="button"
             onClick={onQuickFillDemo}
             title="Populate Realistic Enterprise Demo Preset"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 border border-amber-300/50 text-amber-900 text-xs font-bold transition-all shadow-sm hover:shadow"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-indigo-/10 hover:from-amber-500/20 hover:to-indigo-/20 border border-amber-300/50 text-amber-900 text-xs font-bold transition-all shadow-sm hover:shadow"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
             <span>⚡ Demo Preset</span>
@@ -196,7 +196,7 @@ export const StudioHeaderBar: React.FC<StudioHeaderBarProps> = ({
           onClick={onSubmitForApproval}
           disabled={isSavingDraft || isSubmitting || isFrozen}
           title={isFrozen ? 'Approved/Issued documents are immutable. Only Administrators can modify frozen documents.' : undefined}
-          className="flex items-center gap-2 px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs md:text-sm font-bold shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-5 py-2 rounded-full bg-indigo- hover:bg-indigo- text-white text-xs md:text-sm font-bold shadow-lg shadow-indigo-/25 transition-all disabled:opacity-50"
         >
           {isSubmitting ? (
             <RefreshCw className="w-3.5 h-3.5 animate-spin" />

@@ -370,7 +370,7 @@ export const LetterBuilderPage: React.FC = () => {
             type="button"
             onClick={() => setMobileViewTab('preview')}
             className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              mobileViewTab === 'preview' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              mobileViewTab === 'preview' ? 'bg-indigo- text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -493,7 +493,7 @@ export const LetterBuilderPage: React.FC = () => {
           {/* Card 2: Letter Context & Subject Line */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+              <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
                 <FileText className="w-4 h-4" />
               </div>
               <div>
@@ -544,7 +544,7 @@ export const LetterBuilderPage: React.FC = () => {
           {/* Card 3: Executive Letter Body Editor */}
           <div className="bg-[#F8F9FC] rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-slate-200/60">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+              <div className="w-8 h-8 rounded-xl bg-indigo-/10 border border-indigo-/20 flex items-center justify-center text-indigo-">
                 <PenTool className="w-4 h-4" />
               </div>
               <div>

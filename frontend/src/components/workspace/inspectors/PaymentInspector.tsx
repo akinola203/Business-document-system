@@ -121,13 +121,13 @@ export const PaymentInspector: React.FC<PaymentInspectorProps> = ({
         <div className="p-5 rounded-2xl bg-[#1D2029] border border-slate-800 text-slate-300 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-orange-500" />
+              <FileText className="w-4 h-4 text-indigo-" />
               <span className="text-xs font-bold text-white uppercase tracking-wider">Linked Invoice</span>
             </div>
             {payment.invoiceId && (
               <Link
                 to={`/documents/invoices`}
-                className="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
+                className="text-[11px] font-bold text-indigo- hover:text-indigo- flex items-center gap-1 transition-colors"
               >
                 <span>View Workspace</span>
                 <ExternalLink className="w-3 h-3" />
